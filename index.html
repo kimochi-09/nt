@@ -208,9 +208,10 @@
         }
 
         /* BUBBLES */
-        .msg-row { display: flex; gap: 6px; align-items: flex-start; max-width: 75%; }
+        .msg-row { display: flex; gap: 6px; align-items: flex-start; max-width: 75%; min-width: 0; }
         .msg-row.me { align-self: flex-end; }
         .msg-row.them { align-self: flex-start; }
+        .msg-col { min-width: 0; flex: 1; }
         .chat-avt {
             width: 28px; height: 28px; border-radius: 50%;
             object-fit: cover; flex-shrink: 0;
@@ -219,7 +220,7 @@
         .msg-bubble {
             padding: 9px 14px; border-radius: 20px;
             font-size: 15px; font-weight: 500;
-            word-wrap: break-word; line-height: 1.4;
+            word-break: break-word; overflow-wrap: anywhere; line-height: 1.4;
             display: inline-block; max-width: 100%;
         }
         .them .msg-bubble {
@@ -294,11 +295,67 @@
             gap: 2px;
         }
         .emoji-grid span {
-            font-size: 22px; cursor: pointer; text-align: center;
-            padding: 4px 2px; border-radius: 8px;
-            transition: background .1s; line-height: 1.4;
+            font-size: 20px; cursor: pointer; text-align: center;
+            padding: 3px 0; border-radius: 8px;
+            transition: background .1s; line-height: 1.2;
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; aspect-ratio: 1; overflow: hidden;
         }
         .emoji-grid span:hover { background: #f0f2f5; }
+
+        /* ===== STICKER PICKER ===== */
+        .sticker-wrapper { position: relative; flex-shrink: 0; }
+        #sticker-btn {
+            border: none; background: none; color: #0084ff;
+            font-size: 22px; cursor: pointer; padding: 4px;
+            border-radius: 50%; transition: background .1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #sticker-btn:hover { background: #f0f2f5; }
+        #sticker-picker {
+            display: none;
+            position: absolute; bottom: 46px; right: 0;
+            background: white; border: 1px solid #e4e4e4;
+            border-radius: 16px; padding: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 50; width: 280px;
+        }
+        #sticker-picker.open { display: block; }
+        .sticker-picker-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .sticker-picker-title { font-size: 13px; font-weight: 700; color: #555; }
+        .sticker-add-btn {
+            font-size: 11px; padding: 4px 10px; border-radius: 20px;
+            border: none; background: #d42020; color: white;
+            font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .sticker-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 6px; max-height: 200px; overflow-y: auto;
+        }
+        .sticker-item {
+            position: relative; aspect-ratio: 1; border-radius: 10px;
+            overflow: hidden; cursor: pointer; border: 2px solid transparent;
+            transition: border-color .15s, transform .1s;
+        }
+        .sticker-item:hover { border-color: #0084ff; transform: scale(1.05); }
+        .sticker-item img { width: 100%; height: 100%; object-fit: cover; }
+        .sticker-del {
+            position: absolute; top: 2px; right: 2px;
+            background: rgba(0,0,0,0.55); color: white;
+            border: none; border-radius: 50%; width: 18px; height: 18px;
+            font-size: 10px; cursor: pointer; display: none;
+            align-items: center; justify-content: center; line-height: 1;
+        }
+        .sticker-item:hover .sticker-del { display: flex; }
+        .sticker-empty { font-size: 13px; color: #bbb; text-align: center; padding: 20px 0; }
+        /* Sticker message bubble */
+        .msg-sticker {
+            max-width: 120px; max-height: 120px;
+            border-radius: 10px; display: block;
+        }
 
         /* Empty state */
         .empty-chat {
@@ -344,6 +401,48 @@
             font-family: inherit; cursor: pointer; margin-top: 4px;
         }
 
+        /* ===== FRIEND REQUESTS ===== */
+        .req-badge {
+            background: #d42020; color: white; font-size: 11px; font-weight: 800;
+            border-radius: 50%; width: 18px; height: 18px; display: none;
+            align-items: center; justify-content: center; margin-left: 4px;
+        }
+        .req-badge.visible { display: inline-flex; }
+        #req-tab-btn {
+            border: none; background: none; font-size: 13px; font-weight: 700;
+            color: #65676b; cursor: pointer; padding: 6px 10px;
+            border-radius: 20px; font-family: inherit;
+            display: flex; align-items: center; gap: 4px;
+            transition: background .1s;
+        }
+        #req-tab-btn:hover { background: #f0f2f5; }
+        #req-panel {
+            display: none; flex-direction: column; gap: 2px;
+            padding: 6px 10px; border-top: 1px solid #f0f0f0;
+        }
+        #req-panel.open { display: flex; }
+        .req-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 6px; border-radius: 10px;
+            background: #fafafa; border: 1px solid #f0f0f0;
+        }
+        .req-item img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .req-item-name { flex: 1; font-size: 14px; font-weight: 700; color: #050505; }
+        .req-accept-btn {
+            padding: 5px 12px; border-radius: 20px; border: none;
+            background: #d42020; color: white; font-size: 12px;
+            font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .req-decline-btn {
+            padding: 5px 10px; border-radius: 20px; border: none;
+            background: #f0f2f5; color: #444; font-size: 12px;
+            font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .req-sent-label {
+            font-size: 12px; color: #888; padding: 4px 6px;
+            font-style: italic;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 640px) {
             .sidebar { width: 100%; }
@@ -372,14 +471,21 @@
             <span class="sidebar-title" id="sidebar-title">Đoạn chat</span>
             <img id="my-avatar" src="https://via.placeholder.com/36" onclick="document.getElementById('fileInput').click()" title="Đổi ảnh đại diện">
             <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="uploadImage(this)">
-            <button class="exit-btn" onclick="location.reload()">Thoát</button>
+            <button class="exit-btn" onclick="localStorage.removeItem('nt_myId'); location.reload()">Thoát</button>
         </div>
         <div class="sidebar-search">
-            <input type="text" placeholder="🔍  Tìm kiếm trên Messenger">
+            <input type="text" placeholder="🔍  Tìm kiếm đoạn chat ">
         </div>
         <div class="sidebar-add">
             <input type="text" id="friend-name" placeholder="Nhập tên người dùng...">
             <button onclick="addFriend()">+ Kết bạn</button>
+        </div>
+        <button id="req-tab-btn" onclick="toggleReqPanel()">
+            🔔 Lời mời kết bạn <span class="req-badge" id="req-badge">0</span>
+        </button>
+        <div id="req-panel">
+            <div id="req-list-incoming"></div>
+            <div id="req-list-outgoing"></div>
         </div>
         <div id="user-list"></div>
     </div>
@@ -411,6 +517,19 @@
             <input type="file" id="chat-img-input" accept="image/*" style="display:none;" onchange="sendImage(this)">
 
             <input type="text" id="msg-input" placeholder="Aa" onkeypress="if(event.key==='Enter') sendMsg()">
+            <div class="sticker-wrapper">
+                <button id="sticker-btn" title="Sticker" onclick="toggleStickerPicker(event)">🏷️</button>
+                <div id="sticker-picker">
+                    <div class="sticker-picker-header">
+                        <span class="sticker-picker-title">Sticker của bạn</span>
+                        <button class="sticker-add-btn" onclick="document.getElementById('sticker-upload').click()">+ Thêm</button>
+                        <input type="file" id="sticker-upload" accept="image/*" style="display:none;" onchange="addSticker(this)">
+                    </div>
+                    <div class="sticker-grid" id="sticker-grid">
+                        <div class="sticker-empty" id="sticker-empty">Chưa có sticker nào</div>
+                    </div>
+                </div>
+            </div>
             <div class="emoji-wrapper">
                 <button id="emoji-btn" title="Biểu tượng cảm xúc" onclick="toggleEmojiPicker(event)">🙂</button>
                 <div id="emoji-picker">
@@ -469,6 +588,29 @@
     let myId = "", toId = "", currentRoom = "", avatars = {}, themeColor = "#111111";
     let msgRef = null, settingsRef = null;
 
+    // ===== AUTO LOGIN =====
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            // Extract myId from email: "username@chat.vn"
+            const savedId = localStorage.getItem('nt_myId');
+            if(savedId) {
+                myId = savedId;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'flex';
+                document.getElementById('sidebar-title').textContent = myId;
+                db.ref('user_profiles/' + myId).on('value', s => {
+                    if(s.exists() && s.val().avatar) {
+                        document.getElementById('my-avatar').src = s.val().avatar;
+                        avatars[myId] = s.val().avatar;
+                    }
+                });
+                loadFriends();
+                loadStickers();
+                listenFriendRequests();
+            }
+        }
+    });
+
     async function startApp() {
         const user = document.getElementById('username').value.trim();
         const pass = document.getElementById('password').value;
@@ -480,6 +622,7 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
             document.getElementById('sidebar-title').textContent = myId;
+            localStorage.setItem('nt_myId', myId);
             db.ref('user_profiles/' + myId).on('value', s => {
                 if(s.exists() && s.val().avatar) {
                     document.getElementById('my-avatar').src = s.val().avatar;
@@ -487,6 +630,8 @@
                 }
             });
             loadFriends();
+            loadStickers();
+            listenFriendRequests();
         } catch(e) { alert(e.message); }
     }
 
@@ -585,7 +730,7 @@
                         if(lastMsg) {
                             const pre = document.getElementById('preview-' + name);
                             const tEl = document.getElementById('time-' + name);
-                            if(pre) pre.textContent = (lastMsg.s === myId ? 'Bạn: ' : '') + (lastMsg.img ? '🖼️ Ảnh' : lastMsg.t);
+                            if(pre) pre.textContent = (lastMsg.s === myId ? 'Bạn: ' : '') + (lastMsg.img ? '🖼️ Ảnh' : lastMsg.sticker ? '🏷️ Sticker' : lastMsg.t);
                             if(tEl) tEl.textContent = lastMsg.time || '';
                         }
                         const badgeEl = document.getElementById('badge-' + name);
@@ -702,6 +847,13 @@
             bubble.style.background = 'transparent';
             if(isMe) bubble.style.background = 'transparent';
             bubble.appendChild(imgEl);
+        } else if(d.sticker) {
+            const stickerEl = document.createElement('img');
+            stickerEl.src = d.sticker;
+            stickerEl.className = 'msg-sticker';
+            bubble.style.padding = '0';
+            bubble.style.background = 'transparent';
+            bubble.appendChild(stickerEl);
         } else {
             bubble.textContent = d.t;
             if(isMe) { bubble.style.background = themeColor; bubble.style.color = 'white'; }
@@ -786,6 +938,67 @@
         db.ref('room_settings/' + room).update({ background: null });
     }
 
+    // ===== STICKER SYSTEM =====
+    function loadStickers() {
+        db.ref('stickers/' + myId).on('value', snap => {
+            const grid = document.getElementById('sticker-grid');
+            const empty = document.getElementById('sticker-empty');
+            grid.innerHTML = '';
+            if(!snap.exists()) {
+                const e = document.createElement('div');
+                e.className = 'sticker-empty'; e.id = 'sticker-empty';
+                e.textContent = 'Chưa có sticker nào';
+                grid.appendChild(e); return;
+            }
+            snap.forEach(child => {
+                const key = child.key;
+                const url = child.val().url;
+                const item = document.createElement('div');
+                item.className = 'sticker-item';
+                const img = document.createElement('img');
+                img.src = url;
+                img.onclick = () => sendSticker(url);
+                const del = document.createElement('button');
+                del.className = 'sticker-del'; del.textContent = '✕';
+                del.onclick = (e) => { e.stopPropagation(); db.ref('stickers/' + myId + '/' + key).remove(); };
+                item.appendChild(img); item.appendChild(del);
+                grid.appendChild(item);
+            });
+        });
+    }
+
+    function addSticker(input) {
+        if(!input.files || !input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            db.ref('stickers/' + myId).push({ url: e.target.result });
+        };
+        reader.readAsDataURL(input.files[0]);
+        input.value = '';
+    }
+
+    function sendSticker(url) {
+        if(!toId) return;
+        const room = myId < toId ? myId + toId : toId + myId;
+        db.ref('chats/' + room).push({
+            s: myId, t: '', sticker: url,
+            ts: Date.now(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        document.getElementById('sticker-picker').classList.remove('open');
+    }
+
+    function toggleStickerPicker(e) {
+        e.stopPropagation();
+        document.getElementById('emoji-picker').classList.remove('open');
+        document.getElementById('sticker-picker').classList.toggle('open');
+    }
+
+    document.addEventListener('click', () => {
+        document.getElementById('sticker-picker') && document.getElementById('sticker-picker').classList.remove('open');
+    });
+    document.getElementById('sticker-picker').addEventListener('click', e => e.stopPropagation());
+
     // ===== EMOJI PICKER =====
     const EMOJIS = [
         '😀','😁','😂','🤣','😃','😄','😅','😆',
@@ -839,11 +1052,109 @@
 
     function addFriend() {
         const name = document.getElementById('friend-name').value.trim();
-        if(name && name !== myId) {
-            db.ref('friends/' + myId + '/' + name).set(true);
-            db.ref('friends/' + name + '/' + myId).set(true);
-            document.getElementById('friend-name').value = '';
-        }
+        if(!name || name === myId) return;
+        // Check if already friends
+        db.ref('friends/' + myId + '/' + name).once('value', snap => {
+            if(snap.exists()) { alert('Bạn đã là bạn bè!'); return; }
+            // Check if already sent
+            db.ref('friend_requests/' + name + '/' + myId).once('value', snap2 => {
+                if(snap2.exists()) { alert('Đã gửi lời mời rồi!'); return; }
+                // Check if they already sent us a request → auto accept
+                db.ref('friend_requests/' + myId + '/' + name).once('value', snap3 => {
+                    if(snap3.exists()) {
+                        // They already sent → accept directly
+                        acceptFriend(name);
+                    } else {
+                        db.ref('friend_requests/' + name + '/' + myId).set({ from: myId, ts: Date.now() });
+                        alert('Đã gửi lời mời kết bạn tới ' + name + '!');
+                    }
+                });
+            });
+        });
+        document.getElementById('friend-name').value = '';
+    }
+
+    function acceptFriend(fromId) {
+        db.ref('friends/' + myId + '/' + fromId).set(true);
+        db.ref('friends/' + fromId + '/' + myId).set(true);
+        db.ref('friend_requests/' + myId + '/' + fromId).remove();
+        db.ref('friend_requests/' + fromId + '/' + myId).remove();
+    }
+
+    function declineFriend(fromId) {
+        db.ref('friend_requests/' + myId + '/' + fromId).remove();
+    }
+
+    function toggleReqPanel() {
+        document.getElementById('req-panel').classList.toggle('open');
+    }
+
+    function listenFriendRequests() {
+        // Incoming requests (others sent to me)
+        db.ref('friend_requests/' + myId).on('value', snap => {
+            const inEl = document.getElementById('req-list-incoming');
+            inEl.innerHTML = '';
+            let count = 0;
+            if(snap.exists()) {
+                snap.forEach(child => {
+                    count++;
+                    const fromId = child.key;
+                    const item = document.createElement('div');
+                    item.className = 'req-item';
+                    const avt = document.createElement('img');
+                    avt.src = avatars[fromId] || 'https://via.placeholder.com/40';
+                    // Try to load avatar
+                    db.ref('user_profiles/' + fromId).once('value', p => {
+                        if(p.exists() && p.val().avatar) avt.src = p.val().avatar;
+                    });
+                    const nameEl = document.createElement('div');
+                    nameEl.className = 'req-item-name';
+                    nameEl.textContent = fromId;
+                    const acceptBtn = document.createElement('button');
+                    acceptBtn.className = 'req-accept-btn';
+                    acceptBtn.textContent = '✓ Đồng ý';
+                    acceptBtn.onclick = () => acceptFriend(fromId);
+                    const declineBtn = document.createElement('button');
+                    declineBtn.className = 'req-decline-btn';
+                    declineBtn.textContent = '✕';
+                    declineBtn.onclick = () => declineFriend(fromId);
+                    item.appendChild(avt);
+                    item.appendChild(nameEl);
+                    item.appendChild(acceptBtn);
+                    item.appendChild(declineBtn);
+                    inEl.appendChild(item);
+                });
+            }
+            if(count === 0) {
+                inEl.innerHTML = '<div class="req-sent-label">Không có lời mời nào</div>';
+            }
+            // Update badge
+            const badge = document.getElementById('req-badge');
+            badge.textContent = count;
+            badge.classList.toggle('visible', count > 0);
+            // Auto open panel if new request
+            if(count > 0) document.getElementById('req-panel').classList.add('open');
+        });
+
+        // Outgoing requests (I sent to others)
+        db.ref('friend_requests').on('value', snap => {
+            const outEl = document.getElementById('req-list-outgoing');
+            outEl.innerHTML = '';
+            const outgoing = [];
+            if(snap.exists()) {
+                snap.forEach(toUser => {
+                    toUser.forEach(req => {
+                        if(req.val().from === myId) outgoing.push(toUser.key);
+                    });
+                });
+            }
+            if(outgoing.length > 0) {
+                const label = document.createElement('div');
+                label.className = 'req-sent-label';
+                label.textContent = '📤 Đã gửi: ' + outgoing.join(', ');
+                outEl.appendChild(label);
+            }
+        });
     }
 
     function uploadImage(input) {
