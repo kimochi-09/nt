@@ -572,6 +572,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
 <script>
     const firebaseConfig = {
@@ -634,6 +635,7 @@
             loadFriends();
             loadStickers();
             listenFriendRequests();
+            initPushNotifications();
         } catch(e) { alert(e.message); }
     }
 
@@ -914,6 +916,7 @@
         if(!t || !toId) return;
         const room = myId < toId ? myId + toId : toId + myId;
         db.ref('chats/' + room).push({ s: myId, t: t, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), ts: Date.now() });
+        sendPushToUser(toId, myId, t);
         input.value = "";
     }
 
@@ -1166,6 +1169,113 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    // ===== PUSH NOTIFICATIONS (FCM) =====
+    const VAPID_KEY = "BPiMiPL4I41ISCrdO4DhBkNk8K7tQkKxDOrHSBGDw3wfryqhZJpwxJHOHmyPeEQ64zS6Z9-g-f1F7YuXfXDAt4A";
+
+    async function initPushNotifications() {
+        try {
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+            // Đăng ký service worker inline
+            const swCode = `
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+firebase.initializeApp({
+    apiKey: "AIzaSyDH_skpX3D9sD3zz3iiyrHnB28BIVvIMM0",
+    authDomain: "hihi-c6af6.firebaseapp.com",
+    databaseURL: "https://hihi-c6af6-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "hihi-c6af6",
+    storageBucket: "hihi-c6af6.firebasestorage.app",
+    messagingSenderId: "164013580789",
+    appId: "1:164013580789:web:94227e94c6d517170f40bc"
+});
+const messaging = firebase.messaging();
+messaging.onBackgroundMessage(function(payload) {
+    const { title, body, icon } = payload.notification || {};
+    self.registration.showNotification(title || 'Tin nhắn mới', {
+        body: body || '',
+        icon: icon || '/icon.png',
+        badge: '/icon.png',
+        vibrate: [200, 100, 200],
+        tag: 'nt-msg',
+        renotify: true
+    });
+});
+`;
+            const swBlob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(swBlob);
+
+            let reg;
+            try {
+                reg = await navigator.serviceWorker.register(swUrl, { scope: '/' });
+            } catch(e) {
+                // Nếu blob SW không được, thử dùng SW đã đăng ký trước
+                const regs = await navigator.serviceWorker.getRegistrations();
+                reg = regs[0];
+                if (!reg) return;
+            }
+
+            const messaging = firebase.messaging();
+            messaging.useServiceWorker(reg);
+
+            // Xin quyền thông báo
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+
+            // Lấy FCM token
+            const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+            if (token && myId) {
+                db.ref('fcm_tokens/' + myId).set(token);
+            }
+
+            // Nhận thông báo khi app đang mở (foreground)
+            messaging.onMessage((payload) => {
+                const { title, body } = payload.notification || {};
+                // Nếu đang chat với người gửi thì không hiện
+                const senderId = payload.data && payload.data.senderId;
+                if (senderId && senderId === toId) return;
+
+                if (Notification.permission === 'granted') {
+                    new Notification(title || 'Tin nhắn mới', {
+                        body: body || '',
+                        icon: 'https://i.imgur.com/placeholder.png',
+                        tag: 'nt-msg',
+                        renotify: true,
+                        vibrate: [200, 100, 200]
+                    });
+                }
+            });
+
+        } catch(err) {
+            console.warn('Push notification init failed:', err);
+        }
+    }
+
+    // Gửi thông báo khi có tin nhắn mới đến người nhận
+    async function sendPushToUser(targetId, senderName, messageText) {
+        try {
+            const snap = await db.ref('fcm_tokens/' + targetId).once('value');
+            if (!snap.exists()) return;
+            const token = snap.val();
+
+            // Gọi Firebase Cloud Messaging REST API qua proxy (cần server-side)
+            // Lưu vào db để server/Cloud Function xử lý
+            db.ref('pending_notifications/' + targetId).push({
+                token,
+                title: senderName,
+                body: messageText,
+                senderId: myId,
+                ts: Date.now()
+            });
+        } catch(e) {}
+    }
+</script>
+
+<!-- Service Worker cho FCM background (cần lưu file này riêng tên firebase-messaging-sw.js) -->
+<script>
+// Tự động khởi tạo push sau khi đăng nhập thành công
+const _origStartApp = typeof startApp === 'function' ? startApp : null;
 </script>
 </body>
 </html>
