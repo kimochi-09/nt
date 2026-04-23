@@ -661,6 +661,7 @@
                     const div = document.createElement('div');
                     div.className = 'user-item';
                     div.id = 'friend-item-' + name;
+                    div.setAttribute('data-name', name);
 
                     // Avatar wrapper with online dot
                     const avtWrap = document.createElement('div');
@@ -749,9 +750,21 @@
                         }
                     }
 
-                    db.ref('chats/' + room).on('value', snap => {
+                    db.ref('chats/' + room).limitToLast(100).on('value', snap => {
                         _chatSnap = snap;
                         _refreshBadge();
+                        // Cập nhật timestamp để sort
+                        let latestTs = 0;
+                        if(snap.exists()) snap.forEach(m => { if(m.val().ts > latestTs) latestTs = m.val().ts; });
+                        const item = document.getElementById('friend-item-' + name);
+                        if(item) item.setAttribute('data-ts', latestTs);
+                        // Sort: đưa người nhắn gần nhất lên đầu
+                        const list = document.getElementById('user-list');
+                        if(list) {
+                            const items = Array.from(list.querySelectorAll('.user-item'));
+                            items.sort((a,b) => (b.getAttribute('data-ts')||0) - (a.getAttribute('data-ts')||0));
+                            items.forEach(el => list.appendChild(el));
+                        }
                     });
 
                     db.ref('read_receipts/' + room + '/' + myId).on('value', snap => {
@@ -1051,6 +1064,22 @@
     document.getElementById('emoji-picker').addEventListener('click', e => e.stopPropagation());
 
     initEmojiPicker();
+
+    // Khi người dùng quay lại tab/app → refresh badge ngay lập tức
+    document.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'visible' && myId) {
+            // Force re-read read_receipts để cập nhật badge
+            const list = document.getElementById('user-list');
+            if(list) {
+                list.querySelectorAll('.user-item').forEach(item => {
+                    const name = item.getAttribute('data-name');
+                    if(!name) return;
+                    const room = myId < name ? myId + name : name + myId;
+                    db.ref('read_receipts/' + room + '/' + myId).once('value');
+                });
+            }
+        }
+    });
 
     function toggleModal(s) { document.getElementById('settings-modal').style.display = s ? 'flex' : 'none'; }
     function goBack() { document.getElementById('chat-screen').classList.remove('in-chat'); }
