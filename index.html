@@ -2118,7 +2118,7 @@ messaging.onBackgroundMessage(function(payload) {
             if (!preEl || !s.exists()) return;
             s.forEach(m => {
                 const d = m.val();
-                preEl.textContent = (d.s === myId ? 'Bạn: ' : '') + (d.img ? '🖼️ Ảnh' : d.sticker ? '🏷️ Sticker' : d.t);
+                preEl.textContent = (d.s === myId ? 'Bạn: ' : '') + (d.img ? '🔞 Ảnh' : d.sticker ? '🔥 Sticker' : d.t);
             });
         });
     }
