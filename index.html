@@ -1962,9 +1962,9 @@ messaging.onBackgroundMessage(function(payload) {
         bar.style.borderLeftColor = themeColor;
         document.getElementById('reply-bar-name').textContent = (msgData.isMe ? 'Bạn' : msgData.sender) + ': ';
         document.getElementById('reply-bar-name').style.color = themeColor;
-        document.getElementById('reply-bar-preview').textContent = msgData.img ? '🔞 Ảnh' : msgData.sticker ? '🏷️ Sticker' : msgData.text;
+        document.getElementById('reply-bar-preview').textContent = msgData.img ? '🔞 Ảnh' : msgData.sticker ? '🔥 Sticker' : msgData.text;
         document.getElementById('msg-input').focus();
-        window._replyData = { name: msgData.isMe ? 'Bạn' : msgData.sender, text: msgData.img ? '🔞 Ảnh' : msgData.sticker ? '🏷️ Sticker' : msgData.text };
+        window._replyData = { name: msgData.isMe ? 'Bạn' : msgData.sender, text: msgData.img ? '🔞 Ảnh' : msgData.sticker ? '🔥 Sticker' : msgData.text };
     }
 
     function hideContextMenu() {
