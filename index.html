@@ -176,8 +176,45 @@
             position: absolute; bottom: 2px; right: 2px;
             width: 13px; height: 13px; border-radius: 50%;
             background: #31a24c; border: 2.5px solid #0b0f1c;
+            transition: background 0.3s;
         }
         .online-dot.visible { display: block; }
+        .online-dot.online { background: #31a24c; }
+        .online-dot.offline { background: #6b7280; }
+
+        /* ===== TYPING INDICATOR ===== */
+        #typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 16px 6px;
+        }
+        #typing-indicator.visible { display: flex; }
+        .typing-bubble {
+            background: #0f1526;
+            border: 1px solid #1c2540;
+            border-radius: 20px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .typing-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #4a5878;
+            animation: typingBounce 1.3s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.18s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.36s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-5px); opacity: 1; }
+        }
+        .typing-label {
+            font-size: 12px; color: #4a5878; font-style: italic;
+        }
 
         /* Unread badge */
         .friend-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
@@ -264,10 +301,10 @@
         #header-online-dot {
             position: absolute; bottom: 1px; right: 1px;
             width: 11px; height: 11px; border-radius: 50%;
-            background: #00e5ff; border: 2px solid #0b0f1c;
+            background: #6b7280; border: 2px solid #0b0f1c;
             display: none;
         }
-        #header-online-dot.on { display: block; }
+        #header-online-dot.active { display: block; }
         .header-info { display: flex; flex-direction: column; }
         #chat-title { font-size: 15px; font-weight: 700; color: #dce8ff; }
         #chat-status { font-size: 12px; color: #4a5878; }
@@ -640,6 +677,129 @@
         @media (min-width: 641px) {
             .chat-main { max-width: 780px; }
         }
+
+        /* ===== VIDEO CALL MODAL ===== */
+        #video-call-modal {
+            display: none;
+            position: fixed; inset: 0;
+            background: #060810;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #video-call-modal.open { display: flex; }
+
+        #video-remote {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            background: #0b0f1c;
+        }
+        #video-local {
+            position: absolute;
+            bottom: 120px; right: 16px;
+            width: 110px; height: 150px;
+            border-radius: 16px;
+            object-fit: cover;
+            background: #1c2540;
+            border: 2px solid #00e5ff;
+            z-index: 2;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+        .video-call-top {
+            position: absolute; top: 0; left: 0; right: 0;
+            z-index: 3;
+            padding: 48px 20px 20px;
+            background: linear-gradient(to bottom, rgba(6,8,16,0.9) 0%, transparent 100%);
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+        .video-call-name {
+            font-size: 22px; font-weight: 800; color: #dce8ff;
+        }
+        .video-call-status {
+            font-size: 14px; color: #00e5ff; font-weight: 500;
+        }
+        .video-call-controls {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            z-index: 3;
+            padding: 20px 20px calc(30px + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(6,8,16,0.95) 0%, transparent 100%);
+            display: flex; justify-content: center; gap: 20px; align-items: center;
+        }
+        .vc-btn {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: none; cursor: pointer;
+            font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform .15s, background .15s;
+            flex-shrink: 0;
+        }
+        .vc-btn:active { transform: scale(0.9); }
+        .vc-btn.end {
+            background: #ff3355; color: white;
+            width: 68px; height: 68px; font-size: 26px;
+        }
+        .vc-btn.mute { background: #1c2540; color: #dce8ff; }
+        .vc-btn.mute.active { background: #ff3355; color: white; }
+        .vc-btn.cam { background: #1c2540; color: #dce8ff; }
+        .vc-btn.cam.active { background: #ff3355; color: white; }
+        .vc-btn.speaker { background: #1c2540; color: #dce8ff; }
+
+        /* Incoming call overlay */
+        #incoming-call-modal {
+            display: none;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #0f1526;
+            border: 1px solid #1c2540;
+            border-radius: 24px;
+            padding: 18px 24px;
+            z-index: 9998;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+            width: min(340px, 90vw);
+            animation: slideUp .25s ease;
+        }
+        #incoming-call-modal.open { display: block; }
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(30px); opacity: 0; }
+            to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+        }
+        .incoming-call-top {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+        }
+        .incoming-call-avt {
+            width: 52px; height: 52px; border-radius: 50%;
+            object-fit: cover; border: 2px solid #00e5ff;
+        }
+        .incoming-call-info { flex: 1; }
+        .incoming-call-name { font-size: 17px; font-weight: 800; color: #dce8ff; }
+        .incoming-call-label { font-size: 13px; color: #00e5ff; margin-top: 2px; }
+        .incoming-call-btns {
+            display: flex; gap: 12px;
+        }
+        .incoming-call-btns button {
+            flex: 1; padding: 12px; border-radius: 14px;
+            border: none; font-size: 16px; font-weight: 700;
+            font-family: inherit; cursor: pointer;
+            transition: opacity .15s;
+        }
+        .incoming-call-btns button:active { opacity: 0.75; }
+        .btn-accept-call { background: linear-gradient(135deg, #00e5ff, #0077ee); color: #000; }
+        .btn-decline-call { background: #ff3355; color: white; }
+
+        /* No video placeholder */
+        .video-avatar-placeholder {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #0b0f1c; gap: 14px; z-index: 1;
+        }
+        .video-avatar-placeholder img {
+            width: 100px; height: 100px; border-radius: 50%;
+            object-fit: cover; border: 3px solid #1c2540;
+        }
+        .video-avatar-placeholder span { color: #4a5878; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -693,8 +853,8 @@
                 </div>
             </div>
             <div class="chat-header-actions">
-                <button class="header-action-btn" title="Gọi điện">📞</button>
-                <button class="header-action-btn" title="Gọi video">📹</button>
+                <button class="header-action-btn" title="Gọi điện" onclick="startVoiceCall()">📞</button>
+                <button class="header-action-btn" title="Gọi video" onclick="startVideoCall()">📹</button>
                 <button id="header-settings-btn" class="settings-btn" style="display:none;" onclick="toggleModal(true)" title="Thông tin">⋯</button>
             </div>
         </div>
@@ -708,6 +868,14 @@
             <img id="reply-bar-thumb" src="">
             <div id="reply-bar-text"><span id="reply-bar-name"></span><span id="reply-bar-preview"></span></div>
             <button id="reply-cancel" onclick="cancelReply()">✕</button>
+        </div>
+        <div id="typing-indicator">
+            <div class="typing-bubble">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+            <span class="typing-label" id="typing-label"></span>
         </div>
         <div class="input-area">
             <button class="input-action-btn" title="Ảnh" onclick="document.getElementById('chat-img-input').click()">🖼️</button>
@@ -774,6 +942,40 @@
     </div>
 </div>
 
+
+<!-- ===== VIDEO CALL MODAL ===== -->
+<div id="video-call-modal">
+    <video id="video-remote" autoplay playsinline></video>
+    <div class="video-avatar-placeholder" id="video-remote-placeholder">
+        <img id="video-remote-avt" src="">
+        <span id="video-remote-label">Đang kết nối...</span>
+    </div>
+    <video id="video-local" autoplay playsinline muted></video>
+    <div class="video-call-top">
+        <div class="video-call-name" id="vc-call-name"></div>
+        <div class="video-call-status" id="vc-call-status">Đang gọi...</div>
+    </div>
+    <div class="video-call-controls">
+        <button class="vc-btn mute" id="vc-mute-btn" onclick="toggleVCMute()" title="Tắt/bật mic">🎙️</button>
+        <button class="vc-btn end" onclick="endVideoCall()" title="Kết thúc">📵</button>
+        <button class="vc-btn cam" id="vc-cam-btn" onclick="toggleVCCam()" title="Tắt/bật camera">📷</button>
+    </div>
+</div>
+
+<!-- ===== INCOMING CALL ===== -->
+<div id="incoming-call-modal">
+    <div class="incoming-call-top">
+        <img class="incoming-call-avt" id="incoming-call-avt" src="">
+        <div class="incoming-call-info">
+            <div class="incoming-call-name" id="incoming-call-name"></div>
+            <div class="incoming-call-label">📹 Cuộc gọi video đến</div>
+        </div>
+    </div>
+    <div class="incoming-call-btns">
+        <button class="btn-decline-call" onclick="declineIncomingCall()">📵 Từ chối</button>
+        <button class="btn-accept-call" onclick="acceptIncomingCall()">📹 Trả lời</button>
+    </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -842,14 +1044,27 @@
             loadStickers();
             listenFriendRequests();
             initPushNotifications();
+            listenIncomingCalls();
         } catch(e) { alert(e.message); }
     }
 
     // Track online presence for myself
     function setOnline() {
-        const ref = db.ref('presence/' + myId);
-        ref.set(true);
-        ref.onDisconnect().remove();
+        const presRef = db.ref('presence/' + myId);
+        const lastSeenRef = db.ref('last_seen/' + myId);
+        presRef.set(true);
+        presRef.onDisconnect().remove();
+        lastSeenRef.onDisconnect().set(Date.now());
+    }
+
+    // Format "X phút trước" / "X giờ trước" / ...
+    function formatLastSeen(ts) {
+        if(!ts) return 'Đã offline';
+        const diff = Math.floor((Date.now() - ts) / 1000);
+        if(diff < 60) return 'Vừa hoạt động';
+        if(diff < 3600) return `Hoạt động ${Math.floor(diff/60)} phút trước`;
+        if(diff < 86400) return `Hoạt động ${Math.floor(diff/3600)} giờ trước`;
+        return `Hoạt động ${Math.floor(diff/86400)} ngày trước`;
     }
 
     function loadFriends() {
@@ -923,7 +1138,17 @@
                     // Listen for online presence
                     db.ref('presence/' + name).on('value', snap => {
                         const dot = document.getElementById('dot-' + name);
-                        if(dot) dot.classList.toggle('visible', !!snap.val());
+                        if(dot) {
+                            if(!!snap.val()) {
+                                dot.classList.add('visible');
+                                dot.classList.add('online');
+                                dot.classList.remove('offline');
+                            } else {
+                                dot.classList.add('visible');
+                                dot.classList.remove('online');
+                                dot.classList.add('offline');
+                            }
+                        }
                     });
 
                     // Listen for last message preview + unread count (real-time via Firebase)
@@ -1010,14 +1235,43 @@
         markAsRead(name);
         loadMessages();
         listenSettings();
+        listenTyping(name);
 
         // Lắng nghe trạng thái online của người đang chat
         if(window._headerPresenceRef) { window._headerPresenceRef.off(); }
+        if(window._headerLastSeenRef) { window._headerLastSeenRef.off(); }
+        if(window._headerStatusTimer) { clearInterval(window._headerStatusTimer); }
+
         window._headerPresenceRef = db.ref('presence/' + name);
-        window._headerPresenceRef.on('value', s => {
+        window._headerLastSeenRef = db.ref('last_seen/' + name);
+
+        let _isOnline = false;
+        let _lastSeenTs = null;
+
+        function _updateStatus() {
             const dot = document.getElementById('header-online-dot');
-            if(dot) dot.classList.toggle('on', !!s.val());
+            const statusEl = document.getElementById('chat-status');
+            if(_isOnline) {
+                if(dot) { dot.classList.add('active'); dot.style.background = '#31a24c'; }
+                if(statusEl) statusEl.textContent = 'Đang hoạt động';
+            } else {
+                if(dot) { dot.classList.add('active'); dot.style.background = '#6b7280'; }
+                if(statusEl) statusEl.textContent = _lastSeenTs ? formatLastSeen(_lastSeenTs) : 'Đã offline';
+            }
+        }
+
+        window._headerPresenceRef.on('value', s => {
+            _isOnline = !!s.val();
+            _updateStatus();
         });
+
+        window._headerLastSeenRef.on('value', s => {
+            _lastSeenTs = s.val() || null;
+            _updateStatus();
+        });
+
+        // Refresh "X phút trước" every 30 seconds
+        window._headerStatusTimer = setInterval(() => { if(!_isOnline) _updateStatus(); }, 30000);
     }
 
     function listenSettings() {
@@ -1745,8 +1999,48 @@ messaging.onBackgroundMessage(function(payload) {
         if(e.key === 'Escape') closeLightbox();
     });
 
-    // Override sendMsg to support reply
-    const _origSendMsg = sendMsg;
+    // ===== TYPING INDICATOR =====
+    let _typingTimer = null;
+
+    function startTyping() {
+        if(!toId || !myId) return;
+        db.ref('typing/' + toId + '/' + myId).set(true);
+        clearTimeout(_typingTimer);
+        _typingTimer = setTimeout(stopTyping, 3000);
+    }
+
+    function stopTyping() {
+        if(!toId || !myId) return;
+        db.ref('typing/' + toId + '/' + myId).remove();
+    }
+
+    let _typingListener = null;
+    function listenTyping(name) {
+        if(_typingListener) _typingListener.off();
+        _typingListener = db.ref('typing/' + myId + '/' + name);
+        _typingListener.on('value', snap => {
+            const indicator = document.getElementById('typing-indicator');
+            const label = document.getElementById('typing-label');
+            if(snap.val()) {
+                label.textContent = name + ' đang nhập...';
+                indicator.classList.add('visible');
+            } else {
+                indicator.classList.remove('visible');
+            }
+        });
+    }
+
+    // Attach typing event to input
+    document.getElementById('msg-input').addEventListener('input', function() {
+        if(this.value.length > 0) {
+            startTyping();
+        } else {
+            stopTyping();
+        }
+    });
+
+    // Stop typing when user leaves
+    window.addEventListener('beforeunload', stopTyping);
     window.sendMsg = function() {
         const input = document.getElementById('msg-input');
         const t = input.value.trim();
@@ -1763,8 +2057,289 @@ messaging.onBackgroundMessage(function(payload) {
         db.ref('chats/' + room).push(msgObj);
         sendPushToUser(toId, myId, t);
         input.value = '';
+        stopTyping();
         cancelReply();
     };
+
+    // ===== WEBRTC VIDEO CALL =====
+    const ICE_SERVERS = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+    };
+
+    let vcPeer = null;
+    let vcLocalStream = null;
+    let vcCallRoom = null;
+    let vcIsOffer = false;
+    let vcMuted = false;
+    let vcCamOff = false;
+    let vcSignalRef = null;
+    let vcIncomingCallerId = null;
+    let vcRingTimer = null;
+    let vcStatusTimer = null;
+
+    function getCallRoom(a, b) {
+        return 'videocall_' + (a < b ? a + '_' + b : b + '_' + a);
+    }
+
+    async function startVideoCall() {
+        if(!toId) return alert('Chọn người để gọi trước!');
+        if(vcPeer) return; // already in call
+
+        vcCallRoom = getCallRoom(myId, toId);
+        vcIsOffer = true;
+
+        // Signal the other person
+        const callData = {
+            caller: myId,
+            callee: toId,
+            callerAvt: avatars[myId] || '',
+            state: 'calling',
+            ts: Date.now()
+        };
+        await db.ref('videocalls/' + vcCallRoom).set(callData);
+
+        // Open modal first (local video will show while waiting)
+        await openVideoModal(true);
+
+        // Listen for answer/decline
+        vcSignalRef = db.ref('videocalls/' + vcCallRoom);
+        vcSignalRef.on('value', async snap => {
+            const d = snap.val();
+            if(!d) { endVideoCall(); return; }
+            if(d.state === 'declined') { endVideoCall(); return; }
+            if(d.state === 'ended')    { endVideoCall(); return; }
+            if(d.answer && !vcPeer._answerSet) {
+                vcPeer._answerSet = true;
+                await vcPeer.setRemoteDescription(new RTCSessionDescription(d.answer));
+                document.getElementById('vc-call-status').textContent = 'Đang kết nối...';
+            }
+            if(d.callee_ice) {
+                const iceArr = Object.values(d.callee_ice);
+                for(const ice of iceArr) {
+                    try { await vcPeer.addIceCandidate(new RTCIceCandidate(ice)); } catch(e) {}
+                }
+            }
+        });
+
+        // Create offer
+        await createOffer();
+    }
+
+    async function acceptIncomingCall() {
+        closeIncomingCallUI();
+        if(!vcIncomingCallerId) return;
+
+        vcCallRoom = getCallRoom(myId, vcIncomingCallerId);
+        vcIsOffer = false;
+
+        await db.ref('videocalls/' + vcCallRoom).update({ state: 'accepted' });
+        await openVideoModal(false);
+
+        vcSignalRef = db.ref('videocalls/' + vcCallRoom);
+        vcSignalRef.on('value', async snap => {
+            const d = snap.val();
+            if(!d) { endVideoCall(); return; }
+            if(d.state === 'ended') { endVideoCall(); return; }
+            if(d.offer && !vcPeer._offerSet) {
+                vcPeer._offerSet = true;
+                await vcPeer.setRemoteDescription(new RTCSessionDescription(d.offer));
+                const answer = await vcPeer.createAnswer();
+                await vcPeer.setLocalDescription(answer);
+                await db.ref('videocalls/' + vcCallRoom).update({ answer: { type: answer.type, sdp: answer.sdp } });
+            }
+            if(d.caller_ice) {
+                const iceArr = Object.values(d.caller_ice);
+                for(const ice of iceArr) {
+                    try { await vcPeer.addIceCandidate(new RTCIceCandidate(ice)); } catch(e) {}
+                }
+            }
+        });
+    }
+
+    async function openVideoModal(isOffer) {
+        // Get local media
+        try {
+            vcLocalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch(e) {
+            try {
+                vcLocalStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            } catch(e2) {
+                alert('Không thể truy cập camera/mic: ' + e2.message);
+                return;
+            }
+        }
+
+        document.getElementById('video-local').srcObject = vcLocalStream;
+
+        // Setup peer
+        vcPeer = new RTCPeerConnection(ICE_SERVERS);
+
+        vcLocalStream.getTracks().forEach(track => vcPeer.addTrack(track, vcLocalStream));
+
+        vcPeer.ontrack = (e) => {
+            const remoteVideo = document.getElementById('video-remote');
+            remoteVideo.srcObject = e.streams[0];
+            document.getElementById('video-remote-placeholder').style.display = 'none';
+            document.getElementById('vc-call-status').textContent = 'Đang kết nối...';
+            remoteVideo.onloadedmetadata = () => {
+                document.getElementById('vc-call-status').textContent = '● Đang gọi';
+            };
+        };
+
+        vcPeer.onconnectionstatechange = () => {
+            const state = vcPeer.connectionState;
+            if(state === 'connected') {
+                document.getElementById('vc-call-status').textContent = '● Đang gọi';
+                document.getElementById('video-remote-placeholder').style.display = 'none';
+            } else if(state === 'disconnected' || state === 'failed' || state === 'closed') {
+                endVideoCall();
+            }
+        };
+
+        vcPeer.onicecandidate = async (e) => {
+            if(e.candidate) {
+                const iceKey = isOffer ? 'caller_ice' : 'callee_ice';
+                await db.ref('videocalls/' + vcCallRoom + '/' + iceKey).push({
+                    candidate: e.candidate.candidate,
+                    sdpMid: e.candidate.sdpMid,
+                    sdpMLineIndex: e.candidate.sdpMLineIndex
+                });
+            }
+        };
+
+        // Show modal
+        const partnerName = isOffer ? toId : vcIncomingCallerId;
+        document.getElementById('vc-call-name').textContent = partnerName;
+        document.getElementById('vc-call-status').textContent = isOffer ? 'Đang gọi...' : 'Đang kết nối...';
+        document.getElementById('video-remote-avt').src = avatars[partnerName] || '';
+        document.getElementById('video-remote-label').textContent = isOffer ? 'Đang đổ chuông...' : 'Đang kết nối...';
+        document.getElementById('video-remote-placeholder').style.display = 'flex';
+        document.getElementById('vc-mute-btn').classList.remove('active');
+        document.getElementById('vc-cam-btn').classList.remove('active');
+        vcMuted = false; vcCamOff = false;
+        document.getElementById('video-call-modal').classList.add('open');
+    }
+
+    async function createOffer() {
+        if(!vcPeer) return;
+        const offer = await vcPeer.createOffer();
+        await vcPeer.setLocalDescription(offer);
+        await db.ref('videocalls/' + vcCallRoom).update({
+            offer: { type: offer.type, sdp: offer.sdp }
+        });
+    }
+
+    function declineIncomingCall() {
+        closeIncomingCallUI();
+        if(vcIncomingCallerId) {
+            const room = getCallRoom(myId, vcIncomingCallerId);
+            db.ref('videocalls/' + room).update({ state: 'declined' });
+        }
+        vcIncomingCallerId = null;
+    }
+
+    function endVideoCall() {
+        if(vcSignalRef) { vcSignalRef.off(); vcSignalRef = null; }
+        if(vcCallRoom) {
+            db.ref('videocalls/' + vcCallRoom).update({ state: 'ended' });
+            // Clean up after 3 sec
+            setTimeout(() => db.ref('videocalls/' + vcCallRoom).remove(), 3000);
+        }
+        if(vcPeer) { vcPeer.close(); vcPeer = null; }
+        if(vcLocalStream) { vcLocalStream.getTracks().forEach(t => t.stop()); vcLocalStream = null; }
+        document.getElementById('video-call-modal').classList.remove('open');
+        document.getElementById('video-remote').srcObject = null;
+        document.getElementById('video-local').srcObject = null;
+        vcCallRoom = null; vcIsOffer = false;
+        vcIncomingCallerId = null;
+        closeIncomingCallUI();
+    }
+
+    function toggleVCMute() {
+        if(!vcLocalStream) return;
+        vcMuted = !vcMuted;
+        vcLocalStream.getAudioTracks().forEach(t => t.enabled = !vcMuted);
+        const btn = document.getElementById('vc-mute-btn');
+        btn.textContent = vcMuted ? '🔇' : '🎙️';
+        btn.classList.toggle('active', vcMuted);
+    }
+
+    function toggleVCCam() {
+        if(!vcLocalStream) return;
+        vcCamOff = !vcCamOff;
+        vcLocalStream.getVideoTracks().forEach(t => t.enabled = !vcCamOff);
+        const btn = document.getElementById('vc-cam-btn');
+        btn.textContent = vcCamOff ? '🚫' : '📷';
+        btn.classList.toggle('active', vcCamOff);
+    }
+
+    function startVoiceCall() {
+        alert('Tính năng gọi điện thoại sẽ được thêm sau. Hãy dùng gọi video nhé! 📹');
+    }
+
+    function closeIncomingCallUI() {
+        document.getElementById('incoming-call-modal').classList.remove('open');
+        if(vcRingTimer) { clearInterval(vcRingTimer); vcRingTimer = null; }
+    }
+
+    // ===== LISTEN FOR INCOMING CALLS =====
+    function listenIncomingCalls() {
+        db.ref('videocalls').on('child_added', snap => {
+            const d = snap.val();
+            if(!d) return;
+            // Is this call for me?
+            if(d.callee !== myId) return;
+            if(d.state !== 'calling') return;
+            if(vcPeer) return; // already in call
+
+            vcIncomingCallerId = d.caller;
+            document.getElementById('incoming-call-name').textContent = d.caller;
+            document.getElementById('incoming-call-avt').src = d.callerAvt || avatars[d.caller] || 'https://via.placeholder.com/52';
+            document.getElementById('incoming-call-modal').classList.add('open');
+
+            // Auto-dismiss if caller cancels
+            const callKey = snap.key;
+            const callRef = db.ref('videocalls/' + callKey);
+            callRef.on('value', s => {
+                if(!s.exists() || (s.val() && s.val().state !== 'calling')) {
+                    if(s.val() && s.val().state === 'calling') return;
+                    closeIncomingCallUI();
+                    vcIncomingCallerId = null;
+                    callRef.off();
+                }
+            });
+        });
+
+        // Also listen for changes on existing calls (in case child_added missed it)
+        db.ref('videocalls').on('child_changed', snap => {
+            const d = snap.val();
+            if(!d || d.callee !== myId) return;
+            if(d.state === 'calling' && !vcPeer && !document.getElementById('incoming-call-modal').classList.contains('open')) {
+                vcIncomingCallerId = d.caller;
+                document.getElementById('incoming-call-name').textContent = d.caller;
+                document.getElementById('incoming-call-avt').src = d.callerAvt || avatars[d.caller] || '';
+                document.getElementById('incoming-call-modal').classList.add('open');
+            }
+        });
+    }
+
+    // Start listening for calls after login
+    const _origLoadFriends = loadFriends;
+    const _origStartApp = startApp;
+    // Patch: after auth, also listen for incoming calls
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            const savedId = localStorage.getItem('nt_myId');
+            if(savedId) {
+                // listenIncomingCalls called after myId is set (handled by patching openChat flow)
+                setTimeout(listenIncomingCalls, 1500);
+            }
+        }
+    });
+
 
 
 
