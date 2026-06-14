@@ -94,7 +94,7 @@
             box-sizing: border-box;
         }
 
-        /* ===== SIDEBAR — Messenger style ===== */
+        /* ===== SIDEBAR — redesigned per sketch ===== */
         .sidebar {
             width: 360px;
             height: 100%;
@@ -105,57 +105,66 @@
             flex-shrink: 0;
             overflow: hidden;
         }
+
+        /* Header: Avatar + Name in a card */
         .sidebar-header {
-            padding: 16px 16px 10px;
-            display: flex; align-items: center; gap: 10px;
+            padding: 14px 16px 10px;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid #1c2540;
         }
-        .sidebar-title { font-size: 24px; font-weight: 800; font-family: "Orbitron", monospace; color: #00e5ff; flex: 1; }
         #my-avatar {
-            width: 36px; height: 36px; border-radius: 50%;
+            width: 44px; height: 44px; border-radius: 50%;
             object-fit: cover; cursor: pointer;
-            border: 2px solid #00e5ff;
+            border: 2.5px solid #00e5ff;
+            flex-shrink: 0;
+        }
+        .sidebar-title {
+            font-size: 17px; font-weight: 800;
+            color: #dce8ff; flex: 1;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .exit-btn {
-            border: none; background: #0f1526; color: #4a5878;
-            font-size: 12px; font-family: inherit; cursor: pointer;
-            padding: 5px 10px; border-radius: 20px; font-weight: 600;
+            border: none; background: #1c2540; color: #4a5878;
+            font-size: 11px; font-family: inherit; cursor: pointer;
+            padding: 4px 9px; border-radius: 20px; font-weight: 600;
+            flex-shrink: 0;
         }
-        /* Search bar */
-        .sidebar-search {
-            padding: 6px 14px 10px;
+
+        /* Search + Add friend — same row */
+        .sidebar-top-bar {
+            padding: 10px 14px 8px;
+            display: flex; gap: 8px; align-items: center;
         }
-        .sidebar-search input {
-            width: 100%; padding: 8px 16px; border: none;
-            border-radius: 20px; font-size: 15px;
-            font-family: inherit; outline: none;
+        .sidebar-top-bar input {
+            flex: 1; padding: 9px 14px;
+            border: 1.5px solid #1c2540; border-radius: 22px;
+            font-size: 14px; font-family: inherit; outline: none;
             background: #0f1526; color: #dce8ff;
+            min-width: 0;
         }
-        /* Add friend */
-        .sidebar-add {
-            padding: 6px 14px 10px;
-            display: flex; gap: 7px; border-bottom: 1px solid #1c2540;
-        }
-        .sidebar-add input {
-            flex: 1; padding: 8px 12px; border: 1.5px solid #1c2540;
-            border-radius: 20px; font-size: 13px;
-            font-family: inherit; outline: none; background: #0f1526; color: #dce8ff;
-        }
-        .sidebar-add input:focus { border-color: #00e5ff; }
-        .sidebar-add button {
-            padding: 8px 12px; background: linear-gradient(135deg, #00e5ff, #0077ee); color: #000;
-            border: none; border-radius: 20px; font-size: 12px;
+        .sidebar-top-bar input:focus { border-color: #00e5ff; }
+        .sidebar-top-bar button:not(.notif-bell-btn) {
+            padding: 9px 14px;
+            background: linear-gradient(135deg, #00e5ff, #0077ee); color: #000;
+            border: none; border-radius: 22px; font-size: 13px;
             font-weight: 700; font-family: inherit; cursor: pointer;
+            white-space: nowrap; flex-shrink: 0;
         }
+
         /* User list */
         #user-list { flex: 1; overflow-y: auto; }
 
         .user-item {
-            padding: 8px 14px;
+            padding: 12px 14px;
             display: flex; align-items: center; gap: 12px;
-            cursor: pointer; transition: background .1s;
-            border-radius: 10px; margin: 2px 6px;
+            cursor: pointer; transition: background .15s, border-color .15s;
+            border-radius: 14px;
+            margin: 6px 10px;
+            background: #0f1526;
+            border: 1px solid #1c2540;
         }
-        .user-item:hover, .user-item.active { background: #0f1526; }
+        .user-item:hover { background: #141b30; border-color: #2a3560; }
+        .user-item.active { background: #141b30; border-color: #00e5ff55; }
         .friend-list-avt {
             width: 56px; height: 56px; border-radius: 50%;
             object-fit: cover; flex-shrink: 0; position: relative;
@@ -176,54 +185,18 @@
             position: absolute; bottom: 2px; right: 2px;
             width: 13px; height: 13px; border-radius: 50%;
             background: #31a24c; border: 2.5px solid #0b0f1c;
-            transition: background 0.3s;
         }
         .online-dot.visible { display: block; }
-        .online-dot.online { background: #31a24c; }
-        .online-dot.offline { background: #6b7280; }
-
-        /* ===== TYPING INDICATOR ===== */
-        #typing-indicator {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 16px 6px;
-        }
-        #typing-indicator.visible { display: flex; }
-        .typing-bubble {
-            background: #0f1526;
-            border: 1px solid #1c2540;
-            border-radius: 20px;
-            padding: 8px 14px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .typing-dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: #4a5878;
-            animation: typingBounce 1.3s infinite ease-in-out;
-        }
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
-        .typing-dot:nth-child(2) { animation-delay: 0.18s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.36s; }
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-5px); opacity: 1; }
-        }
-        .typing-label {
-            font-size: 12px; color: #4a5878; font-style: italic;
-        }
 
         /* Unread badge */
         .friend-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
         .unread-badge {
             display: none;
-            background: #ff00cc; color: white;
+            background: #e53935; color: white;
             font-size: 11px; font-weight: 800;
-            border-radius: 20px; min-width: 20px; height: 20px;
-            padding: 0 5px; text-align: center; line-height: 20px;
+            border-radius: 50%; min-width: 22px; height: 22px;
+            padding: 0 5px; text-align: center; line-height: 22px;
+            box-shadow: 0 0 0 2px #0b0f1c;
         }
         .unread-badge.visible { display: block; }
         .friend-name.unread-name { color: #dce8ff; font-weight: 800; }
@@ -295,19 +268,44 @@
             display: none; border-radius: 50%;
         }
         .back-btn:hover { background: #0f1526; }
+        .back-btn { position: relative; }
+        #back-unread-badge {
+            display: none;
+            position: absolute;
+            top: -5px; right: -5px;
+            background: #ff00cc; color: #fff;
+            font-size: 10px; font-weight: 800;
+            border-radius: 50%;
+            min-width: 18px; height: 18px;
+            align-items: center; justify-content: center;
+            padding: 0 3px;
+            box-shadow: 0 0 0 2px #0d1226;
+            pointer-events: none;
+        }
         #header-avt { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: none; }
         #header-avt-wrap { position: relative; flex-shrink: 0; display: none; }
         #header-avt-wrap #header-avt { display: block; }
         #header-online-dot {
             position: absolute; bottom: 1px; right: 1px;
             width: 11px; height: 11px; border-radius: 50%;
-            background: #6b7280; border: 2px solid #0b0f1c;
+            background: #00e5ff; border: 2px solid #0b0f1c;
             display: none;
         }
-        #header-online-dot.active { display: block; }
+        #header-online-dot.on { display: block; }
         .header-info { display: flex; flex-direction: column; }
         #chat-title { font-size: 15px; font-weight: 700; color: #dce8ff; }
-        #chat-status { font-size: 12px; color: #4a5878; }
+        #chat-status { font-size: 12px; color: #4a5878; display: flex; align-items: center; gap: 4px; }
+        .typing-indicator { display: inline-flex; align-items: center; gap: 3px; }
+        .typing-indicator span {
+            width: 4px; height: 4px; border-radius: 50%; background: #00e5ff;
+            display: inline-block; animation: typingBounce 1.2s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
         .chat-header-actions { display: flex; gap: 4px; }
         .header-action-btn {
             border: none; background: none; font-size: 18px; cursor: pointer;
@@ -342,6 +340,17 @@
             text-align: center; font-size: 12px;
             color: #4a5878; margin: 10px 0 6px;
         }
+        .date-divider {
+            text-align: center; font-size: 12px; font-weight: 700;
+            color: #4a5878; margin: 14px 0 8px;
+            position: relative;
+        }
+        .date-divider::before, .date-divider::after {
+            content: ''; position: absolute; top: 50%;
+            width: 28%; height: 1px; background: #1c2540;
+        }
+        .date-divider::before { left: 8px; }
+        .date-divider::after { right: 8px; }
 
         /* BUBBLES */
         .msg-row { display: flex; gap: 6px; align-items: flex-start; max-width: 75%; min-width: 0; }
@@ -526,6 +535,29 @@
             font-family: inherit; cursor: pointer; margin-top: 4px;
         }
 
+        /* ===== NOTIFICATION BELL ===== */
+        .notif-bell-btn {
+            position: relative;
+            flex-shrink: 0;
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: #1c2540;
+            color: #dce8ff;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+            transition: background .15s, transform .1s;
+            padding: 0;
+        }
+        .notif-bell-btn:hover { background: #232d50; }
+        .notif-bell-btn:active { transform: scale(0.9); }
+        .notif-bell-btn .req-badge {
+            position: absolute;
+            top: 2px; right: 2px;
+            margin-left: 0;
+        }
+
         /* ===== FRIEND REQUESTS ===== */
         .req-badge {
             background: #ff00cc; color: white; font-size: 11px; font-weight: 800;
@@ -533,14 +565,6 @@
             align-items: center; justify-content: center; margin-left: 4px;
         }
         .req-badge.visible { display: inline-flex; }
-        #req-tab-btn {
-            border: none; background: none; font-size: 13px; font-weight: 700;
-            color: #4a5878; cursor: pointer; padding: 6px 10px;
-            border-radius: 20px; font-family: inherit;
-            display: flex; align-items: center; gap: 4px;
-            transition: background .1s;
-        }
-        #req-tab-btn:hover { background: #0f1526; }
         #req-panel {
             display: none; flex-direction: column; gap: 2px;
             padding: 6px 10px; border-top: 1px solid #1c2540;
@@ -677,130 +701,6 @@
         @media (min-width: 641px) {
             .chat-main { max-width: 780px; }
         }
-
-        /* ===== VIDEO CALL MODAL ===== */
-        #video-call-modal {
-            display: none;
-            position: fixed; inset: 0;
-            background: #060810;
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        #video-call-modal.open { display: flex; }
-
-        #video-remote {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            background: #0b0f1c;
-        }
-        #video-local {
-            position: absolute;
-            bottom: 120px; right: 16px;
-            width: 110px; height: 150px;
-            border-radius: 16px;
-            object-fit: cover;
-            background: #1c2540;
-            border: 2px solid #00e5ff;
-            z-index: 2;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            transform: scaleX(-1);
-        }
-        .video-call-top {
-            position: absolute; top: 0; left: 0; right: 0;
-            z-index: 3;
-            padding: 48px 20px 20px;
-            background: linear-gradient(to bottom, rgba(6,8,16,0.9) 0%, transparent 100%);
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
-        }
-        .video-call-name {
-            font-size: 22px; font-weight: 800; color: #dce8ff;
-        }
-        .video-call-status {
-            font-size: 14px; color: #00e5ff; font-weight: 500;
-        }
-        .video-call-controls {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            z-index: 3;
-            padding: 20px 20px calc(30px + env(safe-area-inset-bottom));
-            background: linear-gradient(to top, rgba(6,8,16,0.95) 0%, transparent 100%);
-            display: flex; justify-content: center; gap: 20px; align-items: center;
-        }
-        .vc-btn {
-            width: 60px; height: 60px;
-            border-radius: 50%;
-            border: none; cursor: pointer;
-            font-size: 24px;
-            display: flex; align-items: center; justify-content: center;
-            transition: transform .15s, background .15s;
-            flex-shrink: 0;
-        }
-        .vc-btn:active { transform: scale(0.9); }
-        .vc-btn.end {
-            background: #ff3355; color: white;
-            width: 68px; height: 68px; font-size: 26px;
-        }
-        .vc-btn.mute { background: #1c2540; color: #dce8ff; }
-        .vc-btn.mute.active { background: #ff3355; color: white; }
-        .vc-btn.cam { background: #1c2540; color: #dce8ff; }
-        .vc-btn.cam.active { background: #ff3355; color: white; }
-        .vc-btn.speaker { background: #1c2540; color: #dce8ff; }
-
-        /* Incoming call overlay */
-        #incoming-call-modal {
-            display: none;
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: #0f1526;
-            border: 1px solid #1c2540;
-            border-radius: 24px;
-            padding: 18px 24px;
-            z-index: 9998;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.8);
-            width: min(340px, 90vw);
-            animation: slideUp .25s ease;
-        }
-        #incoming-call-modal.open { display: block; }
-        @keyframes slideUp {
-            from { transform: translateX(-50%) translateY(30px); opacity: 0; }
-            to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
-        }
-        .incoming-call-top {
-            display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
-        }
-        .incoming-call-avt {
-            width: 52px; height: 52px; border-radius: 50%;
-            object-fit: cover; border: 2px solid #00e5ff;
-        }
-        .incoming-call-info { flex: 1; }
-        .incoming-call-name { font-size: 17px; font-weight: 800; color: #dce8ff; }
-        .incoming-call-label { font-size: 13px; color: #00e5ff; margin-top: 2px; }
-        .incoming-call-btns {
-            display: flex; gap: 12px;
-        }
-        .incoming-call-btns button {
-            flex: 1; padding: 12px; border-radius: 14px;
-            border: none; font-size: 16px; font-weight: 700;
-            font-family: inherit; cursor: pointer;
-            transition: opacity .15s;
-        }
-        .incoming-call-btns button:active { opacity: 0.75; }
-        .btn-accept-call { background: linear-gradient(135deg, #00e5ff, #0077ee); color: #000; }
-        .btn-decline-call { background: #ff3355; color: white; }
-
-        /* No video placeholder */
-        .video-avatar-placeholder {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: #0b0f1c; gap: 14px; z-index: 1;
-        }
-        .video-avatar-placeholder img {
-            width: 100px; height: 100px; border-radius: 50%;
-            object-fit: cover; border: 3px solid #1c2540;
-        }
-        .video-avatar-placeholder span { color: #4a5878; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -818,21 +718,23 @@
 <div id="chat-screen">
     <div class="sidebar">
         <div class="sidebar-header">
-            <span class="sidebar-title" id="sidebar-title">Đoạn chat</span>
-            <img id="my-avatar" src="https://via.placeholder.com/36" onclick="document.getElementById('fileInput').click()" title="Đổi ảnh đại diện">
+            <img id="my-avatar" src="https://via.placeholder.com/44" onclick="document.getElementById('fileInput').click()" title="Đổi ảnh đại diện">
             <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="uploadImage(this)">
+            <span class="sidebar-title" id="sidebar-title">Tên</span>
             <button class="exit-btn" onclick="localStorage.removeItem('nt_myId'); location.reload()">Thoát</button>
         </div>
-        <div class="sidebar-search">
-            <input type="text" placeholder="🔍  Tìm kiếm đoạn chat ">
+        <div class="sidebar-top-bar">
+            <input type="text" id="friend-name" placeholder="🔍 Tìm bạn...">
+            <button onclick="addFriend()">Gửi</button>
+            <button class="notif-bell-btn" id="notif-bell-btn" onclick="toggleReqPanel()" title="Thông báo lời mời kết bạn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C10.3431 2 9 3.34315 9 5V5.27178C6.62459 6.17313 5 8.45789 5 11V17L3 19V20H21V19L19 17V11C19 8.45789 17.3754 6.17313 15 5.27178V5C15 3.34315 13.6569 2 12 2Z" fill="currentColor" opacity="0.15"/>
+                    <path d="M12 2C10.3431 2 9 3.34315 9 5V5.27178C6.62459 6.17313 5 8.45789 5 11V17L3 19V20H21V19L19 17V11C19 8.45789 17.3754 6.17313 15 5.27178V5C15 3.34315 13.6569 2 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M10 20C10 21.1046 10.8954 22 12 22C13.1046 22 14 21.1046 14 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span class="req-badge" id="req-badge">0</span>
+            </button>
         </div>
-        <div class="sidebar-add">
-            <input type="text" id="friend-name" placeholder="Nhập tên người dùng...">
-            <button onclick="addFriend()">+ Kết bạn</button>
-        </div>
-        <button id="req-tab-btn" onclick="toggleReqPanel()">
-            🔔 Lời mời kết bạn <span class="req-badge" id="req-badge">0</span>
-        </button>
         <div id="req-panel">
             <div id="req-list-incoming"></div>
             <div id="req-list-outgoing"></div>
@@ -843,7 +745,9 @@
     <div class="chat-main">
         <div class="chat-header">
             <div class="chat-header-left">
-                <button class="back-btn" onclick="goBack()">←</button>
+                <button class="back-btn" onclick="goBack()">
+                    <span id="back-unread-badge"></span>←
+                </button>
                 <div id="header-avt-wrap">
                     <img id="header-avt" src="">
                     <div id="header-online-dot"></div>
@@ -854,8 +758,7 @@
                 </div>
             </div>
             <div class="chat-header-actions">
-                <button class="header-action-btn" title="Gọi điện" onclick="startVoiceCall()">📞</button>
-                <button class="header-action-btn" title="Gọi video" onclick="startVideoCall()">📹</button>
+                <button class="header-action-btn" id="call-btn" title="Gọi điện" onclick="startCall()" style="display:none;">📞</button>
                 <button id="header-settings-btn" class="settings-btn" style="display:none;" onclick="toggleModal(true)" title="Thông tin">⋯</button>
             </div>
         </div>
@@ -870,19 +773,11 @@
             <div id="reply-bar-text"><span id="reply-bar-name"></span><span id="reply-bar-preview"></span></div>
             <button id="reply-cancel" onclick="cancelReply()">✕</button>
         </div>
-        <div id="typing-indicator">
-            <div class="typing-bubble">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-            <span class="typing-label" id="typing-label"></span>
-        </div>
         <div class="input-area">
             <button class="input-action-btn" title="Ảnh" onclick="document.getElementById('chat-img-input').click()">🖼️</button>
             <input type="file" id="chat-img-input" accept="image/*" style="display:none;" onchange="sendImage(this)">
 
-            <input type="text" id="msg-input" placeholder="Aa" onkeypress="if(event.key==='Enter') sendMsg()">
+            <input type="text" id="msg-input" placeholder="Aa" onkeypress="if(event.key==='Enter') sendMsg()" oninput="onTyping()">
             <div class="sticker-wrapper">
                 <div id="sticker-btn" class="input-action-btn" title="Sticker" onclick="toggleStickerPicker(event)" style="cursor:pointer;user-select:none;">🏷️</div>
                 <div id="sticker-overlay" onclick="closeAllPickers()" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.5);"></div>
@@ -904,6 +799,28 @@
 </div>
 
 
+
+
+<!-- Call Modal -->
+<div id="call-modal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(6,8,16,0.97); flex-direction:column; align-items:center; justify-content:center; gap:24px;">
+    <div style="text-align:center;">
+        <img id="call-modal-avt" src="" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #00e5ff;box-shadow:0 0 30px rgba(0,229,255,0.4);">
+        <div id="call-modal-name" style="font-size:22px;font-weight:800;color:#dce8ff;margin-top:14px;"></div>
+        <div id="call-modal-status" style="font-size:15px;color:#4a5878;margin-top:6px;"></div>
+    </div>
+    <audio id="remote-audio" autoplay playsinline></audio>
+    <audio id="local-audio" muted autoplay playsinline></audio>
+    <div id="call-ripple" style="position:absolute;width:130px;height:130px;border-radius:50%;border:2px solid rgba(0,229,255,0.3);animation:ripple 1.8s infinite;top:50%;left:50%;transform:translate(-50%,-70%);pointer-events:none;"></div>
+    <div id="call-ripple2" style="position:absolute;width:170px;height:170px;border-radius:50%;border:2px solid rgba(0,229,255,0.15);animation:ripple 1.8s infinite 0.6s;top:50%;left:50%;transform:translate(-50%,-70%);pointer-events:none;"></div>
+    <div style="display:flex;gap:24px;margin-top:20px;">
+        <button id="call-mute-btn" onclick="toggleMute()" style="width:64px;height:64px;border-radius:50%;border:none;background:#1c2540;color:#dce8ff;font-size:24px;cursor:pointer;">🎤</button>
+        <button onclick="endCall()" style="width:72px;height:72px;border-radius:50%;border:none;background:#e53935;color:white;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(229,57,53,0.5);">📵</button>
+        <button id="call-speaker-btn" onclick="toggleSpeaker()" style="width:64px;height:64px;border-radius:50%;border:none;background:#1c2540;color:#dce8ff;font-size:24px;cursor:pointer;">🔊</button>
+    </div>
+</div>
+<style>
+@keyframes ripple { 0% { transform:translate(-50%,-70%) scale(1); opacity:1; } 100% { transform:translate(-50%,-70%) scale(1.8); opacity:0; } }
+</style>
 
 <!-- Lightbox xem ảnh toàn màn hình -->
 <div id="lightbox" onclick="closeLightbox()">
@@ -931,11 +848,6 @@
                 <div class="color-dot" style="background:#ff9800" onclick="changeThemeColor('#ff9800')"></div>
             </div>
         </div>
-        <div class="setting-item">
-            <label class="setting-label">Ảnh nền khung chat</label>
-            <input type="file" accept="image/*" onchange="uploadBackground(this)" style="font-size:12px; width:100%;">
-            <button onclick="removeBackground()" style="margin-top:8px; color:#4a5878; border:none; background:none; cursor:pointer; font-size:13px; font-family:inherit;">✕ Xóa ảnh nền</button>
-        </div>
         <div class="setting-item" style="border-bottom:none; margin-bottom:12px;">
             <button onclick="deleteFriend()" class="delete-friend-btn">🗑️ Hủy kết bạn</button>
         </div>
@@ -943,40 +855,6 @@
     </div>
 </div>
 
-
-<!-- ===== VIDEO CALL MODAL ===== -->
-<div id="video-call-modal">
-    <video id="video-remote" autoplay playsinline></video>
-    <div class="video-avatar-placeholder" id="video-remote-placeholder">
-        <img id="video-remote-avt" src="">
-        <span id="video-remote-label">Đang kết nối...</span>
-    </div>
-    <video id="video-local" autoplay playsinline muted></video>
-    <div class="video-call-top">
-        <div class="video-call-name" id="vc-call-name"></div>
-        <div class="video-call-status" id="vc-call-status">Đang gọi...</div>
-    </div>
-    <div class="video-call-controls">
-        <button class="vc-btn mute" id="vc-mute-btn" onclick="toggleVCMute()" title="Tắt/bật mic">🎙️</button>
-        <button class="vc-btn end" onclick="endVideoCall()" title="Kết thúc">📵</button>
-        <button class="vc-btn cam" id="vc-cam-btn" onclick="toggleVCCam()" title="Tắt/bật camera">📷</button>
-    </div>
-</div>
-
-<!-- ===== INCOMING CALL ===== -->
-<div id="incoming-call-modal">
-    <div class="incoming-call-top">
-        <img class="incoming-call-avt" id="incoming-call-avt" src="">
-        <div class="incoming-call-info">
-            <div class="incoming-call-name" id="incoming-call-name"></div>
-            <div class="incoming-call-label">📹 Cuộc gọi video đến</div>
-        </div>
-    </div>
-    <div class="incoming-call-btns">
-        <button class="btn-decline-call" onclick="declineIncomingCall()">📵 Từ chối</button>
-        <button class="btn-accept-call" onclick="acceptIncomingCall()">📹 Trả lời</button>
-    </div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -1019,6 +897,7 @@
                 loadFriends();
                 loadStickers();
                 listenFriendRequests();
+                listenIncomingCalls();
             }
         }
     });
@@ -1051,21 +930,22 @@
 
     // Track online presence for myself
     function setOnline() {
-        const presRef = db.ref('presence/' + myId);
-        const lastSeenRef = db.ref('last_seen/' + myId);
-        presRef.set(true);
-        presRef.onDisconnect().remove();
-        lastSeenRef.onDisconnect().set(Date.now());
+        const ref = db.ref('presence/' + myId);
+        ref.set({ online: true, ts: Date.now() });
+        ref.onDisconnect().set({ online: false, ts: Date.now() });
+        // Keep ts fresh every 30s
+        setInterval(() => {
+            if(myId) db.ref('presence/' + myId).update({ ts: Date.now() });
+        }, 30000);
     }
 
-    // Format "X phút trước" / "X giờ trước" / ...
     function formatLastSeen(ts) {
-        if(!ts) return 'Đã offline';
+        if(!ts) return 'Không xác định';
         const diff = Math.floor((Date.now() - ts) / 1000);
-        if(diff < 60) return 'Vừa hoạt động';
-        if(diff < 3600) return `Hoạt động ${Math.floor(diff/60)} phút trước`;
-        if(diff < 86400) return `Hoạt động ${Math.floor(diff/3600)} giờ trước`;
-        return `Hoạt động ${Math.floor(diff/86400)} ngày trước`;
+        if(diff < 60) return 'Hoạt động vài giây trước';
+        if(diff < 3600) return 'Hoạt động ' + Math.floor(diff/60) + ' phút trước';
+        if(diff < 86400) return 'Hoạt động ' + Math.floor(diff/3600) + ' giờ trước';
+        return 'Hoạt động ' + Math.floor(diff/86400) + ' ngày trước';
     }
 
     function loadFriends() {
@@ -1139,17 +1019,7 @@
                     // Listen for online presence
                     db.ref('presence/' + name).on('value', snap => {
                         const dot = document.getElementById('dot-' + name);
-                        if(dot) {
-                            if(!!snap.val()) {
-                                dot.classList.add('visible');
-                                dot.classList.add('online');
-                                dot.classList.remove('offline');
-                            } else {
-                                dot.classList.add('visible');
-                                dot.classList.remove('online');
-                                dot.classList.add('offline');
-                            }
-                        }
+                        if(dot) dot.classList.toggle('visible', !!snap.val());
                     });
 
                     // Listen for last message preview + unread count (real-time via Firebase)
@@ -1167,19 +1037,22 @@
                         if(lastMsg) {
                             const pre = document.getElementById('preview-' + name);
                             const tEl = document.getElementById('time-' + name);
-                            if(pre) pre.textContent = (lastMsg.s === myId ? 'Bạn: ' : '') + (lastMsg.img ? '🖼️ Ảnh' : lastMsg.sticker ? '🏷️ Sticker' : lastMsg.t);
-                            if(tEl) tEl.textContent = lastMsg.time || '';
+                            if(pre) pre.textContent = 'Nhấn để trò chuyện';
+                            // time hidden intentionally
                         }
                         const badgeEl = document.getElementById('badge-' + name);
                         const nameLabel = document.getElementById('fname-' + name);
                         const preEl = document.getElementById('preview-' + name);
                         if(badgeEl) {
+                            badgeEl.setAttribute('data-count', unread);
                             const show = unread > 0 && toId !== name;
                             badgeEl.textContent = unread > 99 ? '99+' : unread;
                             badgeEl.classList.toggle('visible', show);
                             if(nameLabel) nameLabel.classList.toggle('unread-name', show);
                             if(preEl) preEl.classList.toggle('unread-preview', show);
                         }
+                        // Update back-btn total unread badge (messages from others while in chat)
+                        _updateBackBadge();
                     }
 
                     db.ref('chats/' + room).limitToLast(100).on('value', snap => {
@@ -1235,44 +1108,47 @@
 
         markAsRead(name);
         loadMessages();
+        _reEvalAllBadges();
+        setTimeout(_updateBackBadge, 300);
         listenSettings();
-        listenTyping(name);
 
         // Lắng nghe trạng thái online của người đang chat
         if(window._headerPresenceRef) { window._headerPresenceRef.off(); }
-        if(window._headerLastSeenRef) { window._headerLastSeenRef.off(); }
-        if(window._headerStatusTimer) { clearInterval(window._headerStatusTimer); }
-
+        if(window._headerTypingRef) { window._headerTypingRef.off(); }
         window._headerPresenceRef = db.ref('presence/' + name);
-        window._headerLastSeenRef = db.ref('last_seen/' + name);
-
-        let _isOnline = false;
-        let _lastSeenTs = null;
-
-        function _updateStatus() {
+        window._headerPresenceRef.on('value', s => {
             const dot = document.getElementById('header-online-dot');
             const statusEl = document.getElementById('chat-status');
-            if(_isOnline) {
-                if(dot) { dot.classList.add('active'); dot.style.background = '#31a24c'; }
-                if(statusEl) statusEl.textContent = 'Đang hoạt động';
-            } else {
-                if(dot) { dot.classList.add('active'); dot.style.background = '#6b7280'; }
-                if(statusEl) statusEl.textContent = _lastSeenTs ? formatLastSeen(_lastSeenTs) : 'Đã offline';
+            const val = s.val();
+            if(!val) { if(dot) dot.classList.remove('on'); if(statusEl) statusEl.textContent = ''; return; }
+            const isOnline = val === true || val.online === true;
+            if(dot) dot.classList.toggle('on', isOnline);
+            if(statusEl && !window._isTyping) {
+                statusEl.textContent = isOnline ? 'Đang hoạt động' : formatLastSeen(val.ts);
             }
-        }
-
-        window._headerPresenceRef.on('value', s => {
-            _isOnline = !!s.val();
-            _updateStatus();
         });
-
-        window._headerLastSeenRef.on('value', s => {
-            _lastSeenTs = s.val() || null;
-            _updateStatus();
+        const room2 = myId < name ? myId + name : name + myId;
+        window._isTyping = false;
+        window._headerTypingRef = db.ref('typing/' + room2 + '/' + name);
+        window._headerTypingRef.on('value', s => {
+            const statusEl = document.getElementById('chat-status');
+            const dot = document.getElementById('header-online-dot');
+            window._isTyping = !!s.val();
+            if(statusEl) {
+                if(window._isTyping) {
+                    statusEl.innerHTML = '<span class="typing-indicator"><span></span><span></span><span></span></span> Đang nhập...';
+                } else {
+                    // re-read presence
+                    db.ref('presence/' + name).once('value', ps => {
+                        const val = ps.val();
+                        if(!val) { statusEl.textContent = ''; return; }
+                        const isOnline = val === true || val.online === true;
+                        if(dot) dot.classList.toggle('on', isOnline);
+                        statusEl.textContent = isOnline ? 'Đang hoạt động' : formatLastSeen(val.ts);
+                    });
+                }
+            }
         });
-
-        // Refresh "X phút trước" every 30 seconds
-        window._headerStatusTimer = setInterval(() => { if(!_isOnline) _updateStatus(); }, 30000);
     }
 
     function listenSettings() {
@@ -1302,9 +1178,25 @@
         currentRoom = room;
         const box = document.getElementById('messages');
         box.innerHTML = "";
+        _lastDateLabel = '';
         if(msgRef) msgRef.off();
         msgRef = db.ref('chats/' + room);
         msgRef.limitToLast(50).on('child_added', s => { const d = s.val(); d.key = s.key; renderMsg(d, box); });
+    }
+
+    // Track last shown date label per chat box
+    let _lastDateLabel = '';
+
+    function getDateLabel(ts) {
+        if(!ts) return '';
+        const msgDate = new Date(ts);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        const isSameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        if(isSameDay(msgDate, today)) return 'H\u00f4m nay';
+        if(isSameDay(msgDate, yesterday)) return 'H\u00f4m qua';
+        return msgDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
 
     function renderMsg(d, box) {
@@ -1314,6 +1206,18 @@
         // Remove empty state
         const es = document.getElementById('empty-state');
         if(es) es.remove();
+
+        // Date divider
+        if(d.ts) {
+            const label = getDateLabel(d.ts);
+            if(label && label !== _lastDateLabel) {
+                _lastDateLabel = label;
+                const divider = document.createElement('div');
+                divider.className = 'date-divider';
+                divider.textContent = label;
+                box.appendChild(divider);
+            }
+        }
 
         const row = document.createElement('div');
         row.className = `msg-row ${isMe ? 'me' : 'them'}`;
@@ -1455,7 +1359,12 @@
 
         const time = document.createElement('div');
         time.className = 'msg-time';
-        time.textContent = d.time || '';
+        // Display time in viewer's local timezone from ts (UTC)
+        if(d.ts) {
+            time.textContent = new Date(d.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if(d.time) {
+            time.textContent = d.time;
+        }
 
         col.appendChild(bubble); col.appendChild(time);
         row.appendChild(col);
@@ -1488,12 +1397,22 @@
                 s: myId,
                 t: '',
                 img: e.target.result,
-                ts: Date.now(),
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                ts: Date.now()
             });
         };
         reader.readAsDataURL(input.files[0]);
         input.value = '';
+    }
+
+    let _typingTimer = null;
+    function onTyping() {
+        if(!toId || !myId) return;
+        const room = myId < toId ? myId + toId : toId + myId;
+        db.ref('typing/' + room + '/' + myId).set(true);
+        clearTimeout(_typingTimer);
+        _typingTimer = setTimeout(() => {
+            db.ref('typing/' + room + '/' + myId).remove();
+        }, 2500);
     }
 
     function sendMsg() {
@@ -1501,7 +1420,9 @@
         const t = input.value.trim();
         if(!t || !toId) return;
         const room = myId < toId ? myId + toId : toId + myId;
-        db.ref('chats/' + room).push({ s: myId, t: t, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), ts: Date.now() });
+        db.ref('chats/' + room).push({ s: myId, t: t, ts: Date.now() });
+        db.ref('typing/' + room + '/' + myId).remove();
+        clearTimeout(_typingTimer);
         sendPushToUser(toId, myId, t);
         input.value = "";
     }
@@ -1573,8 +1494,7 @@
         const room = myId < toId ? myId + toId : toId + myId;
         db.ref('chats/' + room).push({
             s: myId, t: '', sticker: url,
-            ts: Date.now(),
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            ts: Date.now()
         });
         closeAllPickers();
     }
@@ -1641,7 +1561,40 @@
     });
 
     function toggleModal(s) { document.getElementById('settings-modal').style.display = s ? 'flex' : 'none'; }
-    function goBack() { document.getElementById('chat-screen').classList.remove('in-chat'); }
+    function _reEvalAllBadges() {
+        document.querySelectorAll('.unread-badge').forEach(el => {
+            const name = el.id.replace('badge-', '');
+            const c = parseInt(el.getAttribute('data-count')) || 0;
+            const show = c > 0 && toId !== name;
+            el.classList.toggle('visible', show);
+            const nameEl = document.getElementById('fname-' + name);
+            const preEl = document.getElementById('preview-' + name);
+            if(nameEl) nameEl.classList.toggle('unread-name', show);
+            if(preEl) preEl.classList.toggle('unread-preview', show);
+        });
+    }
+
+    function _updateBackBadge() {
+        // Sum all unread badges from friends that are NOT the current chat
+        let total = 0;
+        document.querySelectorAll('.unread-badge.visible').forEach(el => total += parseInt(el.textContent) || 0);
+        const bb = document.getElementById('back-unread-badge');
+        if(!bb) return;
+        if(total > 0) {
+            bb.textContent = total > 99 ? '99+' : total;
+            bb.style.display = 'inline-flex';
+        } else {
+            bb.style.display = 'none';
+        }
+    }
+
+    function goBack() {
+        toId = "";
+        document.getElementById('chat-screen').classList.remove('in-chat');
+        const bb = document.getElementById('back-unread-badge');
+        if(bb) bb.style.display = 'none';
+        _reEvalAllBadges();
+    }
 
     function addFriend() {
         const name = document.getElementById('friend-name').value.trim();
@@ -2000,48 +1953,8 @@ messaging.onBackgroundMessage(function(payload) {
         if(e.key === 'Escape') closeLightbox();
     });
 
-    // ===== TYPING INDICATOR =====
-    let _typingTimer = null;
-
-    function startTyping() {
-        if(!toId || !myId) return;
-        db.ref('typing/' + toId + '/' + myId).set(true);
-        clearTimeout(_typingTimer);
-        _typingTimer = setTimeout(stopTyping, 3000);
-    }
-
-    function stopTyping() {
-        if(!toId || !myId) return;
-        db.ref('typing/' + toId + '/' + myId).remove();
-    }
-
-    let _typingListener = null;
-    function listenTyping(name) {
-        if(_typingListener) _typingListener.off();
-        _typingListener = db.ref('typing/' + myId + '/' + name);
-        _typingListener.on('value', snap => {
-            const indicator = document.getElementById('typing-indicator');
-            const label = document.getElementById('typing-label');
-            if(snap.val()) {
-                label.textContent = name + ' đang nhập...';
-                indicator.classList.add('visible');
-            } else {
-                indicator.classList.remove('visible');
-            }
-        });
-    }
-
-    // Attach typing event to input
-    document.getElementById('msg-input').addEventListener('input', function() {
-        if(this.value.length > 0) {
-            startTyping();
-        } else {
-            stopTyping();
-        }
-    });
-
-    // Stop typing when user leaves
-    window.addEventListener('beforeunload', stopTyping);
+    // Override sendMsg to support reply
+    const _origSendMsg = sendMsg;
     window.sendMsg = function() {
         const input = document.getElementById('msg-input');
         const t = input.value.trim();
@@ -2058,291 +1971,193 @@ messaging.onBackgroundMessage(function(payload) {
         db.ref('chats/' + room).push(msgObj);
         sendPushToUser(toId, myId, t);
         input.value = '';
-        stopTyping();
         cancelReply();
     };
 
-    // ===== WEBRTC VIDEO CALL =====
-    const ICE_SERVERS = {
-        iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
-        ]
-    };
+    // ===== VOICE CALL (WebRTC + Firebase Signaling) =====
+    let _pc = null, _localStream = null, _callRole = null, _callRef = null, _isMuted = false;
 
-    let vcPeer = null;
-    let vcLocalStream = null;
-    let vcCallRoom = null;
-    let vcIsOffer = false;
-    let vcMuted = false;
-    let vcCamOff = false;
-    let vcSignalRef = null;
-    let vcIncomingCallerId = null;
-    let vcRingTimer = null;
-    let vcStatusTimer = null;
+    const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
-    function getCallRoom(a, b) {
-        return 'videocall_' + (a < b ? a + '_' + b : b + '_' + a);
+    function getCallRoom() {
+        return 'calls/' + (myId < toId ? myId + '_' + toId : toId + '_' + myId);
     }
 
-    async function startVideoCall() {
-        if(!toId) return alert('Chọn người để gọi trước!');
-        if(vcPeer) return; // already in call
-
-        vcCallRoom = getCallRoom(myId, toId);
-        vcIsOffer = true;
-
-        // Signal the other person
-        const callData = {
-            caller: myId,
-            callee: toId,
-            callerAvt: avatars[myId] || '',
-            state: 'calling',
-            ts: Date.now()
-        };
-        await db.ref('videocalls/' + vcCallRoom).set(callData);
-
-        // Open modal first (local video will show while waiting)
-        await openVideoModal(true);
-
-        // Listen for answer/decline
-        vcSignalRef = db.ref('videocalls/' + vcCallRoom);
-        vcSignalRef.on('value', async snap => {
-            const d = snap.val();
-            if(!d) { endVideoCall(); return; }
-            if(d.state === 'declined') { endVideoCall(); return; }
-            if(d.state === 'ended')    { endVideoCall(); return; }
-            if(d.answer && !vcPeer._answerSet) {
-                vcPeer._answerSet = true;
-                await vcPeer.setRemoteDescription(new RTCSessionDescription(d.answer));
-                document.getElementById('vc-call-status').textContent = 'Đang kết nối...';
-            }
-            if(d.callee_ice) {
-                const iceArr = Object.values(d.callee_ice);
-                for(const ice of iceArr) {
-                    try { await vcPeer.addIceCandidate(new RTCIceCandidate(ice)); } catch(e) {}
-                }
-            }
-        });
-
-        // Create offer
-        await createOffer();
+    function showCallModal(status) {
+        const modal = document.getElementById('call-modal');
+        modal.style.display = 'flex';
+        document.getElementById('call-modal-name').textContent = toId;
+        document.getElementById('call-modal-avt').src = avatars[toId] || 'https://via.placeholder.com/90';
+        document.getElementById('call-modal-status').textContent = status;
     }
 
-    async function acceptIncomingCall() {
-        closeIncomingCallUI();
-        if(!vcIncomingCallerId) return;
-
-        vcCallRoom = getCallRoom(myId, vcIncomingCallerId);
-        vcIsOffer = false;
-
-        await db.ref('videocalls/' + vcCallRoom).update({ state: 'accepted' });
-        await openVideoModal(false);
-
-        vcSignalRef = db.ref('videocalls/' + vcCallRoom);
-        vcSignalRef.on('value', async snap => {
-            const d = snap.val();
-            if(!d) { endVideoCall(); return; }
-            if(d.state === 'ended') { endVideoCall(); return; }
-            if(d.offer && !vcPeer._offerSet) {
-                vcPeer._offerSet = true;
-                await vcPeer.setRemoteDescription(new RTCSessionDescription(d.offer));
-                const answer = await vcPeer.createAnswer();
-                await vcPeer.setLocalDescription(answer);
-                await db.ref('videocalls/' + vcCallRoom).update({ answer: { type: answer.type, sdp: answer.sdp } });
-            }
-            if(d.caller_ice) {
-                const iceArr = Object.values(d.caller_ice);
-                for(const ice of iceArr) {
-                    try { await vcPeer.addIceCandidate(new RTCIceCandidate(ice)); } catch(e) {}
-                }
-            }
-        });
-    }
-
-    async function openVideoModal(isOffer) {
-        // Get local media
+    async function startCall() {
+        if(!toId) return;
         try {
-            vcLocalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            _localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         } catch(e) {
-            try {
-                vcLocalStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-            } catch(e2) {
-                alert('Không thể truy cập camera/mic: ' + e2.message);
-                return;
-            }
+            alert('Không thể truy cập microphone: ' + e.message);
+            return;
         }
+        document.getElementById('local-audio').srcObject = _localStream;
+        _callRole = 'caller';
+        _pc = new RTCPeerConnection(RTC_CONFIG);
+        _localStream.getTracks().forEach(t => _pc.addTrack(t, _localStream));
 
-        document.getElementById('video-local').srcObject = vcLocalStream;
-
-        // Setup peer
-        vcPeer = new RTCPeerConnection(ICE_SERVERS);
-
-        vcLocalStream.getTracks().forEach(track => vcPeer.addTrack(track, vcLocalStream));
-
-        vcPeer.ontrack = (e) => {
-            const remoteVideo = document.getElementById('video-remote');
-            remoteVideo.srcObject = e.streams[0];
-            document.getElementById('video-remote-placeholder').style.display = 'none';
-            document.getElementById('vc-call-status').textContent = 'Đang kết nối...';
-            remoteVideo.onloadedmetadata = () => {
-                document.getElementById('vc-call-status').textContent = '● Đang gọi';
-            };
+        _pc.ontrack = e => {
+            document.getElementById('remote-audio').srcObject = e.streams[0];
         };
 
-        vcPeer.onconnectionstatechange = () => {
-            const state = vcPeer.connectionState;
-            if(state === 'connected') {
-                document.getElementById('vc-call-status').textContent = '● Đang gọi';
-                document.getElementById('video-remote-placeholder').style.display = 'none';
-            } else if(state === 'disconnected' || state === 'failed' || state === 'closed') {
-                endVideoCall();
+        const callRoom = getCallRoom();
+        _callRef = db.ref(callRoom);
+        await _callRef.remove();
+
+        _pc.onicecandidate = e => {
+            if(e.candidate) _callRef.child('callerCandidates').push(e.candidate.toJSON());
+        };
+
+        const offer = await _pc.createOffer();
+        await _pc.setLocalDescription(offer);
+        await _callRef.child('offer').set({ type: offer.type, sdp: offer.sdp, caller: myId, callee: toId, ts: Date.now() });
+
+        showCallModal('Đang gọi...');
+
+        // Listen for answer
+        _callRef.child('answer').on('value', async snap => {
+            if(snap.val() && _pc && !_pc.currentRemoteDescription) {
+                const answer = new RTCSessionDescription(snap.val());
+                await _pc.setRemoteDescription(answer);
+                document.getElementById('call-modal-status').textContent = 'Đang kết nối...';
             }
-        };
-
-        vcPeer.onicecandidate = async (e) => {
-            if(e.candidate) {
-                const iceKey = isOffer ? 'caller_ice' : 'callee_ice';
-                await db.ref('videocalls/' + vcCallRoom + '/' + iceKey).push({
-                    candidate: e.candidate.candidate,
-                    sdpMid: e.candidate.sdpMid,
-                    sdpMLineIndex: e.candidate.sdpMLineIndex
-                });
-            }
-        };
-
-        // Show modal
-        const partnerName = isOffer ? toId : vcIncomingCallerId;
-        document.getElementById('vc-call-name').textContent = partnerName;
-        document.getElementById('vc-call-status').textContent = isOffer ? 'Đang gọi...' : 'Đang kết nối...';
-        document.getElementById('video-remote-avt').src = avatars[partnerName] || '';
-        document.getElementById('video-remote-label').textContent = isOffer ? 'Đang đổ chuông...' : 'Đang kết nối...';
-        document.getElementById('video-remote-placeholder').style.display = 'flex';
-        document.getElementById('vc-mute-btn').classList.remove('active');
-        document.getElementById('vc-cam-btn').classList.remove('active');
-        vcMuted = false; vcCamOff = false;
-        document.getElementById('video-call-modal').classList.add('open');
-    }
-
-    async function createOffer() {
-        if(!vcPeer) return;
-        const offer = await vcPeer.createOffer();
-        await vcPeer.setLocalDescription(offer);
-        await db.ref('videocalls/' + vcCallRoom).update({
-            offer: { type: offer.type, sdp: offer.sdp }
         });
+
+        // Listen for callee ICE candidates
+        _callRef.child('calleeCandidates').on('child_added', snap => {
+            if(_pc && snap.val()) _pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+        });
+
+        // Track connection state
+        _pc.onconnectionstatechange = () => {
+            if(_pc.connectionState === 'connected') document.getElementById('call-modal-status').textContent = 'Đang gọi ✦';
+            if(_pc.connectionState === 'disconnected' || _pc.connectionState === 'failed') endCall();
+        };
+
+        // Timeout: 30s no answer
+        setTimeout(() => {
+            if(_pc && _pc.connectionState !== 'connected') {
+                document.getElementById('call-modal-status').textContent = 'Không có phản hồi';
+                setTimeout(endCall, 1500);
+            }
+        }, 30000);
+
+        // Notify callee via Firebase
+        db.ref('call_notify/' + toId).set({ from: myId, roomKey: callRoom.replace('calls/',''), ts: Date.now() });
     }
 
-    function declineIncomingCall() {
-        closeIncomingCallUI();
-        if(vcIncomingCallerId) {
-            const room = getCallRoom(myId, vcIncomingCallerId);
-            db.ref('videocalls/' + room).update({ state: 'declined' });
+    async function answerCall(callData) {
+        if(!callData) return;
+        const callerName = callData.caller;
+        const confirmed = confirm('📞 ' + callerName + ' đang gọi cho bạn. Nghe máy?');
+        if(!confirmed) {
+            db.ref('calls/' + callData.roomKey).child('declined').set(true);
+            db.ref('call_notify/' + myId).remove();
+            return;
         }
-        vcIncomingCallerId = null;
-    }
-
-    function endVideoCall() {
-        if(vcSignalRef) { vcSignalRef.off(); vcSignalRef = null; }
-        if(vcCallRoom) {
-            db.ref('videocalls/' + vcCallRoom).update({ state: 'ended' });
-            // Clean up after 3 sec
-            setTimeout(() => db.ref('videocalls/' + vcCallRoom).remove(), 3000);
+        // Switch to caller chat if needed
+        if(toId !== callerName) {
+            // Open chat silently
+            toId = callerName;
         }
-        if(vcPeer) { vcPeer.close(); vcPeer = null; }
-        if(vcLocalStream) { vcLocalStream.getTracks().forEach(t => t.stop()); vcLocalStream = null; }
-        document.getElementById('video-call-modal').classList.remove('open');
-        document.getElementById('video-remote').srcObject = null;
-        document.getElementById('video-local').srcObject = null;
-        vcCallRoom = null; vcIsOffer = false;
-        vcIncomingCallerId = null;
-        closeIncomingCallUI();
+
+        try {
+            _localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch(e) {
+            alert('Không thể truy cập microphone: ' + e.message);
+            db.ref('call_notify/' + myId).remove();
+            return;
+        }
+        document.getElementById('local-audio').srcObject = _localStream;
+        _callRole = 'callee';
+        _pc = new RTCPeerConnection(RTC_CONFIG);
+        _localStream.getTracks().forEach(t => _pc.addTrack(t, _localStream));
+
+        _pc.ontrack = e => {
+            document.getElementById('remote-audio').srcObject = e.streams[0];
+        };
+
+        _callRef = db.ref('calls/' + callData.roomKey);
+
+        _pc.onicecandidate = e => {
+            if(e.candidate) _callRef.child('calleeCandidates').push(e.candidate.toJSON());
+        };
+
+        const offerSnap = await _callRef.child('offer').once('value');
+        const offer = offerSnap.val();
+        await _pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await _pc.createAnswer();
+        await _pc.setLocalDescription(answer);
+        await _callRef.child('answer').set({ type: answer.type, sdp: answer.sdp });
+
+        // Listen for caller ICE candidates
+        _callRef.child('callerCandidates').on('child_added', snap => {
+            if(_pc && snap.val()) _pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+        });
+
+        _pc.onconnectionstatechange = () => {
+            if(_pc.connectionState === 'connected') document.getElementById('call-modal-status').textContent = 'Đang gọi ✦';
+            if(_pc.connectionState === 'disconnected' || _pc.connectionState === 'failed') endCall();
+        };
+
+        showCallModal('Đang kết nối...');
+        db.ref('call_notify/' + myId).remove();
     }
 
-    function toggleVCMute() {
-        if(!vcLocalStream) return;
-        vcMuted = !vcMuted;
-        vcLocalStream.getAudioTracks().forEach(t => t.enabled = !vcMuted);
-        const btn = document.getElementById('vc-mute-btn');
-        btn.textContent = vcMuted ? '🔇' : '🎙️';
-        btn.classList.toggle('active', vcMuted);
+    function endCall() {
+        if(_pc) { _pc.close(); _pc = null; }
+        if(_localStream) { _localStream.getTracks().forEach(t => t.stop()); _localStream = null; }
+        if(_callRef) { _callRef.child('ended').set(true); _callRef.off(); _callRef = null; }
+        document.getElementById('remote-audio').srcObject = null;
+        document.getElementById('local-audio').srcObject = null;
+        document.getElementById('call-modal').style.display = 'none';
+        _callRole = null; _isMuted = false;
+        document.getElementById('call-mute-btn').textContent = '🎤';
     }
 
-    function toggleVCCam() {
-        if(!vcLocalStream) return;
-        vcCamOff = !vcCamOff;
-        vcLocalStream.getVideoTracks().forEach(t => t.enabled = !vcCamOff);
-        const btn = document.getElementById('vc-cam-btn');
-        btn.textContent = vcCamOff ? '🚫' : '📷';
-        btn.classList.toggle('active', vcCamOff);
+    function toggleMute() {
+        if(!_localStream) return;
+        _isMuted = !_isMuted;
+        _localStream.getAudioTracks().forEach(t => t.enabled = !_isMuted);
+        document.getElementById('call-mute-btn').textContent = _isMuted ? '🔇' : '🎤';
+        document.getElementById('call-mute-btn').style.background = _isMuted ? '#e53935' : '#1c2540';
     }
 
-    function startVoiceCall() {
-        alert('Tính năng gọi điện thoại sẽ được thêm sau. Hãy dùng gọi video nhé! 📹');
+    function toggleSpeaker() {
+        const audio = document.getElementById('remote-audio');
+        // On mobile this is a hint — not universally supported
+        audio.muted = !audio.muted;
+        document.getElementById('call-speaker-btn').textContent = audio.muted ? '🔈' : '🔊';
+        document.getElementById('call-speaker-btn').style.background = audio.muted ? '#e53935' : '#1c2540';
     }
 
-    function closeIncomingCallUI() {
-        document.getElementById('incoming-call-modal').classList.remove('open');
-        if(vcRingTimer) { clearInterval(vcRingTimer); vcRingTimer = null; }
-    }
-
-    // ===== LISTEN FOR INCOMING CALLS =====
+    // Listen for incoming call notifications
     function listenIncomingCalls() {
-        db.ref('videocalls').on('child_added', snap => {
-            const d = snap.val();
-            if(!d) return;
-            // Is this call for me?
-            if(d.callee !== myId) return;
-            if(d.state !== 'calling') return;
-            if(vcPeer) return; // already in call
-
-            vcIncomingCallerId = d.caller;
-            document.getElementById('incoming-call-name').textContent = d.caller;
-            document.getElementById('incoming-call-avt').src = d.callerAvt || avatars[d.caller] || 'https://via.placeholder.com/52';
-            document.getElementById('incoming-call-modal').classList.add('open');
-
-            // Auto-dismiss if caller cancels
-            const callKey = snap.key;
-            const callRef = db.ref('videocalls/' + callKey);
-            callRef.on('value', s => {
-                if(!s.exists() || (s.val() && s.val().state !== 'calling')) {
-                    if(s.val() && s.val().state === 'calling') return;
-                    closeIncomingCallUI();
-                    vcIncomingCallerId = null;
-                    callRef.off();
-                }
-            });
-        });
-
-        // Also listen for changes on existing calls (in case child_added missed it)
-        db.ref('videocalls').on('child_changed', snap => {
-            const d = snap.val();
-            if(!d || d.callee !== myId) return;
-            if(d.state === 'calling' && !vcPeer && !document.getElementById('incoming-call-modal').classList.contains('open')) {
-                vcIncomingCallerId = d.caller;
-                document.getElementById('incoming-call-name').textContent = d.caller;
-                document.getElementById('incoming-call-avt').src = d.callerAvt || avatars[d.caller] || '';
-                document.getElementById('incoming-call-modal').classList.add('open');
-            }
+        if(!myId) return;
+        db.ref('call_notify/' + myId).on('value', snap => {
+            if(!snap.val()) return;
+            const data = snap.val();
+            if(Date.now() - (data.ts || 0) > 40000) { db.ref('call_notify/' + myId).remove(); return; }
+            // Don't answer if already in call
+            if(_pc) return;
+            answerCall({ caller: data.from, roomKey: data.roomKey });
         });
     }
 
-    // Start listening for calls after login
-    const _origLoadFriends = loadFriends;
-    const _origStartApp = startApp;
-    // Patch: after auth, also listen for incoming calls
-    auth.onAuthStateChanged(user => {
-        if(user) {
-            const savedId = localStorage.getItem('nt_myId');
-            if(savedId) {
-                // listenIncomingCalls called after myId is set (handled by patching openChat flow)
-                setTimeout(listenIncomingCalls, 1500);
-            }
-        }
-    });
-
-
-
+    // Show call button when in chat
+    const _origOpenChat = openChat;
+    openChat = function(name, avt, div) {
+        _origOpenChat(name, avt, div);
+        document.getElementById('call-btn').style.display = 'block';
+    };
 
 </script>
 </body>
