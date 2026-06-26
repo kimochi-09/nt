@@ -359,23 +359,7 @@
             touch-action: pan-y;
             position: relative;
         }
-        /* Glowing vase/hourglass shape at bottom like screenshot */
-        #messages::after {
-            content: '';
-            position: sticky;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            display: block;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(ellipse, rgba(180,20,130,0.4) 0%, rgba(120,10,80,0.2) 50%, transparent 75%);
-            filter: blur(25px);
-            pointer-events: none;
-            margin-top: auto;
-            flex-shrink: 0;
-        }
+        /* glow moved to messages-wrap pseudo-elements */
 
         /* Time divider */
         .time-divider {
@@ -415,7 +399,7 @@
         }
         .me .msg-bubble {
             background: linear-gradient(135deg, #9b30d0, #7b1fa2);
-            color: #fff;
+            color: #fff; /* purple bubble */
             border-radius: 20px;
         }
         /* Group consecutive bubbles - fully rounded */
@@ -1065,7 +1049,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let myId = "", toId = "", currentRoom = "", avatars = {}, themeColor = "#00e5ff";
+    let myId = "", toId = "", currentRoom = "", avatars = {}, themeColor = "#9b30d0";
     let msgRef = null, settingsRef = null;
     let msgElements = {}; // key -> row element, dùng để cập nhật khi tin nhắn bị thu hồi
 
@@ -1349,8 +1333,8 @@
         settingsRef = db.ref('room_settings/' + room);
         settingsRef.on('value', s => {
             const set = s.val() || {};
-            themeColor = set.color || "#0084ff";
-            document.getElementById('send-icon').style.color = themeColor;
+            themeColor = set.color || "#9b30d0";
+            document.getElementById('send-icon').style.color = themeColor; document.getElementById('send-icon').style.color = themeColor;
             const box = document.getElementById('messages');
             if(set.background) {
                 box.style.backgroundImage = `url(${set.background})`;
