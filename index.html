@@ -2278,7 +2278,13 @@ messaging.onBackgroundMessage(function(payload) {
     let _callTimerInterval = null, _callStartTime = null;
     let _pendingCallData = null; // stores incoming call data while showing incoming screen
 
-    const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+    const RTC_CONFIG = { iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+    ] };
 
     function getCallRoom() {
         return 'calls/' + (myId < toId ? myId + '_' + toId : toId + '_' + myId);
