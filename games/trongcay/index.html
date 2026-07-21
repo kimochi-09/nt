@@ -451,6 +451,16 @@
     let currentShopTab = 'seeds';
     let tickTimer = null;
 
+    // Giới hạn cho Phân bón thần kỳ
+    const FERT_COOLDOWN_MS = 10 * 60 * 1000; // 10 phút hồi giữa 2 lần dùng
+    const FERT_DAILY_USE_LIMIT = 3;   // tối đa 3 lần dùng/ngày
+    const FERT_DAILY_BUY_LIMIT = 3;   // tối đa 3 lần mua/ngày
+
+    function todayKey() {
+        const d = new Date();
+        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    }
+
     function defaultState() {
         return {
             coins: 50,
@@ -460,7 +470,19 @@
             upgrades: { fastWater: false, autoHarvest: false },
             inventory: { magicFertilizer: 0, pesticide: 0 },
             decor: { scarecrow: false, fence: false, hut: false, hat: false },
+            fertLimits: { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 },
         };
+    }
+
+    // Đảm bảo bộ đếm giới hạn phân bón được reset mỗi ngày mới
+    function ensureFertLimits() {
+        if (!state.fertLimits) {
+            state.fertLimits = { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 };
+            return;
+        }
+        if (state.fertLimits.day !== todayKey()) {
+            state.fertLimits = { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 };
+        }
     }
 
     // ===== Đăng nhập (giống chat.html) =====
@@ -489,7 +511,9 @@
                 state.upgrades = Object.assign({fastWater:false, autoHarvest:false}, snap.val().upgrades);
                 state.inventory = Object.assign({magicFertilizer:0, pesticide:0}, snap.val().inventory);
                 state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false}, snap.val().decor);
+                state.fertLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().fertLimits);
             }
+            ensureFertLimits();
             document.getElementById('loading').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
             render();
@@ -500,6 +524,8 @@
                 state.upgrades = Object.assign({fastWater:false, autoHarvest:false}, snap.val().upgrades);
                 state.inventory = Object.assign({magicFertilizer:0, pesticide:0}, snap.val().inventory);
                 state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false}, snap.val().decor);
+                state.fertLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().fertLimits);
+                ensureFertLimits();
                 render();
             });
             tickTimer = setInterval(gameTick, 1000);
@@ -721,7 +747,21 @@
         let html = '';
         html += `<button class="action-btn" ${plant.watered ? 'disabled' : ''} onclick="waterPlant()">💧 Tưới nước ${plant.watered ? '(đã tưới)' : '(giảm 20% thời gian)'}</button>`;
         html += `<button class="action-btn" ${plant.fertilized ? 'disabled' : ''} onclick="fertilizePlant()">🌟 Bón phân ${plant.fertilized ? '(đã bón)' : '(tăng 50% xu khi bán)'}</button>`;
-        html += `<button class="action-btn" ${state.inventory.magicFertilizer > 0 ? '' : 'disabled'} onclick="useMagicFertilizer()">✨ Dùng phân bón thần kỳ (${state.inventory.magicFertilizer} còn lại) - chín ngay</button>`;
+        ensureFertLimits();
+        const fertRemaining = Math.max(0, FERT_DAILY_USE_LIMIT - state.fertLimits.usedCount);
+        const cooldownLeft = state.fertLimits.lastUsedAt ? (FERT_COOLDOWN_MS - (Date.now() - state.fertLimits.lastUsedAt)) : 0;
+        let fertLabel = `✨ Dùng phân bón thần kỳ (${state.inventory.magicFertilizer} còn lại) - chín ngay`;
+        let fertDisabled = state.inventory.magicFertilizer <= 0;
+        if (fertRemaining <= 0) {
+            fertLabel = `✨ Đã dùng hết lượt hôm nay (tối đa ${FERT_DAILY_USE_LIMIT}/ngày)`;
+            fertDisabled = true;
+        } else if (cooldownLeft > 0) {
+            fertLabel = `✨ Đang hồi (còn ${formatTime(cooldownLeft/1000)})`;
+            fertDisabled = true;
+        } else {
+            fertLabel += ` · Còn ${fertRemaining} lượt hôm nay`;
+        }
+        html += `<button class="action-btn" ${fertDisabled ? 'disabled' : ''} onclick="useMagicFertilizer()">${fertLabel}</button>`;
         html += `<button class="action-btn" ${(!plant.protected && state.inventory.pesticide > 0) ? '' : 'disabled'} onclick="usePesticide()">🧪 Dùng thuốc trừ sâu (${state.inventory.pesticide} còn lại)${plant.protected ? ' - đã bảo vệ' : ''}</button>`;
         actions.innerHTML = html;
 
@@ -747,7 +787,19 @@
     function useMagicFertilizer() {
         const plant = state.plots[activePlotIdx];
         if (!plant || state.inventory.magicFertilizer <= 0) return;
+        ensureFertLimits();
+        if (state.fertLimits.usedCount >= FERT_DAILY_USE_LIMIT) {
+            showToast('Đã dùng hết lượt phân bón hôm nay!');
+            return;
+        }
+        const cooldownLeft = state.fertLimits.lastUsedAt ? (FERT_COOLDOWN_MS - (Date.now() - state.fertLimits.lastUsedAt)) : 0;
+        if (cooldownLeft > 0) {
+            showToast('Còn hồi ' + formatTime(cooldownLeft / 1000) + ' nữa!');
+            return;
+        }
         state.inventory.magicFertilizer -= 1;
+        state.fertLimits.usedCount += 1;
+        state.fertLimits.lastUsedAt = Date.now();
         const seed = SEEDS[plant.seed];
         const growDuration = seed.growSec * (plant.watered ? 0.8 : 1);
         plant.plantedAt = Date.now() - growDuration * 1000; // đẩy về mốc đã chín
@@ -870,8 +922,22 @@
                 </div>`;
             }).join('');
         } else if (tab === 'items') {
+            ensureFertLimits();
             content.innerHTML = Object.keys(ITEMS).map(key => {
                 const it = ITEMS[key];
+                if (key === 'magicFertilizer') {
+                    const buysLeft = Math.max(0, FERT_DAILY_BUY_LIMIT - state.fertLimits.buyCount);
+                    const limitReached = buysLeft <= 0;
+                    return `
+                    <div class="item-row">
+                        <div class="item-icon">${it.icon}</div>
+                        <div class="item-info">
+                            <div class="item-name">${it.name} <span style="color:#8fbf9a;font-weight:700;">x${state.inventory[key]}</span></div>
+                            <div class="item-sub">${it.desc} · Mua tối đa ${FERT_DAILY_BUY_LIMIT}/ngày (còn ${buysLeft} lượt hôm nay)</div>
+                        </div>
+                        <button class="buy-btn" ${(state.coins < it.cost || limitReached) ? 'disabled' : ''} onclick="buyItem('${key}')">${limitReached ? 'Hết lượt' : it.cost + ' xu'}</button>
+                    </div>`;
+                }
                 return `
                 <div class="item-row">
                     <div class="item-icon">${it.icon}</div>
@@ -911,6 +977,14 @@
     function buyItem(key) {
         const it = ITEMS[key];
         if (state.coins < it.cost) return;
+        if (key === 'magicFertilizer') {
+            ensureFertLimits();
+            if (state.fertLimits.buyCount >= FERT_DAILY_BUY_LIMIT) {
+                showToast('Đã mua hết lượt phân bón hôm nay!');
+                return;
+            }
+            state.fertLimits.buyCount += 1;
+        }
         state.coins -= it.cost;
         state.inventory[key] = (state.inventory[key] || 0) + 1;
         save(); render(); switchShopTab('items');
