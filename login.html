@@ -149,7 +149,7 @@
     auth.onAuthStateChanged(user => {
         const savedId = localStorage.getItem('nt_myId');
         if(user && savedId) {
-            window.location.href = 'chat.html';
+            window.location.href = 'chat';
         }
     });
 
@@ -162,7 +162,7 @@
         try {
             await auth.signInWithEmailAndPassword(email, pass).catch(() => auth.createUserWithEmailAndPassword(email, pass));
             localStorage.setItem('nt_myId', myId);
-            window.location.href = 'chat.html';
+            window.location.href = 'chat';
         } catch(e) { alert(e.message); }
     }
 
