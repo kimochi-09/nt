@@ -224,7 +224,7 @@
     <div class="header">
         <button class="back-btn" onclick="goBack()">←</button>
         <div class="header-title">
-            🌾 Nông Trại Vui Vẻ
+            🌾 Nông Trại 
             <span class="lvl" id="lvl-label">Cấp 1</span>
         </div>
         <div class="coin-badge">🪙 <span id="coin-count">0</span></div>
@@ -309,7 +309,7 @@
         wheat:      { name: "Lúa mì",        icon: "🌾", cost: 10,   growSec: 10,   sell: 15   },
         tomato:     { name: "Cà chua",       icon: "🍅", cost: 50,   growSec: 60,   sell: 85   },
         watermelon: { name: "Dưa hấu",       icon: "🍉", cost: 200,  growSec: 300,  sell: 380  },
-        rainbow:    { name: "Cây Cầu Vồng",  icon: "🌈", cost: 1000, growSec: 1800, sell: 2500 },
+        rainbow:    { name: "Cây Ngô",  icon: "🌽", cost: 1000, growSec: 1800, sell: 2500 },
     };
     const PLOT_COSTS = [100, 180, 320, 550, 900, 1400, 2000, 2800]; // mở ô 5 -> 12
     const MAX_PLOTS = 4 + PLOT_COSTS.length; // 12
@@ -318,7 +318,7 @@
         autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 500, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
     };
     const ITEMS = {
-        magicFertilizer: { name: "Phân bón thần kỳ", icon: "✨", cost: 80, desc: "Làm cây đang trồng chín ngay lập tức." },
+        magicFertilizer: { name: "Phân bón", icon: "✨", cost: 80, desc: "Làm cây đang trồng chín ngay lập tức." },
         pesticide:        { name: "Thuốc trừ sâu",    icon: "🧪", cost: 50, desc: "Bảo vệ 1 cây khỏi sâu bệnh phá hoại." },
     };
     const DECOR = {
