@@ -1059,7 +1059,7 @@
             listenIncomingCalls();
         } else if(authChecked) {
             // Đã kiểm tra xong mà vẫn không có user -> chưa đăng nhập
-            window.location.href = 'login.html';
+            window.location.href = '/';
         }
         authChecked = true;
     });
@@ -1067,13 +1067,13 @@
     // Phòng trường hợp Firebase phản hồi quá chậm, vẫn có lưới an toàn:
     // nếu sau 3s không có myId thì quay lại trang đăng nhập.
     setTimeout(() => {
-        if(!myId) window.location.href = 'login.html';
+        if(!myId) window.location.href = '/';
     }, 3000);
 
     function doLogout() {
         localStorage.removeItem('nt_myId');
         auth.signOut().finally(() => {
-            window.location.href = 'login.html';
+            window.location.href = '/';
         });
     }
 
