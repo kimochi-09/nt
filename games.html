@@ -138,8 +138,8 @@
     <div class="coming-banner">
         <div class="icon">🚀</div>
         <div>
-            <div class="text-title">Khu vực trò chơi đang được xây dựng</div>
-            <div class="text-sub">Dự kiến ra mắt trong khoảng 20 năm nữa. Cảm ơn bạn đã kiên nhẫn chờ đợi!</div>
+            <div class="text-title">Chờ bố làm đã hahahahha</div>
+            <div class="text-sub">Khoảng 20 năm nữa nhaa</div>
         </div>
     </div>
 
@@ -148,14 +148,14 @@
 
 <script>
     const games = [
-        { icon: "🎲", name: "Cờ Caro Online" },
-        { icon: "🐟", name: "Bắn Cá Đại Chiến" },
-        { icon: "🏎️", name: "Đua Xe Tốc Độ" },
-        { icon: "🧩", name: "Giải Đố Xếp Hình" },
-        { icon: "🃏", name: "Tiến Lên Miền Nam" },
-        { icon: "🎯", name: "Bắn Súng Mini" },
-        { icon: "♟️", name: "Cờ Tướng Đối Kháng" },
-        { icon: "🐍", name: "Rắn Săn Mồi" },
+        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🚫", name: "Sắp ra mắt" },
     ];
 
     function renderGames(filter = "") {
@@ -164,7 +164,7 @@
         const filtered = games.filter(g => g.name.toLowerCase().includes(f));
 
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="empty-note">Không tìm thấy trò chơi phù hợp 🎮</div>';
+            list.innerHTML = '<div class="empty-note">Chưa có🎮</div>';
             return;
         }
 
@@ -173,9 +173,9 @@
                 <div class="game-icon-wrap">${g.icon}</div>
                 <div class="game-info">
                     <div class="game-name">${g.name}</div>
-                    <div class="game-status"><span class="dot"></span>Sắp ra mắt · Dự kiến 20 năm</div>
+                    <div class="game-status"><span class="dot"></span> · Dự kiến 20 năm</div>
                 </div>
-                <div class="lock-tag">🔒 Chờ nhé</div>
+                <div class="lock-tag">🔒 Chờ anh nhé</div>
             </div>
         `).join('');
     }
@@ -185,14 +185,14 @@
     }
 
     function openGame(name) {
-        alert(name + " đang được phát triển 🚧\nDự kiến ra mắt trong khoảng 20 năm nữa. Hẹn gặp lại bạn khi đó!");
+        alert(name + " đang được phát triển 🚧\nDự kiến ra mắt trong khoảng 20 năm nữa!");
     }
 
     function goBack() {
         if (window.history.length > 1) {
             window.history.back();
         } else {
-            window.location.href = 'chathaha.html';
+            window.location.href = 'chat';
         }
     }
 
