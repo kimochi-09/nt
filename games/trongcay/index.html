@@ -423,20 +423,20 @@
         wheat:      { name: "Lúa mì",        icon: "🌾", cost: 10,   growSec: 10,   sell: 15   },
         carrot:     { name: "Cà rốt",       icon: "🥕", cost: 25,    growSec: 30,   sell: 40    },
         tomato:     { name: "Cà chua",       icon: "🍅", cost: 50,   growSec: 60,   sell: 85   },
-        strawberry: { name: "Dâu tây",      icon: "🍓", cost: 120,   growSec: 120,  sell: 210   },
-        watermelon: { name: "Dưa hấu",       icon: "🍉", cost: 200,  growSec: 300,  sell: 380  },
-        corn   :    { name: "Ngô",       icon: "🌽", cost: 1000, growSec: 1800, sell: 2500 },
+        strawberry: { name: "Dâu tây",      icon: "🍓", cost: 155,   growSec: 120,  sell: 210   },
+        watermelon: { name: "Dưa hấu",       icon: "🍉", cost: 250,  growSec: 300,  sell: 380  },
+        corn   :    { name: "Ngô",       icon: "🌽", cost: 1750, growSec: 1800, sell: 2500 },
     };
     // Mở dần từ 4 ô mặc định lên tối đa 16 ô (lưới 4x4) — 12 ô còn lại có giá tăng dần
     const PLOT_COSTS = [100, 180, 320, 550, 900, 1400, 2000, 2800, 3800, 5200, 7000, 9500]; // mở ô 5 -> 16
     const MAX_PLOTS = 4 + PLOT_COSTS.length; // 16
     const UPGRADES = {
-        fastWater:   { name: "Bình tưới siêu tốc",      icon: "💦", cost: 300, desc: "Tự động tưới nước ngay khi trồng cây mới (giảm 20% thời gian lớn)." },
-        autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 500, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
+        fastWater:   { name: "Bình tưới siêu tốc",      icon: "💦", cost: 500, desc: "Tự động tưới nước ngay khi trồng cây mới (giảm 20% thời gian lớn)." },
+        autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 2000, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
     };
     const ITEMS = {
-        magicFertilizer: { name: "Phân bón", icon: "✨", cost: 80, desc: "Làm cây đang trồng chín ngay lập tức." },
-        pesticide:        { name: "Thuốc trừ sâu",    icon: "🧪", cost: 50, desc: "Bảo vệ 1 cây khỏi sâu bệnh phá hoại." },
+        magicFertilizer: { name: "Phân bón", icon: "✨", cost: 500, desc: "Làm cây đang trồng chín ngay lập tức." },
+        pesticide:        { name: "Thuốc trừ sâu",    icon: "🧪", cost: 200, desc: "Bảo vệ 1 cây khỏi sâu bệnh phá hoại." },
     };
     const DECOR = {
         scarecrow: { name: "Bù nhìn rơm", icon: "🎃", cost: 150 },
