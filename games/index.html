@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Trò chơi</title>
+<title>Chò chơi</title>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 
@@ -159,7 +159,7 @@
         <div class="icon">🚀</div>
         <div>
             <div class="text-title">Chờ bố làm đã hahahahha</div>
-            <div class="text-sub">Khoảng 20 năm nữa là đủ</div>
+            <div class="text-sub">20 năm</div>
         </div>
     </div>
 
@@ -169,13 +169,8 @@
 <script>
     const games = [
         { icon: "🌱", name: "Nông Trại", unlocked: true, file: "trongcay" },
-        { icon: "🔢", name: "sudoku", locked: true, file: "sudoku" },
-        { icon: "🚫", name: "Sắp ra mắt" },
-        { icon: "🚫", name: "Sắp ra mắt" },
-        { icon: "🚫", name: "Sắp ra mắt" },
-        { icon: "🚫", name: "Sắp ra mắt" },
-        { icon: "🚫", name: "Sắp ra mắt" },
-        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🔢", name: "Sudoku", locked: true, file: "sudoku" },
+        { icon: "🐟", name: "Câu cá" },
     ];
 
     function renderGames(filter = "") {
@@ -205,7 +200,7 @@
                 <div class="game-icon-wrap">${g.icon}</div>
                 <div class="game-info">
                     <div class="game-name">${g.name}</div>
-                    <div class="game-status"><span class="dot"></span> · Dự kiến 20 năm</div>
+                    <div class="game-status"><span class="dot"></span> Sắp ra mắt · Dự kiến 20 năm</div>
                 </div>
                 <div class="lock-tag">🔒 Chờ anh nhé</div>
             </div>`;
