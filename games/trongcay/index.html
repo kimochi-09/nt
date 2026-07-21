@@ -17,11 +17,30 @@
     ::-webkit-scrollbar { display: none; }
     * { -ms-overflow-style: none; scrollbar-width: none; }
 
-    #screen {
+    /* ============================================================
+       Layout shell: on desktop this becomes a fixed "painting" —
+       a centered frame that never scrolls, with side/top-bottom UI.
+       On narrow/mobile viewports it falls back to the original
+       vertical scrolling app layout.
+       ============================================================ */
+    #app {
         height: 100%; width: 100%;
-        display: flex; flex-direction: column;
-        background: linear-gradient(180deg, #0e2a12 0%, #0a1a10 55%, #08120d 100%);
+        display: flex; align-items: center; justify-content: center;
+        background:
+            radial-gradient(1200px 700px at 50% -10%, rgba(60,140,80,0.18), transparent 60%),
+            linear-gradient(180deg, #0c1a10 0%, #081208 60%, #050a06 100%);
+    }
+
+    #frame {
         position: relative;
+        width: 100%; height: 100%;
+        max-width: 1400px;
+        max-height: 900px;
+        display: flex; flex-direction: column;
+        border-radius: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, #12321a 0%, #0d2413 55%, #091a0e 100%);
+        box-shadow: none;
     }
 
     /* ===== Header ===== */
@@ -56,8 +75,44 @@
         white-space: nowrap;
     }
 
-    /* ===== Farm area ===== */
-    #farm-wrap { flex: 1; overflow-y: auto; padding: 14px 12px 90px; position: relative; }
+    /* ===== Main body: farm stage (center) ===== */
+    #body-row {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* Side rail (decor + quick stats) - shown on wide frame only */
+    .side-rail {
+        width: 150px; flex-shrink: 0;
+        padding: 16px 10px;
+        display: none;
+        flex-direction: column; gap: 10px;
+        border-right: 1px solid rgba(80,200,120,0.15);
+        overflow: hidden;
+    }
+    .side-rail.right { border-right: none; border-left: 1px solid rgba(80,200,120,0.15); }
+    .rail-card {
+        background: rgba(20,45,25,0.55);
+        border: 1px solid rgba(120,200,140,0.2);
+        border-radius: 14px; padding: 10px;
+    }
+    .rail-title { font-size: 11px; font-weight: 800; color: #9fd8ac; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+    .rail-decor-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rail-decor-grid .decor-chip { font-size: 20px; }
+    .rail-stat { display: flex; justify-content: space-between; font-size: 12.5px; color: #cfeed8; padding: 3px 0; }
+    .rail-stat b { color: #ffd15c; }
+
+    #farm-wrap {
+        flex: 1;
+        min-width: 0;
+        overflow-y: auto;
+        padding: 14px 12px 90px;
+        position: relative;
+        display: flex; flex-direction: column;
+        align-items: center;
+    }
     .decor-row {
         display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
         margin-bottom: 12px; min-height: 4px;
@@ -69,8 +124,11 @@
     }
 
     #plots-grid {
-        display: grid; grid-template-columns: repeat(3, 1fr);
+        display: grid; grid-template-columns: repeat(4, 1fr);
         gap: 10px;
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
     }
     .plot {
         position: relative;
@@ -113,7 +171,7 @@
 
     /* floating +coin */
     .float-coin {
-        position: absolute; font-weight: 900; font-size: 15px; color: #ffd15c;
+        position: fixed; font-weight: 900; font-size: 15px; color: #ffd15c;
         pointer-events: none; animation: floatUp 1s ease-out forwards;
         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         z-index: 50;
@@ -151,11 +209,11 @@
     /* ===== Modal ===== */
     .modal-bg {
         position: absolute; inset: 0; background: rgba(0,0,0,0.6);
-        display: none; align-items: flex-end; z-index: 60;
+        display: none; align-items: flex-end; justify-content: center; z-index: 60;
     }
     .modal-bg.show { display: flex; }
     .modal-sheet {
-        width: 100%; max-height: 78%; background: #101d13;
+        width: 100%; max-width: 480px; max-height: 78%; background: #101d13;
         border-radius: 20px 20px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
         overflow-y: auto; border-top: 1px solid rgba(120,200,140,0.25);
     }
@@ -211,6 +269,33 @@
         border: 3px solid rgba(120,200,140,0.25); border-top-color: #3bc95e;
         animation: spin 0.8s linear infinite;
     }
+
+    /* ============================================================
+       Desktop / wide-viewport "static painting" mode:
+       fixed frame, no page scroll, side rails visible,
+       farm stage never scrolls either (fits entirely on screen).
+       ============================================================ */
+    @media (min-width: 900px) and (min-height: 560px) {
+        #app { padding: 24px; }
+        #frame {
+            border-radius: 22px;
+            border: 1px solid rgba(120,200,140,0.18);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+        .side-rail { display: flex; }
+        #farm-wrap {
+            overflow: hidden;
+            justify-content: center;
+            padding-bottom: 100px;
+        }
+        #plots-grid {
+            max-width: 720px;
+            gap: 14px;
+        }
+        .plot .icon { font-size: 36px; }
+        .modal-bg { align-items: center; }
+        .modal-sheet { border-radius: 20px; max-height: 82%; }
+    }
 </style>
 </head>
 <body>
@@ -220,7 +305,8 @@
     <div>Đang tải nông trại...</div>
 </div>
 
-<div id="screen" style="display:none;">
+<div id="app" style="display:none;">
+<div id="frame">
     <div class="header">
         <button class="back-btn" onclick="goBack()">←</button>
         <div class="header-title">
@@ -232,15 +318,43 @@
 
     <div id="toast"></div>
 
-    <div id="farm-wrap">
-        <div class="decor-row" id="decor-row"></div>
-        <div id="plots-grid"></div>
+    <div id="body-row">
+        <div class="side-rail" id="side-rail-left">
+            <div class="rail-card">
+                <div class="rail-title">Trang trí</div>
+                <div class="rail-decor-grid" id="decor-row-side"></div>
+            </div>
+            <div class="rail-card">
+                <div class="rail-title">Thống kê</div>
+                <div class="rail-stat">Đã kiếm <b id="stat-total">0</b></div>
+                <div class="rail-stat">Ô đất <b id="stat-plots">4/16</b></div>
+            </div>
+        </div>
+
+        <div id="farm-wrap">
+            <div class="decor-row" id="decor-row"></div>
+            <div id="plots-grid"></div>
+        </div>
+
+        <div class="side-rail right" id="side-rail-right">
+            <div class="rail-card">
+                <div class="rail-title">Kho vật phẩm</div>
+                <div class="rail-stat">✨ Phân bón thần kỳ <b id="stat-fert">0</b></div>
+                <div class="rail-stat">🧪 Thuốc trừ sâu <b id="stat-pest">0</b></div>
+            </div>
+            <div class="rail-card">
+                <div class="rail-title">Nâng cấp</div>
+                <div class="rail-stat">💦 Tưới siêu tốc <b id="stat-water">Chưa có</b></div>
+                <div class="rail-stat">🧺 Tự thu hoạch <b id="stat-auto">Chưa có</b></div>
+            </div>
+        </div>
     </div>
 
     <div id="bottom-nav">
         <button class="nav-btn active" id="tab-farm" onclick="switchMainTab('farm')">🌱 Nông trại</button>
         <button class="nav-btn" id="tab-shop" onclick="switchMainTab('shop')">🛒 Cửa hàng</button>
     </div>
+</div>
 </div>
 
 <!-- Modal: chọn hạt giống để trồng -->
@@ -313,8 +427,9 @@
         watermelon: { name: "Dưa hấu",       icon: "🍉", cost: 200,  growSec: 300,  sell: 380  },
         corn   :    { name: "Ngô",       icon: "🌽", cost: 1000, growSec: 1800, sell: 2500 },
     };
-    const PLOT_COSTS = [100, 180, 320, 550, 900, 1400, 2000, 2800]; // mở ô 5 -> 12
-    const MAX_PLOTS = 4 + PLOT_COSTS.length; // 12
+    // Mở dần từ 4 ô mặc định lên tối đa 16 ô (lưới 4x4) — 12 ô còn lại có giá tăng dần
+    const PLOT_COSTS = [100, 180, 320, 550, 900, 1400, 2000, 2800, 3800, 5200, 7000, 9500]; // mở ô 5 -> 16
+    const MAX_PLOTS = 4 + PLOT_COSTS.length; // 16
     const UPGRADES = {
         fastWater:   { name: "Bình tưới siêu tốc",      icon: "💦", cost: 300, desc: "Tự động tưới nước ngay khi trồng cây mới (giảm 20% thời gian lớn)." },
         autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 500, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
@@ -376,7 +491,7 @@
                 state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false}, snap.val().decor);
             }
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('screen').style.display = 'flex';
+            document.getElementById('app').style.display = 'flex';
             render();
             gameRef.on('value', snap => {
                 if (!snap.exists()) return;
@@ -421,10 +536,19 @@
         document.getElementById('coin-count').textContent = state.coins.toLocaleString('vi-VN');
         document.getElementById('lvl-label').textContent = 'Cấp ' + computeLevel();
 
-        // decor row
-        const dRow = document.getElementById('decor-row');
-        dRow.innerHTML = Object.keys(DECOR).filter(k => state.decor[k])
-            .map(k => `<div class="decor-chip">${DECOR[k].icon}</div>`).join('');
+        // decor row (mobile, inline above grid)
+        const ownedDecor = Object.keys(DECOR).filter(k => state.decor[k]);
+        const decorHtml = ownedDecor.map(k => `<div class="decor-chip">${DECOR[k].icon}</div>`).join('');
+        document.getElementById('decor-row').innerHTML = decorHtml;
+        document.getElementById('decor-row-side').innerHTML = decorHtml || '<span style="font-size:12px;color:#7fa88a;">Chưa có</span>';
+
+        // side rail stats (desktop)
+        document.getElementById('stat-total').textContent = (state.totalEarned || 0).toLocaleString('vi-VN');
+        document.getElementById('stat-plots').textContent = state.unlockedPlots + '/' + MAX_PLOTS;
+        document.getElementById('stat-fert').textContent = state.inventory.magicFertilizer || 0;
+        document.getElementById('stat-pest').textContent = state.inventory.pesticide || 0;
+        document.getElementById('stat-water').textContent = state.upgrades.fastWater ? 'Đã có' : 'Chưa có';
+        document.getElementById('stat-auto').textContent = state.upgrades.autoHarvest ? 'Đã có' : 'Chưa có';
 
         // plots
         const grid = document.getElementById('plots-grid');
