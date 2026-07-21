@@ -151,6 +151,14 @@
         font-size: 10.5px; font-weight: 800; color: #ffcda0; margin-top: 4px;
     }
     .plot.ready { border-color: #ffd15c; box-shadow: 0 0 14px rgba(255,209,92,0.55); animation: pulseReady 1.1s infinite; }
+    .plot.giant { border-color: #ffb238; box-shadow: 0 0 18px rgba(255,178,56,0.75); }
+    .plot.giant .icon { font-size: 40px; }
+    .plot.mutant { border-color: #b388ff; box-shadow: 0 0 18px rgba(179,136,255,0.75); }
+    .plot .special-tag {
+        font-size: 8.5px; font-weight: 800; color: #3a2600; background: linear-gradient(135deg,#ffe08a,#ffb238);
+        padding: 1px 6px; border-radius: 8px; margin-top: 2px;
+    }
+    .plot .special-tag.mutant-tag { color: #fff; background: linear-gradient(135deg,#c9a4ff,#8a5cf0); }
     @keyframes pulseReady { 0%,100%{ box-shadow:0 0 10px rgba(255,209,92,0.4);} 50%{ box-shadow:0 0 20px rgba(255,209,92,0.85);} }
     .plot .sparkle { position:absolute; top:4px; right:6px; font-size:14px; animation: spin 2s linear infinite; }
     @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
@@ -423,28 +431,40 @@
         wheat:      { name: "Lúa mì",        icon: "🌾", cost: 10,   growSec: 10,   sell: 15   },
         carrot:     { name: "Cà rốt",       icon: "🥕", cost: 25,    growSec: 30,   sell: 40    },
         tomato:     { name: "Cà chua",       icon: "🍅", cost: 50,   growSec: 60,   sell: 85   },
-        strawberry: { name: "Dâu tây",      icon: "🍓", cost: 155,   growSec: 120,  sell: 210   },
+        strawberry: { name: "Dâu tây",      icon: "🍓", cost: 130,   growSec: 120,  sell: 210   },
         watermelon: { name: "Dưa hấu",       icon: "🍉", cost: 250,  growSec: 300,  sell: 380  },
         corn   :    { name: "Ngô",       icon: "🌽", cost: 1750, growSec: 1800, sell: 2500 },
+        // Hạt giống hiếm — chỉ có được qua Cây Đột Biến hoặc Rương May Mắn, không bán ở cửa hàng
+        goldenGrape: { name: "Nho Vàng", icon: "🍇", cost: 500, growSec: 600, sell: 900, rare: true },
+        magicMango:  { name: "Xoài Thần", icon: "🥭", cost: 800, growSec: 900, sell: 1500, rare: true },
     };
     // Mở dần từ 4 ô mặc định lên tối đa 16 ô (lưới 4x4) — 12 ô còn lại có giá tăng dần
     const PLOT_COSTS = [100, 180, 320, 550, 900, 1400, 2000, 2800, 3800, 5200, 7000, 9500]; // mở ô 5 -> 16
     const MAX_PLOTS = 4 + PLOT_COSTS.length; // 16
     const UPGRADES = {
-        fastWater:   { name: "Bình tưới siêu tốc",      icon: "💦", cost: 500, desc: "Tự động tưới nước ngay khi trồng cây mới (giảm 20% thời gian lớn)." },
-        autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 2000, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
+        fastWater:   { name: "Bình tưới siêu tốc",      icon: "💦", cost: 300, desc: "Tự động tưới nước ngay khi trồng cây mới (giảm 20% thời gian lớn)." },
+        autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 1000, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
     };
     const ITEMS = {
         magicFertilizer: { name: "Phân bón", icon: "✨", cost: 500, desc: "Làm cây đang trồng chín ngay lập tức." },
-        pesticide:        { name: "Thuốc trừ sâu",    icon: "🧪", cost: 200, desc: "Bảo vệ 1 cây khỏi sâu bệnh phá hoại." },
+        pesticide:        { name: "Thuốc trừ sâu",    icon: "🧪", cost: 300, desc: "Bảo vệ 1 cây khỏi sâu bệnh phá hoại." },
+        mutationCookie:   { name: "Bánh Đột Biến", icon: "🍪", cost: 400, desc: "30% cơ hội biến cây đang trồng thành Cây Khổng Lồ (bán x3 xu) hoặc Cây Đột Biến (nhận hạt giống hiếm)." },
+        pureWater:        { name: "Nước Thuần Khiết", icon: "💎", cost: 200, desc: "Tưới nước cao cấp, giảm 35% thời gian lớn (thay cho tưới nước thường)." },
     };
     const DECOR = {
         scarecrow: { name: "Bù nhìn rơm", icon: "🎃", cost: 150 },
         fence:     { name: "Hàng rào",    icon: "🚧", cost: 100 },
         hut:       { name: "Nhà chòi",    icon: "🏠", cost: 400 },
         hat:       { name: "Nón nông dân", icon: "👒", cost: 120 },
+        // Trang trí giới hạn — chỉ có được qua Rương May Mắn
+        goldenStatue: { name: "Tượng Vàng", icon: "🏆", cost: 100, limited: true },
+        rainbowFlag:  { name: "Cờ Cầu Vồng", icon: "🎏", cost: 120, limited: true },
     };
     const PEST_CHANCE = 0.15; // 15% khả năng sâu bệnh nếu không có bảo vệ
+    const MUTATION_CHANCE = 0.30; // 30% cơ hội đột biến khi dùng Bánh Đột Biến
+    const LUCKY_CHEST_COST = 200;
+    const LUCKY_RARE_SEEDS = ['goldenGrape', 'magicMango'];
+    const LUCKY_LIMITED_DECOR = ['goldenStatue', 'rainbowFlag'];
 
     let state = null; // trạng thái game hiện tại (đồng bộ với Firebase)
     let activePlotIdx = null;
@@ -455,6 +475,11 @@
     const FERT_COOLDOWN_MS = 10 * 60 * 1000; // 10 phút hồi giữa 2 lần dùng
     const FERT_DAILY_USE_LIMIT = 3;   // tối đa 3 lần dùng/ngày
     const FERT_DAILY_BUY_LIMIT = 3;   // tối đa 3 lần mua/ngày
+
+    // Giới hạn cho Bánh Đột Biến (cùng quy tắc như Phân bón thần kỳ)
+    const MUTATION_COOLDOWN_MS = 10 * 60 * 1000;
+    const MUTATION_DAILY_USE_LIMIT = 3;
+    const MUTATION_DAILY_BUY_LIMIT = 3;
 
     function todayKey() {
         const d = new Date();
@@ -468,13 +493,14 @@
             unlockedPlots: 4,
             plots: {},
             upgrades: { fastWater: false, autoHarvest: false },
-            inventory: { magicFertilizer: 0, pesticide: 0 },
-            decor: { scarecrow: false, fence: false, hut: false, hat: false },
+            inventory: { magicFertilizer: 0, pesticide: 0, mutationCookie: 0, pureWater: 0 },
+            decor: { scarecrow: false, fence: false, hut: false, hat: false, goldenStatue: false, rainbowFlag: false },
             fertLimits: { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 },
+            mutationLimits: { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 },
         };
     }
 
-    // Đảm bảo bộ đếm giới hạn phân bón được reset mỗi ngày mới
+    // Đảm bảo bộ đếm giới hạn phân bón/bánh đột biến được reset mỗi ngày mới
     function ensureFertLimits() {
         if (!state.fertLimits) {
             state.fertLimits = { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 };
@@ -482,6 +508,16 @@
         }
         if (state.fertLimits.day !== todayKey()) {
             state.fertLimits = { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 };
+        }
+    }
+
+    function ensureMutationLimits() {
+        if (!state.mutationLimits) {
+            state.mutationLimits = { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 };
+            return;
+        }
+        if (state.mutationLimits.day !== todayKey()) {
+            state.mutationLimits = { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 };
         }
     }
 
@@ -509,11 +545,13 @@
                 state = Object.assign(defaultState(), snap.val());
                 state.plots = snap.val().plots || {};
                 state.upgrades = Object.assign({fastWater:false, autoHarvest:false}, snap.val().upgrades);
-                state.inventory = Object.assign({magicFertilizer:0, pesticide:0}, snap.val().inventory);
-                state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false}, snap.val().decor);
+                state.inventory = Object.assign({magicFertilizer:0, pesticide:0, mutationCookie:0, pureWater:0}, snap.val().inventory);
+                state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false, goldenStatue:false, rainbowFlag:false}, snap.val().decor);
                 state.fertLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().fertLimits);
+                state.mutationLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().mutationLimits);
             }
             ensureFertLimits();
+            ensureMutationLimits();
             document.getElementById('loading').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
             render();
@@ -522,10 +560,12 @@
                 state = Object.assign(defaultState(), snap.val());
                 state.plots = snap.val().plots || {};
                 state.upgrades = Object.assign({fastWater:false, autoHarvest:false}, snap.val().upgrades);
-                state.inventory = Object.assign({magicFertilizer:0, pesticide:0}, snap.val().inventory);
-                state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false}, snap.val().decor);
+                state.inventory = Object.assign({magicFertilizer:0, pesticide:0, mutationCookie:0, pureWater:0}, snap.val().inventory);
+                state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false, goldenStatue:false, rainbowFlag:false}, snap.val().decor);
                 state.fertLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().fertLimits);
+                state.mutationLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().mutationLimits);
                 ensureFertLimits();
+                ensureMutationLimits();
                 render();
             });
             tickTimer = setInterval(gameTick, 1000);
@@ -605,17 +645,22 @@
         }
 
         const seed = SEEDS[plant.seed];
-        const growDuration = seed.growSec * (plant.watered ? 0.8 : 1);
+        const waterFactor = plant.waterBoost === 'pure' ? 0.65 : (plant.watered ? 0.8 : 1);
+        const growDuration = seed.growSec * waterFactor;
         const elapsed = (Date.now() - plant.plantedAt) / 1000;
         const remaining = Math.max(0, growDuration - elapsed);
         const pct = Math.min(100, Math.round((elapsed / growDuration) * 100));
 
         if (remaining <= 0) {
             div.classList.add('ready');
+            if (plant.giant) div.classList.add('giant');
+            if (plant.mutant) div.classList.add('mutant');
+            const specialTag = plant.giant ? '<div class="special-tag">🌟 Khổng Lồ x3</div>' : (plant.mutant ? '<div class="special-tag mutant-tag">🧬 Đột Biến</div>' : '');
             div.innerHTML = `
                 <div class="plot-name">${seed.name}</div>
                 <span class="sparkle">✨</span>
                 <div class="icon">${seed.icon}</div>
+                ${specialTag}
                 <div class="timer">Đã chín! Chạm để thu hoạch</div>
             `;
         } else {
@@ -625,7 +670,7 @@
                 <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
                 <div class="timer">${formatTime(remaining)}</div>
                 <div class="care-icons">
-                    ${plant.watered ? '<span>💧</span>' : ''}
+                    ${plant.waterBoost === 'pure' ? '<span>💎</span>' : (plant.watered ? '<span>💧</span>' : '')}
                     ${plant.fertilized ? '<span>🌟</span>' : ''}
                     ${plant.protected ? '<span>🛡️</span>' : ''}
                 </div>
@@ -652,7 +697,8 @@
             Object.keys(state.plots).forEach(key => {
                 const plant = state.plots[key];
                 const seed = SEEDS[plant.seed];
-                const growDuration = seed.growSec * (plant.watered ? 0.8 : 1);
+                const waterFactor = plant.waterBoost === 'pure' ? 0.65 : (plant.watered ? 0.8 : 1);
+                const growDuration = seed.growSec * waterFactor;
                 const elapsed = (Date.now() - plant.plantedAt) / 1000;
                 if (elapsed >= growDuration) {
                     const earned = harvestPlant(key, plant, seed, true);
@@ -682,7 +728,8 @@
             return;
         }
         const seed = SEEDS[plant.seed];
-        const growDuration = seed.growSec * (plant.watered ? 0.8 : 1);
+        const waterFactor = plant.waterBoost === 'pure' ? 0.65 : (plant.watered ? 0.8 : 1);
+        const growDuration = seed.growSec * waterFactor;
         const elapsed = (Date.now() - plant.plantedAt) / 1000;
         if (elapsed >= growDuration) {
             doHarvestWithFx(i);
@@ -719,8 +766,11 @@
             seed: key,
             plantedAt: Date.now(),
             watered: !!state.upgrades.fastWater,
+            waterBoost: state.upgrades.fastWater ? 'basic' : null,
             fertilized: false,
             protected: false,
+            giant: false,
+            mutant: false,
         };
         closeModal('seed-modal');
         render();
@@ -733,7 +783,8 @@
         activePlotIdx = plotIdx;
         const plant = state.plots[plotIdx];
         const seed = SEEDS[plant.seed];
-        const growDuration = seed.growSec * (plant.watered ? 0.8 : 1);
+        const waterFactor = plant.waterBoost === 'pure' ? 0.65 : (plant.watered ? 0.8 : 1);
+        const growDuration = seed.growSec * waterFactor;
         const elapsed = (Date.now() - plant.plantedAt) / 1000;
         const remaining = Math.max(0, growDuration - elapsed);
 
@@ -745,23 +796,54 @@
 
         const actions = document.getElementById('care-actions');
         let html = '';
+
+        // Tưới nước thường
         html += `<button class="action-btn" ${plant.watered ? 'disabled' : ''} onclick="waterPlant()">💧 Tưới nước ${plant.watered ? '(đã tưới)' : '(giảm 20% thời gian)'}</button>`;
+
+        // Nước Thuần Khiết — tưới cao cấp, thay thế tưới thường, hiệu quả cao hơn
+        const pureWaterDisabled = plant.waterBoost === 'pure' || state.inventory.pureWater <= 0;
+        let pureWaterLabel = `💎 Dùng Nước Thuần Khiết (${state.inventory.pureWater} còn lại) - giảm 35% thời gian`;
+        if (plant.waterBoost === 'pure') pureWaterLabel = '💎 Đã dùng Nước Thuần Khiết';
+        html += `<button class="action-btn" ${pureWaterDisabled ? 'disabled' : ''} onclick="usePureWater()">${pureWaterLabel}</button>`;
+
         html += `<button class="action-btn" ${plant.fertilized ? 'disabled' : ''} onclick="fertilizePlant()">🌟 Bón phân ${plant.fertilized ? '(đã bón)' : '(tăng 50% xu khi bán)'}</button>`;
+
         ensureFertLimits();
         const fertRemaining = Math.max(0, FERT_DAILY_USE_LIMIT - state.fertLimits.usedCount);
-        const cooldownLeft = state.fertLimits.lastUsedAt ? (FERT_COOLDOWN_MS - (Date.now() - state.fertLimits.lastUsedAt)) : 0;
+        const fertCooldownLeft = state.fertLimits.lastUsedAt ? (FERT_COOLDOWN_MS - (Date.now() - state.fertLimits.lastUsedAt)) : 0;
         let fertLabel = `✨ Dùng phân bón thần kỳ (${state.inventory.magicFertilizer} còn lại) - chín ngay`;
         let fertDisabled = state.inventory.magicFertilizer <= 0;
         if (fertRemaining <= 0) {
             fertLabel = `✨ Đã dùng hết lượt hôm nay (tối đa ${FERT_DAILY_USE_LIMIT}/ngày)`;
             fertDisabled = true;
-        } else if (cooldownLeft > 0) {
-            fertLabel = `✨ Đang hồi (còn ${formatTime(cooldownLeft/1000)})`;
+        } else if (fertCooldownLeft > 0) {
+            fertLabel = `✨ Đang hồi (còn ${formatTime(fertCooldownLeft/1000)})`;
             fertDisabled = true;
         } else {
             fertLabel += ` · Còn ${fertRemaining} lượt hôm nay`;
         }
         html += `<button class="action-btn" ${fertDisabled ? 'disabled' : ''} onclick="useMagicFertilizer()">${fertLabel}</button>`;
+
+        // Bánh Đột Biến
+        ensureMutationLimits();
+        const mutRemaining = Math.max(0, MUTATION_DAILY_USE_LIMIT - state.mutationLimits.usedCount);
+        const mutCooldownLeft = state.mutationLimits.lastUsedAt ? (MUTATION_COOLDOWN_MS - (Date.now() - state.mutationLimits.lastUsedAt)) : 0;
+        let mutLabel = `🍪 Dùng Bánh Đột Biến (${state.inventory.mutationCookie} còn lại) - 30% cơ hội đột biến`;
+        let mutDisabled = state.inventory.mutationCookie <= 0 || plant.giant || plant.mutant;
+        if (plant.giant || plant.mutant) {
+            mutLabel = '🍪 Cây đã đột biến rồi';
+            mutDisabled = true;
+        } else if (mutRemaining <= 0) {
+            mutLabel = `🍪 Đã dùng hết lượt hôm nay (tối đa ${MUTATION_DAILY_USE_LIMIT}/ngày)`;
+            mutDisabled = true;
+        } else if (mutCooldownLeft > 0) {
+            mutLabel = `🍪 Đang hồi (còn ${formatTime(mutCooldownLeft/1000)})`;
+            mutDisabled = true;
+        } else if (state.inventory.mutationCookie > 0) {
+            mutLabel += ` · Còn ${mutRemaining} lượt hôm nay`;
+        }
+        html += `<button class="action-btn" ${mutDisabled ? 'disabled' : ''} onclick="useMutationCookie()">${mutLabel}</button>`;
+
         html += `<button class="action-btn" ${(!plant.protected && state.inventory.pesticide > 0) ? '' : 'disabled'} onclick="usePesticide()">🧪 Dùng thuốc trừ sâu (${state.inventory.pesticide} còn lại)${plant.protected ? ' - đã bảo vệ' : ''}</button>`;
         actions.innerHTML = html;
 
@@ -772,8 +854,19 @@
         const plant = state.plots[activePlotIdx];
         if (!plant || plant.watered) return;
         plant.watered = true;
+        if (!plant.waterBoost) plant.waterBoost = 'basic';
         save(); render(); openCareModal(activePlotIdx);
         showToast('Đã tưới nước 💧');
+    }
+
+    function usePureWater() {
+        const plant = state.plots[activePlotIdx];
+        if (!plant || plant.waterBoost === 'pure' || state.inventory.pureWater <= 0) return;
+        state.inventory.pureWater -= 1;
+        plant.watered = true;
+        plant.waterBoost = 'pure';
+        save(); render(); openCareModal(activePlotIdx);
+        showToast('Đã dùng Nước Thuần Khiết 💎');
     }
 
     function fertilizePlant() {
@@ -801,11 +894,50 @@
         state.fertLimits.usedCount += 1;
         state.fertLimits.lastUsedAt = Date.now();
         const seed = SEEDS[plant.seed];
-        const growDuration = seed.growSec * (plant.watered ? 0.8 : 1);
+        const waterFactor = plant.waterBoost === 'pure' ? 0.65 : (plant.watered ? 0.8 : 1);
+        const growDuration = seed.growSec * waterFactor;
         plant.plantedAt = Date.now() - growDuration * 1000; // đẩy về mốc đã chín
         save(); render();
         closeModal('care-modal');
         showToast('Cây đã chín ngay lập tức! ✨');
+    }
+
+    // ===== Bánh Đột Biến =====
+    function useMutationCookie() {
+        const plant = state.plots[activePlotIdx];
+        if (!plant || state.inventory.mutationCookie <= 0) return;
+        if (plant.giant || plant.mutant) { showToast('Cây này đã đột biến rồi!'); return; }
+        ensureMutationLimits();
+        if (state.mutationLimits.usedCount >= MUTATION_DAILY_USE_LIMIT) {
+            showToast('Đã dùng hết lượt Bánh Đột Biến hôm nay!');
+            return;
+        }
+        const cooldownLeft = state.mutationLimits.lastUsedAt ? (MUTATION_COOLDOWN_MS - (Date.now() - state.mutationLimits.lastUsedAt)) : 0;
+        if (cooldownLeft > 0) {
+            showToast('Còn hồi ' + formatTime(cooldownLeft / 1000) + ' nữa!');
+            return;
+        }
+        state.inventory.mutationCookie -= 1;
+        state.mutationLimits.usedCount += 1;
+        state.mutationLimits.lastUsedAt = Date.now();
+
+        if (Math.random() < MUTATION_CHANCE) {
+            // 50/50 giữa Khổng Lồ (x3 xu) và Đột Biến (nhận hạt hiếm)
+            if (Math.random() < 0.5) {
+                plant.giant = true;
+                save(); render(); openCareModal(activePlotIdx);
+                showToast('Cây đã biến thành Cây Khổng Lồ! 🌟 (bán x3 xu)');
+            } else {
+                plant.mutant = true;
+                const rareKey = LUCKY_RARE_SEEDS[Math.floor(Math.random() * LUCKY_RARE_SEEDS.length)];
+                state.inventory[rareKey] = (state.inventory[rareKey] || 0) + 1;
+                save(); render(); openCareModal(activePlotIdx);
+                showToast('Cây đã Đột Biến! 🧬 Nhận thêm hạt ' + SEEDS[rareKey].name);
+            }
+        } else {
+            save(); render(); openCareModal(activePlotIdx);
+            showToast('Không có gì xảy ra... thử lại lần khác 🍪');
+        }
     }
 
     function usePesticide() {
