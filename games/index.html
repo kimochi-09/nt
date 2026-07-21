@@ -114,6 +114,26 @@
         flex-shrink: 0; white-space: nowrap;
     }
 
+    /* Game đã mở khóa (có thể chơi ngay) */
+    .game-item.unlocked {
+        opacity: 1;
+        background: linear-gradient(135deg, rgba(59,201,94,0.18), rgba(30,155,69,0.10));
+        border: 1px solid rgba(120,200,140,0.4);
+    }
+    .game-item.unlocked:active { background: rgba(59,201,94,0.28); }
+    .game-item.unlocked .game-icon-wrap {
+        background: linear-gradient(135deg, #2a5a2f, #16321c);
+    }
+    .game-item.unlocked .game-status { color: #7ecf95; }
+    .game-item.unlocked .game-status .dot { background: #3bc95e; }
+    .play-tag {
+        font-size: 10.5px; font-weight: 800; color: #06210d;
+        background: linear-gradient(135deg, #7ee08a, #3bc95e);
+        padding: 3px 10px; border-radius: 20px;
+        flex-shrink: 0; white-space: nowrap;
+        box-shadow: 0 3px 8px rgba(59,201,94,0.35);
+    }
+
     .empty-note {
         text-align: center; color: #6a5480; font-size: 12.5px;
         padding: 18px 30px 8px; line-height: 1.6;
@@ -148,7 +168,7 @@
 
 <script>
     const games = [
-        { icon: "🚫", name: "Sắp ra mắt" },
+        { icon: "🌱", name: "Nông Trại Vui Vẻ", unlocked: true, file: "trongcay.html" },
         { icon: "🚫", name: "Sắp ra mắt" },
         { icon: "🚫", name: "Sắp ra mắt" },
         { icon: "🚫", name: "Sắp ra mắt" },
@@ -168,7 +188,19 @@
             return;
         }
 
-        list.innerHTML = filtered.map(g => `
+        list.innerHTML = filtered.map(g => {
+            if (g.unlocked) {
+                return `
+            <div class="game-item unlocked" onclick="openGame('${g.name}', '${g.file}')">
+                <div class="game-icon-wrap">${g.icon}</div>
+                <div class="game-info">
+                    <div class="game-name">${g.name}</div>
+                    <div class="game-status"><span class="dot"></span> · Đang mở, chơi ngay!</div>
+                </div>
+                <div class="play-tag">▶ Chơi ngay</div>
+            </div>`;
+            }
+            return `
             <div class="game-item" onclick="openGame('${g.name}')">
                 <div class="game-icon-wrap">${g.icon}</div>
                 <div class="game-info">
@@ -176,15 +208,19 @@
                     <div class="game-status"><span class="dot"></span> · Dự kiến 20 năm</div>
                 </div>
                 <div class="lock-tag">🔒 Chờ anh nhé</div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     function filterGames() {
         renderGames(document.getElementById('search-game').value);
     }
 
-    function openGame(name) {
+    function openGame(name, file) {
+        if (file) {
+            window.location.href = file;
+            return;
+        }
         alert(name + " đang được phát triển 🚧\nDự kiến ra mắt trong khoảng 20 năm nữa!");
     }
 
