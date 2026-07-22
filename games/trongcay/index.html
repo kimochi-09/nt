@@ -428,16 +428,29 @@
 
     // ===== Dữ liệu game =====
     const SEEDS = {
-        wheat:      { name: "Lúa mì",        icon: "🌾", cost: 10,   growSec: 10,   sell: 15   },
-        carrot:     { name: "Cà rốt",       icon: "🥕", cost: 25,    growSec: 30,   sell: 40    },
-        tomato:     { name: "Cà chua",       icon: "🍅", cost: 50,   growSec: 60,   sell: 85   },
-        strawberry: { name: "Dâu tây",      icon: "🍓", cost: 130,   growSec: 120,  sell: 210   },
-        watermelon: { name: "Dưa hấu",       icon: "🍉", cost: 250,  growSec: 300,  sell: 380  },
-        corn   :    { name: "Ngô",       icon: "🌽", cost: 1750, growSec: 1800, sell: 2500 },
-        // Hạt giống hiếm — chỉ có được qua Cây Đột Biến hoặc Rương May Mắn, không bán ở cửa hàng
-        goldenGrape: { name: "Nho Vàng", icon: "🍇", cost: 500, growSec: 600, sell: 900, rare: true },
-        magicMango:  { name: "Xoài Thần", icon: "🥭", cost: 800, growSec: 900, sell: 1500, rare: true },
-    };
+    chestnut:   { name: "Hạt dẻ",    icon: "🌰", cost: 10,    growSec: 10,   sell: 15 },
+    carrot:     { name: "Cà rốt",    icon: "🥕", cost: 25,    growSec: 30,   sell: 40 },
+    broccoli:   { name: "Súp lơ",    icon: "🥦", cost: 40,    growSec: 45,   sell: 65 },
+    lime:       { name: "Chanh xanh",icon: "🍋‍🟩", cost: 60,    growSec: 60,   sell: 95 },
+    strawberry: { name: "Dâu tây",   icon: "🍓", cost: 90,    growSec: 90,   sell: 145 },
+    blueberry:  { name: "Việt quất", icon: "🫐", cost: 130,   growSec: 120,  sell: 210 },
+    cherry:     { name: "Anh đào",   icon: "🍒", cost: 180,   growSec: 180,  sell: 280 },
+    kiwi:       { name: "Kiwi",      icon: "🥝", cost: 240,   growSec: 240,  sell: 370 },
+    greenApple: { name: "Táo xanh",  icon: "🍏", cost: 300,   growSec: 300,  sell: 460 },
+    redApple:   { name: "Táo đỏ",    icon: "🍎", cost: 380,   growSec: 360,  sell: 580 },
+    pear:       { name: "Quả lê",    icon: "🍐", cost: 460,   growSec: 420,  sell: 700 },
+    orange:     { name: "Quả cam",   icon: "🍊", cost: 550,   growSec: 480,  sell: 840 },
+    peach:      { name: "Quả đào",   icon: "🍑", cost: 650,   growSec: 540,  sell: 990 },
+    sweetPotato:{ name: "Khoai lang",icon: "🍠", cost: 760,   growSec: 600,  sell: 1160 },
+    banana:     { name: "Chuối",     icon: "🍌", cost: 880,   growSec: 720,  sell: 1350 },
+    grape:      { name: "Nho",       icon: "🍇", cost: 1000,  growSec: 840,  sell: 1530 },
+    avocado:    { name: "Quả bơ",    icon: "🥑", cost: 1150,  growSec: 960,  sell: 1750 },
+    mango:      { name: "Xoài",      icon: "🥭", cost: 1300,  growSec: 1080, sell: 1980 },
+    melon:      { name: "Dưa lưới",  icon: "🍈", cost: 1450,  growSec: 1200, sell: 2200 },
+    watermelon: { name: "Dưa hấu",   icon: "🍉", cost: 1600,  growSec: 1350, sell: 2430 },
+    coconut:    { name: "Quả dừa",   icon: "🥥", cost: 1800,  growSec: 1500, sell: 2700 },
+    pineapple:  { name: "Quả dứa",   icon: "🍍", cost: 2000,  growSec: 1800, sell: 3000 }
+};
     // Mở dần từ 4 ô mặc định lên tối đa 16 ô (lưới 4x4) — 12 ô còn lại có giá tăng dần
     const PLOT_COSTS = [100, 180, 320, 550, 900, 1400, 2000, 2800, 3800, 5200, 7000, 9500]; // mở ô 5 -> 16
     const MAX_PLOTS = 4 + PLOT_COSTS.length; // 16
@@ -446,7 +459,7 @@
         autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 1000, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
     };
     const ITEMS = {
-        magicFertilizer: { name: "Phân bón", icon: "✨", cost: 500, desc: "Làm cây đang trồng chín ngay lập tức." },
+        magicFertilizer: { name: "Phân bón", icon: "💩", cost: 500, desc: "Làm cây đang trồng chín ngay lập tức." },
         pesticide:        { name: "Thuốc trừ sâu",    icon: "🧪", cost: 300, desc: "Bảo vệ 1 cây khỏi sâu bệnh phá hoại." },
         mutationCookie:   { name: "Bánh Đột Biến", icon: "🍪", cost: 400, desc: "30% cơ hội biến cây đang trồng thành Cây Khổng Lồ (bán x3 xu) hoặc Cây Đột Biến (nhận hạt giống hiếm)." },
         pureWater:        { name: "Nước Thuần Khiết", icon: "💎", cost: 200, desc: "Tưới nước cao cấp, giảm 35% thời gian lớn (thay cho tưới nước thường)." },
