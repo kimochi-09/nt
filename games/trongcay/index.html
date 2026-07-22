@@ -83,7 +83,7 @@
         overflow: hidden;
     }
 
-    /* Side rail (decor + quick stats) - shown on wide frame only */
+    /* Side rail (quick stats) - shown on wide frame only */
     .side-rail {
         width: 150px; flex-shrink: 0;
         padding: 16px 10px;
@@ -99,8 +99,6 @@
         border-radius: 14px; padding: 10px;
     }
     .rail-title { font-size: 11px; font-weight: 800; color: #9fd8ac; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
-    .rail-decor-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-    .rail-decor-grid .decor-chip { font-size: 20px; }
     .rail-stat { display: flex; justify-content: space-between; font-size: 12.5px; color: #cfeed8; padding: 3px 0; }
     .rail-stat b { color: #ffd15c; }
 
@@ -113,16 +111,6 @@
         display: flex; flex-direction: column;
         align-items: center;
     }
-    .decor-row {
-        display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
-        margin-bottom: 12px; min-height: 4px;
-    }
-    .decor-chip {
-        font-size: 22px; background: rgba(30,60,35,0.5);
-        border: 1px solid rgba(120,200,140,0.25);
-        border-radius: 12px; padding: 4px 10px;
-    }
-
     #plots-grid {
         display: grid; grid-template-columns: repeat(4, 1fr);
         gap: 10px;
@@ -239,6 +227,53 @@
         display: flex; align-items: center; gap: 12px; padding: 11px 8px;
         border-bottom: 1px solid rgba(120,200,140,0.12);
     }
+
+    /* ===== Seed grid (chọn hạt giống đẹp hơn) ===== */
+    .seed-hint {
+        font-size: 12px; color: #8fbf9a; padding: 0 4px 12px; line-height: 1.4;
+    }
+    .seed-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    }
+    .seed-card {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; text-align: center;
+        gap: 4px; padding: 14px 8px 12px;
+        border-radius: 16px; cursor: pointer; border: none; font-family: inherit;
+        background: linear-gradient(160deg, rgba(40,80,45,0.55), rgba(18,40,20,0.55));
+        border: 1px solid rgba(120,200,140,0.18);
+        transition: transform .12s, border-color .12s;
+    }
+    .seed-card:active { transform: scale(0.96); }
+    .seed-card.tier-common { border-color: rgba(140,200,150,0.25); }
+    .seed-card.tier-uncommon { border-top: 2px solid #6fd88a; }
+    .seed-card.tier-rare { border-top: 2px solid #5bc8ff; box-shadow: 0 0 14px rgba(91,200,255,0.12); }
+    .seed-card.tier-epic { border-top: 2px solid #b388ff; box-shadow: 0 0 14px rgba(179,136,255,0.16); }
+    .seed-card.tier-legendary {
+        border-top: 2px solid #ffb238; box-shadow: 0 0 16px rgba(255,178,56,0.22);
+        background: linear-gradient(160deg, rgba(70,55,20,0.55), rgba(30,20,10,0.55));
+    }
+    .seed-card:disabled { opacity: .42; cursor: default; }
+    .seed-card .seed-icon {
+        font-size: 34px; line-height: 1;
+        filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+    }
+    .seed-card .seed-name { font-size: 13.5px; font-weight: 800; color: #e8fff0; margin-top: 2px; }
+    .seed-card .seed-time {
+        font-size: 10.5px; font-weight: 700; color: #a8d9b4;
+        background: rgba(0,0,0,0.25); padding: 2px 8px; border-radius: 10px;
+    }
+    .seed-card .seed-price {
+        font-size: 12.5px; font-weight: 800; color: #ffd15c;
+        display: flex; align-items: center; gap: 3px; margin-top: 2px;
+    }
+    .seed-card .seed-profit {
+        font-size: 10px; font-weight: 700; color: #7ecf95;
+    }
+    .seed-card .tier-badge {
+        position: absolute; top: 6px; right: 8px; font-size: 9px; font-weight: 800;
+        color: #d8ffe0; opacity: .55; text-transform: uppercase; letter-spacing: .03em;
+    }
     .item-row .item-icon { font-size: 26px; width: 40px; text-align: center; flex-shrink: 0; }
     .item-row .item-info { flex: 1; min-width: 0; }
     .item-row .item-name { font-size: 14px; font-weight: 800; color: #d8ffe0; }
@@ -329,10 +364,6 @@
     <div id="body-row">
         <div class="side-rail" id="side-rail-left">
             <div class="rail-card">
-                <div class="rail-title">Trang trí</div>
-                <div class="rail-decor-grid" id="decor-row-side"></div>
-            </div>
-            <div class="rail-card">
                 <div class="rail-title">Thống kê</div>
                 <div class="rail-stat">Đã kiếm <b id="stat-total">0</b></div>
                 <div class="rail-stat">Ô đất <b id="stat-plots">4/16</b></div>
@@ -340,7 +371,6 @@
         </div>
 
         <div id="farm-wrap">
-            <div class="decor-row" id="decor-row"></div>
             <div id="plots-grid"></div>
         </div>
 
@@ -353,7 +383,6 @@
             <div class="rail-card">
                 <div class="rail-title">Nâng cấp</div>
                 <div class="rail-stat">💦 Tưới siêu tốc <b id="stat-water">Chưa có</b></div>
-                <div class="rail-stat">🧺 Tự thu hoạch <b id="stat-auto">Chưa có</b></div>
             </div>
         </div>
     </div>
@@ -398,7 +427,6 @@
             <div class="shop-tab active" data-tab="seeds" onclick="switchShopTab('seeds')">Hạt giống</div>
             <div class="shop-tab" data-tab="upgrades" onclick="switchShopTab('upgrades')">Nâng cấp</div>
             <div class="shop-tab" data-tab="items" onclick="switchShopTab('items')">Vật phẩm</div>
-            <div class="shop-tab" data-tab="decor" onclick="switchShopTab('decor')">Trang trí</div>
         </div>
         <div id="shop-content"></div>
     </div>
@@ -448,7 +476,6 @@
     const MAX_PLOTS = 4 + PLOT_COSTS.length; // 16
     const UPGRADES = {
         fastWater:   { name: "Bình tưới siêu tốc",      icon: "💦", cost: 300, desc: "Tự động tưới nước ngay khi trồng cây mới (giảm 20% thời gian lớn)." },
-        autoHarvest: { name: "Giỏ thu hoạch tự động",   icon: "🧺", cost: 1000, desc: "Tự động thu hoạch xu ngay khi cây chín, kể cả khi bạn không thao tác." },
     };
     const ITEMS = {
         magicFertilizer: { name: "Phân bón", icon: "💩", cost: 500, desc: "Làm cây đang trồng chín ngay lập tức." },
@@ -456,20 +483,10 @@
         mutationCookie:   { name: "Bánh Đột Biến", icon: "🍪", cost: 400, desc: "30% cơ hội biến cây đang trồng thành Cây Khổng Lồ (bán x3 xu) hoặc Cây Đột Biến (nhận hạt giống hiếm)." },
         pureWater:        { name: "Nước Thuần Khiết", icon: "💎", cost: 200, desc: "Tưới nước cao cấp, giảm 35% thời gian lớn (thay cho tưới nước thường)." },
     };
-    const DECOR = {
-        scarecrow: { name: "Bù nhìn rơm", icon: "🎃", cost: 150 },
-        fence:     { name: "Hàng rào",    icon: "🚧", cost: 100 },
-        hut:       { name: "Nhà chòi",    icon: "🏠", cost: 400 },
-        hat:       { name: "Nón nông dân", icon: "👒", cost: 120 },
-        // Trang trí giới hạn — chỉ có được qua Rương May Mắn
-        goldenStatue: { name: "Tượng Vàng", icon: "🏆", cost: 100, limited: true },
-        rainbowFlag:  { name: "Cờ Cầu Vồng", icon: "🎏", cost: 120, limited: true },
-    };
     const PEST_CHANCE = 0.15; // 15% khả năng sâu bệnh nếu không có bảo vệ
     const MUTATION_CHANCE = 0.30; // 30% cơ hội đột biến khi dùng Bánh Đột Biến
     const LUCKY_CHEST_COST = 200;
     const LUCKY_RARE_SEEDS = ['goldenGrape', 'magicMango'];
-    const LUCKY_LIMITED_DECOR = ['goldenStatue', 'rainbowFlag'];
 
     let state = null; // trạng thái game hiện tại (đồng bộ với Firebase)
     let activePlotIdx = null;
@@ -497,9 +514,8 @@
             totalEarned: 0,
             unlockedPlots: 4,
             plots: {},
-            upgrades: { fastWater: false, autoHarvest: false },
+            upgrades: { fastWater: false },
             inventory: { magicFertilizer: 0, pesticide: 0, mutationCookie: 0, pureWater: 0 },
-            decor: { scarecrow: false, fence: false, hut: false, hat: false, goldenStatue: false, rainbowFlag: false },
             fertLimits: { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 },
             mutationLimits: { day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0 },
         };
@@ -549,9 +565,8 @@
             } else {
                 state = Object.assign(defaultState(), snap.val());
                 state.plots = snap.val().plots || {};
-                state.upgrades = Object.assign({fastWater:false, autoHarvest:false}, snap.val().upgrades);
+                state.upgrades = Object.assign({fastWater:false}, snap.val().upgrades);
                 state.inventory = Object.assign({magicFertilizer:0, pesticide:0, mutationCookie:0, pureWater:0}, snap.val().inventory);
-                state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false, goldenStatue:false, rainbowFlag:false}, snap.val().decor);
                 state.fertLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().fertLimits);
                 state.mutationLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().mutationLimits);
             }
@@ -564,9 +579,8 @@
                 if (!snap.exists()) return;
                 state = Object.assign(defaultState(), snap.val());
                 state.plots = snap.val().plots || {};
-                state.upgrades = Object.assign({fastWater:false, autoHarvest:false}, snap.val().upgrades);
+                state.upgrades = Object.assign({fastWater:false}, snap.val().upgrades);
                 state.inventory = Object.assign({magicFertilizer:0, pesticide:0, mutationCookie:0, pureWater:0}, snap.val().inventory);
-                state.decor = Object.assign({scarecrow:false, fence:false, hut:false, hat:false, goldenStatue:false, rainbowFlag:false}, snap.val().decor);
                 state.fertLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().fertLimits);
                 state.mutationLimits = Object.assign({day: todayKey(), usedCount: 0, buyCount: 0, lastUsedAt: 0}, snap.val().mutationLimits);
                 ensureFertLimits();
@@ -607,19 +621,12 @@
         document.getElementById('coin-count').textContent = state.coins.toLocaleString('vi-VN');
         document.getElementById('lvl-label').textContent = 'Cấp ' + computeLevel();
 
-        // decor row (mobile, inline above grid)
-        const ownedDecor = Object.keys(DECOR).filter(k => state.decor[k]);
-        const decorHtml = ownedDecor.map(k => `<div class="decor-chip">${DECOR[k].icon}</div>`).join('');
-        document.getElementById('decor-row').innerHTML = decorHtml;
-        document.getElementById('decor-row-side').innerHTML = decorHtml || '<span style="font-size:12px;color:#7fa88a;">Chưa có</span>';
-
         // side rail stats (desktop)
         document.getElementById('stat-total').textContent = (state.totalEarned || 0).toLocaleString('vi-VN');
         document.getElementById('stat-plots').textContent = state.unlockedPlots + '/' + MAX_PLOTS;
         document.getElementById('stat-fert').textContent = state.inventory.magicFertilizer || 0;
         document.getElementById('stat-pest').textContent = state.inventory.pesticide || 0;
         document.getElementById('stat-water').textContent = state.upgrades.fastWater ? 'Đã có' : 'Chưa có';
-        document.getElementById('stat-auto').textContent = state.upgrades.autoHarvest ? 'Đã có' : 'Chưa có';
 
         // plots
         const grid = document.getElementById('plots-grid');
@@ -697,23 +704,8 @@
     // ===== Tick: cập nhật đồng hồ + tự động thu hoạch =====
     function gameTick() {
         if (!state) return;
-        let changed = false;
-        if (state.upgrades.autoHarvest) {
-            Object.keys(state.plots).forEach(key => {
-                const plant = state.plots[key];
-                const seed = SEEDS[plant.seed];
-                const waterFactor = plant.waterBoost === 'pure' ? 0.65 : (plant.watered ? 0.8 : 1);
-                const growDuration = seed.growSec * waterFactor;
-                const elapsed = (Date.now() - plant.plantedAt) / 1000;
-                if (elapsed >= growDuration) {
-                    const earned = harvestPlant(key, plant, seed, true);
-                    changed = true;
-                }
-            });
-        }
         // chỉ vẽ lại đồng hồ đếm ngược, không ghi Firebase liên tục
         renderTimersOnly();
-        if (changed) save();
     }
 
     function renderTimersOnly() {
