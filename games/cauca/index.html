@@ -341,7 +341,7 @@
     <button class="back-btn" onclick="goBack()">←</button>
     <div style="flex:1;"></div>
     <div style="display:flex; gap:6px;">
-      <div class="stat"><span class="ic">💰</span><span id="coinDisplay">0</span></div>
+      <div class="stat"><span class="ic">🪙</span><span id="coinDisplay">0</span></div>
       <div class="stat"><span class="ic">🐟</span><span id="fishCountDisplay">0/60</span></div>
     </div>
   </div>
@@ -583,7 +583,7 @@ function updateHeader(){
   coinDisplay.textContent = state.coins.toLocaleString('vi-VN');
   const caughtCount = Object.keys(state.caughtIds).length;
   fishCountDisplay.textContent = caughtCount + "/60";
-  document.getElementById('shopCoin').textContent = "💰 " + state.coins.toLocaleString('vi-VN');
+  document.getElementById('shopCoin').textContent = "🪙 " + state.coins.toLocaleString('vi-VN');
 }
 
 function toast(msg){
