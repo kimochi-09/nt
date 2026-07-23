@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Nông Trại Vui Vẻ</title>
+<title>Trồng Cây</title>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
@@ -105,23 +105,30 @@
     #farm-wrap {
         flex: 1;
         min-width: 0;
-        overflow-y: auto;
-        padding: 14px 12px 90px;
+        min-height: 0;
+        overflow: hidden;
+        padding: 10px 12px 80px;
         position: relative;
         display: flex; flex-direction: column;
         align-items: center;
+        justify-content: center;
     }
     #plots-grid {
         display: grid; grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
+        grid-template-rows: repeat(4, 1fr);
+        gap: 8px;
         width: 100%;
+        height: 100%;
         max-width: 640px;
+        max-height: 100%;
+        aspect-ratio: 1 / 1;
         margin: 0 auto;
     }
     .plot {
         position: relative;
-        aspect-ratio: 1 / 1;
-        border-radius: 16px;
+        min-height: 0;
+        min-width: 0;
+        border-radius: 14px;
         background: radial-gradient(circle at 30% 20%, #3a2a18, #241a0f 70%);
         border: 2px solid rgba(140,90,40,0.5);
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -130,40 +137,40 @@
         overflow: hidden;
     }
     .plot:active { transform: scale(0.94); }
-    .plot .icon { font-size: 30px; }
+    .plot .icon { font-size: 22px; }
     .plot.empty { background: radial-gradient(circle at 30% 20%, #3a2c1a, #23180d 70%); }
-    .plot.empty .icon { font-size: 26px; color: #7a5a2c; opacity: .8; }
+    .plot.empty .icon { font-size: 19px; color: #7a5a2c; opacity: .8; }
     .plot.locked { background: rgba(20,20,25,0.6); border-color: rgba(120,120,130,0.25); }
-    .plot.locked .icon { font-size: 22px; opacity: .6; }
+    .plot.locked .icon { font-size: 17px; opacity: .6; }
     .plot.locked .lock-cost {
-        font-size: 10.5px; font-weight: 800; color: #ffcda0; margin-top: 4px;
+        font-size: 9px; font-weight: 800; color: #ffcda0; margin-top: 3px;
     }
     .plot.ready { border-color: #ffd15c; box-shadow: 0 0 14px rgba(255,209,92,0.55); animation: pulseReady 1.1s infinite; }
     .plot.giant { border-color: #ffb238; box-shadow: 0 0 18px rgba(255,178,56,0.75); }
-    .plot.giant .icon { font-size: 40px; }
+    .plot.giant .icon { font-size: 30px; }
     .plot.mutant { border-color: #b388ff; box-shadow: 0 0 18px rgba(179,136,255,0.75); }
     .plot .special-tag {
-        font-size: 8.5px; font-weight: 800; color: #3a2600; background: linear-gradient(135deg,#ffe08a,#ffb238);
-        padding: 1px 6px; border-radius: 8px; margin-top: 2px;
+        font-size: 7.5px; font-weight: 800; color: #3a2600; background: linear-gradient(135deg,#ffe08a,#ffb238);
+        padding: 1px 5px; border-radius: 7px; margin-top: 2px;
     }
     .plot .special-tag.mutant-tag { color: #fff; background: linear-gradient(135deg,#c9a4ff,#8a5cf0); }
     @keyframes pulseReady { 0%,100%{ box-shadow:0 0 10px rgba(255,209,92,0.4);} 50%{ box-shadow:0 0 20px rgba(255,209,92,0.85);} }
-    .plot .sparkle { position:absolute; top:4px; right:6px; font-size:14px; animation: spin 2s linear infinite; }
+    .plot .sparkle { position:absolute; top:3px; right:5px; font-size:12px; animation: spin 2s linear infinite; }
     @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
     .plot .timer {
-        font-size: 10.5px; font-weight: 700; color: #d8ffe0; margin-top: 4px;
-        background: rgba(0,0,0,0.35); padding: 1px 7px; border-radius: 10px;
+        font-size: 9px; font-weight: 700; color: #d8ffe0; margin-top: 3px;
+        background: rgba(0,0,0,0.35); padding: 1px 6px; border-radius: 9px;
     }
-    .plot .care-icons { position: absolute; bottom: 4px; left: 0; right: 0; display: flex; justify-content: center; gap: 3px; }
-    .plot .care-icons span { font-size: 11px; opacity: .9; }
+    .plot .care-icons { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
+    .plot .care-icons span { font-size: 9.5px; opacity: .9; }
     .plot .bar-wrap {
-        width: 78%; height: 5px; border-radius: 4px; background: rgba(0,0,0,0.35);
-        margin-top: 5px; overflow: hidden;
+        width: 78%; height: 4px; border-radius: 4px; background: rgba(0,0,0,0.35);
+        margin-top: 4px; overflow: hidden;
     }
     .plot .bar-fill { height: 100%; background: linear-gradient(90deg,#7ee08a,#3bc95e); border-radius: 4px; }
 
-    .plot-name { position:absolute; top:4px; left:6px; font-size:9px; font-weight:800; color:#d8ffe0; opacity:.65; }
+    .plot-name { position:absolute; top:3px; left:5px; font-size:7.5px; font-weight:800; color:#d8ffe0; opacity:.65; }
 
     /* floating +coin */
     .float-coin {
