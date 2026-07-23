@@ -965,7 +965,7 @@ function renderInventory(){
         <div class="iprice">${fish.price.toLocaleString('vi-VN')} xu / con</div>
       </div>
       <div class="iqty">x${qty}</div>
-      <button class="sellOneBtn" data-sell-id="${id}">Bán (${(fish.price*qty).toLocaleString('vi-VN')} 💰)</button>
+      <button class="sellOneBtn" data-sell-id="${id}">Bán (${(fish.price*qty).toLocaleString('vi-VN')} 🪙)</button>
     `;
     wrap.appendChild(item);
   });
@@ -989,7 +989,7 @@ function renderInventory(){
   });
   const sellBtn = document.createElement('button');
   sellBtn.className='sellAllBtn';
-  sellBtn.textContent = `💰 Bán tất cả (nhận ${totalValue.toLocaleString('vi-VN')} xu)`;
+  sellBtn.textContent = `🪙 Bán tất cả (nhận ${totalValue.toLocaleString('vi-VN')} xu)`;
   sellBtn.addEventListener('click', ()=>{
     SoundEngine.sfx.sell();
     const b = rodBonus();
