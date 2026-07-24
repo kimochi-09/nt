@@ -1004,12 +1004,12 @@
 
   document.getElementById('backBtn').addEventListener('click', () => {
     saveProgress();
-    window.location.href = 'games';
+    window.location.href = '/games';
   });
   document.getElementById('backBtn').addEventListener('touchstart', e => {
     e.preventDefault();
     saveProgress();
-    window.location.href = 'games';
+    window.location.href = '/games';
   });
 
   auth.onAuthStateChanged(user => {
@@ -1021,11 +1021,11 @@
       loadProgress();
     } else if (authReady) {
       // chưa đăng nhập ở chat -> quay lại trang chat để đăng nhập
-      window.location.href = 'games';
+      window.location.href = '/games';
     }
     authReady = true;
   });
-  setTimeout(() => { if (!myId) window.location.href = 'games'; }, 3000);
+  setTimeout(() => { if (!myId) window.location.href = '/games'; }, 3000);
 
   function loadProgress() {
     if (!saveRef) return;
