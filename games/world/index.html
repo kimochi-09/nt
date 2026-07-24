@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Open World 2D - Module</title>
+<title>World</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body {
@@ -500,14 +500,7 @@
   window.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'c') openCraft(); });
 
 
-  const interactables = [
-    { x: 8*TILE,  y: 8*TILE,  r: 26, name:'Lão tiều phu', color:'#c77b3a',
-      msg: 'Lão tiều phu: "Cẩn thận với đá ở phía đông nam, chàng trai!"' },
-    { x: 50*TILE, y: 10*TILE, r: 26, name:'Thương nhân', color:'#c04fc0',
-      msg: 'Thương nhân: "Ta có hàng hiếm, tiếc là ngươi chưa đủ vàng."' },
-    { x: 30*TILE, y: 30*TILE, r: 22, name:'Rương báu', color:'#f2c14e',
-      msg: '🎁 Bạn tìm thấy 1 Rương báu! (gắn logic mở thưởng ở đây)' },
-  ];
+  const interactables = []; // đã bỏ NPC / rương báu khỏi thế giới
 
   // ---------- NHÂN VẬT ----------
   const player = {
@@ -832,6 +825,7 @@
 
       player.frameTimer += dt;
       if (player.frameTimer > 0.12) { player.frame = (player.frame+1) % 4; player.frameTimer = 0; }
+      broadcastPosition();
     } else {
       player.frame = 0;
     }
@@ -925,6 +919,40 @@
     }
   }
 
+  // vẽ những người chơi khác đang ở chung thế giới (realtime)
+  function drawOtherPlayers() {
+    const now = Date.now();
+    for (const id in otherPlayers) {
+      const p = otherPlayers[id];
+      if (!p || typeof p.x !== 'number' || typeof p.y !== 'number') continue;
+      if (p.t && now - p.t > 20000) continue; // dữ liệu quá cũ (có thể đã thoát), bỏ qua
+
+      const sx = p.x - camera.x;
+      const sy = p.y - camera.y;
+      if (sx < -60 || sy < -60 || sx > canvas.width+60 || sy > canvas.height+60) continue;
+
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.ellipse(sx, sy + player.h/2 - 2, player.w/2.4, 6, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = '#66ccff';
+      roundRect(ctx, sx - player.w/2, sy - player.h/2, player.w, player.h, 6);
+      ctx.fill();
+
+      ctx.fillStyle = '#222';
+      const dir = p.dir || 'down';
+      const eyeOffset = { up:[-5,-9,5,-9], down:[-5,3,5,3], left:[-8,-2,-2,-2], right:[2,-2,8,-2] }[dir];
+      ctx.fillRect(sx+eyeOffset[0]-2, sy+eyeOffset[1]-2, 4, 4);
+      ctx.fillRect(sx+eyeOffset[2]-2, sy+eyeOffset[3]-2, 4, 4);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '11px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.name || id, sx, sy - player.h/2 - 8);
+    }
+  }
+
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x+r, y);
@@ -954,6 +982,18 @@
       miniCtx.fillRect(node.x*scaleX-1, node.y*scaleY-1, 2, 2);
     }
 
+    // vị trí những người chơi khác đang ở chung thế giới
+    const nowMini = Date.now();
+    miniCtx.fillStyle = '#66ccff';
+    for (const id in otherPlayers) {
+      const p = otherPlayers[id];
+      if (!p || typeof p.x !== 'number') continue;
+      if (p.t && nowMini - p.t > 20000) continue;
+      miniCtx.beginPath();
+      miniCtx.arc(p.x*scaleX, p.y*scaleY, 2.5, 0, Math.PI*2);
+      miniCtx.fill();
+    }
+
     // vị trí người chơi
     miniCtx.fillStyle = '#ff2222';
     miniCtx.beginPath();
@@ -971,6 +1011,7 @@
     drawResourceNodes();
     drawBuildings();
     drawInteractables();
+    drawOtherPlayers();
     drawPlayer();
     drawChopFx();
     drawMinimap();
@@ -1018,6 +1059,7 @@ auth.onAuthStateChanged(user => {
     document.getElementById('playerTag').textContent = '👤 ' + myId;
     saveRef = db.ref('game_open_world/' + myId);
     loadProgress();
+    initMultiplayer();
   } else {
     window.location.replace('/games/');
   }
@@ -1054,6 +1096,55 @@ auth.onAuthStateChanged(user => {
   setInterval(saveProgress, 15000);
   window.addEventListener('beforeunload', saveProgress);
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
+
+  // ---------- THẾ GIỚI CHUNG (MULTIPLAYER REALTIME) ----------
+  // Tất cả tài khoản khi vào game đều đứng chung 1 phòng "main",
+  // thấy nhau di chuyển realtime qua Firebase Realtime Database.
+  const WORLD_ROOM_ID = 'main';
+  let playersRef = null;
+  let myPlayerRef = null;
+  const otherPlayers = {}; // id khác -> {x,y,dir,name,t}
+  let lastSentX = null, lastSentY = null, lastSentDir = null, lastSendTime = 0;
+
+  function initMultiplayer() {
+    if (!myId || playersRef) return;
+    playersRef = db.ref('game_open_world_room/' + WORLD_ROOM_ID + '/players');
+    myPlayerRef = playersRef.child(myId);
+
+    // tự xoá mình khỏi phòng nếu mất kết nối / đóng tab
+    myPlayerRef.onDisconnect().remove();
+
+    playersRef.on('child_added', snap => {
+      if (snap.key === myId) return;
+      otherPlayers[snap.key] = snap.val();
+    });
+    playersRef.on('child_changed', snap => {
+      if (snap.key === myId) return;
+      otherPlayers[snap.key] = snap.val();
+    });
+    playersRef.on('child_removed', snap => {
+      delete otherPlayers[snap.key];
+    });
+  }
+
+  function broadcastPosition(force) {
+    if (!myPlayerRef) return;
+    const now = performance.now();
+    if (!force) {
+      if (now - lastSendTime < 120) return; // giới hạn tần suất gửi lên server
+      if (player.x === lastSentX && player.y === lastSentY && player.dir === lastSentDir) return;
+    }
+    lastSentX = player.x; lastSentY = player.y; lastSentDir = player.dir;
+    lastSendTime = now;
+    myPlayerRef.set({
+      x: player.x, y: player.y, dir: player.dir,
+      name: myId,
+      t: firebase.database.ServerValue.TIMESTAMP
+    });
+  }
+  // gửi lại vị trí định kỳ dù đứng yên, để timestamp luôn mới
+  // (tránh bị các người chơi khác coi là "đã rời phòng")
+  setInterval(() => broadcastPosition(true), 8000);
 
 
   const rotateRoot = document.getElementById('rotateRoot');
