@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🎣 Fishing World: Chat & Chill</title>
+<title>🎣 Câu Cá </title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -299,6 +299,7 @@
   .msg .name{font-size:11px; color:var(--text-dim); font-weight:700; margin-bottom:2px;}
   .msg .msgTime{font-size:10px; color:var(--text-dim); opacity:.65; margin-top:2px;}
   .msg.me .msgTime{text-align:right;}
+  .msg.me .name{text-align:right;}
   .msg.me{align-self:flex-end; flex-direction:row-reverse;}
   .msg.me .bubble2{background:var(--gold); color:#3a2400; border-radius:14px 14px 4px 14px;}
   .msg.sys{align-self:center; max-width:95%;}
@@ -332,19 +333,11 @@
   ::-webkit-scrollbar{width:5px;}
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15); border-radius:10px;}
 
-  /* FLOATING WORLD-CHAT BUBBLE */
-  #chatBubbleBtn{
-    position:absolute; right:14px; bottom:calc(var(--nav-h) + 16px);
-    width:54px; height:54px; border-radius:50%;
-    background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400;
-    border:none; box-shadow:0 6px 14px rgba(0,0,0,.45), 0 0 0 3px rgba(255,255,255,.1);
-    font-size:24px; z-index:80; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; padding:0;
-  }
-  #chatBubbleBtn:active{transform:scale(.92);}
+  /* CHAT UNREAD BADGE (gắn trên nút nav "Chat chung") */
+  .navBtn{position:relative;}
   #chatUnreadBadge{
-    position:absolute; top:-3px; right:-3px; background:#ff4757; color:#fff;
-    font-size:10.5px; font-weight:800; min-width:18px; height:18px; border-radius:9px;
+    position:absolute; top:2px; right:calc(50% - 26px); background:#ff4757; color:#fff;
+    font-size:10px; font-weight:800; min-width:16px; height:16px; border-radius:8px;
     display:none; align-items:center; justify-content:center; padding:0 4px;
     border:2px solid var(--bg-deep);
   }
@@ -399,6 +392,7 @@
     <button class="navBtn" data-panel="shop"><span class="navIc">🛒</span>Cửa hàng</button>
     <button class="navBtn" data-panel="collection"><span class="navIc">📖</span>Sổ tay</button>
     <button class="navBtn" data-panel="inventory"><span class="navIc">🎒</span>Kho đồ</button>
+    <button class="navBtn" data-panel="worldchat"><span class="navIc">💬</span>Chat chung<span id="chatUnreadBadge">0</span></button>
   </div>
 
   <!-- SHOP PANEL -->
@@ -438,7 +432,7 @@
   <div class="panel" id="panel-worldchat">
     <div class="panelHeader">
       <span class="phTitle">💬 Chat Chung</span>
-      <button class="closeBtn" id="closeWorldChatBtn">✕</button>
+      <button class="closeBtn" data-close>✕</button>
     </div>
     <div id="chatMessages"></div>
     <div id="chatInputBar">
@@ -446,12 +440,6 @@
       <button id="worldChatSendBtn">➤</button>
     </div>
   </div>
-
-  <!-- FLOATING CHAT BUBBLE -->
-  <button id="chatBubbleBtn" title="Chat chung với người khác">
-    💬
-    <span id="chatUnreadBadge">0</span>
-  </button>
 
 </div>
 
@@ -695,14 +683,11 @@ spawnBubbles();
 
 /* ============== WORLD CHAT (bong bóng chat chung với người khác) ============== */
 const WORLD_CHAT_ROOM = 'world_fishing'; // phòng chat chung, dùng chung Firebase với hệ thống Chat
-const CHAT_LASTREAD_KEY = 'fishingWorld_chatLastRead';
-const chatBubbleBtn = document.getElementById('chatBubbleBtn');
 const chatUnreadBadge = document.getElementById('chatUnreadBadge');
 const panelWorldChat = document.getElementById('panel-worldchat');
 const chatMessagesEl = document.getElementById('chatMessages');
 const worldChatInput = document.getElementById('worldChatInput');
 const worldChatSendBtn = document.getElementById('worldChatSendBtn');
-const closeWorldChatBtn = document.getElementById('closeWorldChatBtn');
 
 function myChatName(){
   return currentUser ? currentUser.uid : ('Khách#' + state.playerId);
@@ -711,32 +696,15 @@ function escapeHtml(str){
   return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-let pausedPanelId = null;
 let worldChatUnread = 0;
 function isWorldChatOpen(){ return panelWorldChat.classList.contains('show'); }
 let worldChatReady = false; // để không tính tin nhắn cũ là "chưa đọc" khi vừa mở app
-let lastReadTs = Number((function(){ try{ return localStorage.getItem(CHAT_LASTREAD_KEY); }catch(e){ return 0; } })() || 0);
 
-function openWorldChat(){
-  const shown = document.querySelector('.panel.show');
-  pausedPanelId = shown ? shown.id : null;
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-  panelWorldChat.classList.add('show');
+function markWorldChatRead(){
   worldChatUnread = 0;
   updateChatBadge();
-  lastReadTs = Date.now();
-  try{ localStorage.setItem(CHAT_LASTREAD_KEY, String(lastReadTs)); }catch(e){}
   setTimeout(()=>{ chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight; }, 60);
 }
-function closeWorldChat(){
-  panelWorldChat.classList.remove('show');
-  if(pausedPanelId){
-    const p = document.getElementById(pausedPanelId);
-    if(p) p.classList.add('show');
-  }
-}
-chatBubbleBtn.addEventListener('click', ()=>{ SoundEngine.unlock(); openWorldChat(); });
-closeWorldChatBtn.addEventListener('click', closeWorldChat);
 
 function updateChatBadge(){
   if(worldChatUnread>0 && !isWorldChatOpen()){
@@ -759,9 +727,9 @@ function renderChatMsg(key, m){
     row.className = 'msg' + (me?' me':'');
     const time = new Date(m.ts||Date.now()).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
     row.innerHTML = `
-      <div class="av">${escapeHtml((m.s||'?').slice(0,1).toUpperCase())}</div>
+      <div class="av">👤</div>
       <div>
-        ${me?'':`<div class="name">${escapeHtml(m.s)}</div>`}
+        <div class="name">${escapeHtml(m.s)}</div>
         <div class="bubble2">${escapeHtml(m.t)}</div>
         <div class="msgTime">${time}</div>
       </div>
@@ -791,11 +759,6 @@ function sendWorldChat(){
 }
 worldChatSendBtn.addEventListener('click', sendWorldChat);
 worldChatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendWorldChat(); } });
-
-/* Gửi thông báo hệ thống vào chat chung (ví dụ khi ai đó mua cần câu mới) */
-function addSystemChatMsg(text){
-  db.ref('chats/' + WORLD_CHAT_ROOM).push({ s:'system', t:text, ts:Date.now(), sys:true }).catch(()=>{});
-}
 
 /* ============== FISHING LOGIC ============== */
 let fishingState = "idle"; // idle -> waiting -> biting -> reeling
@@ -1077,7 +1040,6 @@ function renderShop(){
         updateHeader();
         renderShop();
         toast(`Đã mua và trang bị ${rod.name}!`);
-        addSystemChatMsg(`🎉 Cần thủ #${state.playerId} vừa tậu ${rod.name}!`);
       } else {
         SoundEngine.sfx.error();
         toast('Không đủ xu 😢');
@@ -1203,6 +1165,7 @@ navBtns.forEach(btn=>{
       if(target==='shop') renderShop();
       if(target==='collection') renderCollection();
       if(target==='inventory') renderInventory();
+      if(target==='worldchat') markWorldChatRead();
     }
   });
 });
