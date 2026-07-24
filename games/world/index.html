@@ -1002,30 +1002,26 @@
   let saveRef = null;
   let authReady = false;
 
-  document.getElementById('backBtn').addEventListener('click', () => {
-    saveProgress();
-    window.location.href = '/games';
-  });
-  document.getElementById('backBtn').addEventListener('touchstart', e => {
+  const backBtn = document.getElementById('backBtn');
+if (backBtn) {
+  backBtn.addEventListener('click', (e) => {
     e.preventDefault();
     saveProgress();
-    window.location.href = '/games';
+    window.location.replace('/games/');
   });
+}
 
-  auth.onAuthStateChanged(user => {
-    const savedId = localStorage.getItem('nt_myId');
-    if (user && savedId) {
-      myId = savedId;
-      document.getElementById('playerTag').textContent = '👤 ' + myId;
-      saveRef = db.ref('game_open_world/' + myId);
-      loadProgress();
-    } else if (authReady) {
-      // chưa đăng nhập ở chat -> quay lại trang chat để đăng nhập
-      window.location.href = '/games';
-    }
-    authReady = true;
-  });
-  setTimeout(() => { if (!myId) window.location.href = '/games'; }, 3000);
+auth.onAuthStateChanged(user => {
+  const savedId = localStorage.getItem('nt_myId');
+  if (user && savedId) {
+    myId = savedId;
+    document.getElementById('playerTag').textContent = '👤 ' + myId;
+    saveRef = db.ref('game_open_world/' + myId);
+    loadProgress();
+  } else {
+    window.location.replace('/games/');
+  }
+});
 
   function loadProgress() {
     if (!saveRef) return;
