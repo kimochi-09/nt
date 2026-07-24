@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World</title>
+<title>Open World 2D - Module</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body {
@@ -127,33 +127,44 @@
   }
   .invItem .ic { font-size:14px; }
 
-  #craftBtn {
+  #shopBtn {
     position:absolute; right:20px; bottom:100px; z-index:10;
     width:56px; height:56px; border-radius:50%;
-    background:rgba(90,160,250,.85); border:3px solid rgba(255,255,255,.85);
+    background:rgba(250,170,60,.9); border:3px solid rgba(255,255,255,.85);
     box-shadow:0 2px 10px rgba(0,0,0,.4);
     color:#fff; font-weight:bold; font-size:11px; line-height:1.15;
     display:flex; align-items:center; justify-content:center; text-align:center;
     user-select:none;
   }
 
-  #craftOverlay {
+  #shopOverlay {
     position:absolute; inset:0; background:rgba(0,0,0,.55);
     display:none; align-items:center; justify-content:center; z-index:20;
   }
-  #craftPanel {
+  #shopPanel {
     background:#2b2f3a; border-radius:12px; padding:14px 16px;
     width:88%; max-width:420px; max-height:82%; overflow-y:auto;
     color:#fff; box-shadow:0 8px 30px rgba(0,0,0,.5);
   }
-  #craftPanel h3 {
+  #shopPanel h3 {
     margin:0 0 10px; font-size:16px;
     display:flex; justify-content:space-between; align-items:center;
   }
-  #craftClose {
+  #shopClose {
     cursor:pointer; background:rgba(255,255,255,.15); border:none;
     color:#fff; width:26px; height:26px; border-radius:50%; font-size:13px;
   }
+  #shopCoinRow {
+    display:flex; align-items:center; gap:6px; font-size:13px;
+    background:rgba(255,210,77,.12); border-radius:8px; padding:6px 10px;
+    margin-bottom:10px; font-weight:bold;
+  }
+  #shopTabs { display:flex; gap:6px; margin-bottom:10px; }
+  .shopTab {
+    flex:1; text-align:center; padding:7px 0; border-radius:7px;
+    background:rgba(255,255,255,.08); cursor:pointer; font-size:13px; font-weight:bold;
+  }
+  .shopTab.active { background:#4c8bf5; }
   .recipeCard {
     display:flex; align-items:center; justify-content:space-between;
     gap:8px; background:rgba(255,255,255,.06); border-radius:8px;
@@ -166,7 +177,26 @@
     background:#4caf50; border:none; color:#fff; padding:7px 12px;
     border-radius:6px; font-size:12px; cursor:pointer; white-space:nowrap;
   }
+  .recipeBtn.sellBtn { background:#e0a13a; }
   .recipeBtn:disabled { background:#666; cursor:not-allowed; opacity:.6; }
+
+  /* ---------- THANH SỨC KHOẺ ---------- */
+  #hpBarWrap {
+    position:absolute; top:44px; right:8px; z-index:5;
+    width:120px; background:rgba(0,0,0,.35); border-radius:8px; padding:5px 7px;
+  }
+  #hpLabel {
+    color:#fff; font-size:10px; margin-bottom:3px; display:flex;
+    justify-content:space-between; text-shadow:0 1px 2px rgba(0,0,0,.8);
+  }
+  #hpBarBg {
+    width:100%; height:9px; border-radius:5px; background:rgba(255,255,255,.15);
+    overflow:hidden; border:1px solid rgba(255,255,255,.3);
+  }
+  #hpBarFill {
+    height:100%; width:100%; background:linear-gradient(90deg,#ff5b5b,#ff9a3d);
+    transition:width .25s ease;
+  }
 
   /* ---------- ÉP XOAY NGANG TRÊN ĐIỆN THOẠI ---------- */
   /* Khi màn hình đang ở chế độ dọc trên thiết bị cảm ứng (điện thoại),
@@ -204,6 +234,10 @@
     </div>
 
     <div id="invBar"></div>
+    <div id="hpBarWrap">
+      <div id="hpLabel"><span>❤️ Sức khoẻ</span><span id="hpText">100/100</span></div>
+      <div id="hpBarBg"><div id="hpBarFill"></div></div>
+    </div>
 
     <div id="msgBox"></div>
     <div id="helpHint">bản thử nghiệm thoii đừng choi</div>
@@ -213,13 +247,18 @@
       <div id="joyBase"><div id="joyStick"></div></div>
     </div>
     <div id="hotbar"></div>
-    <div id="craftBtn">Chế<br>tạo</div>
+    <div id="shopBtn">Cửa<br>hàng</div>
     <div id="interactBtn">Dùng</div>
 
-    <div id="craftOverlay">
-      <div id="craftPanel">
-        <h3>🛠️ Chế tạo <button id="craftClose">✕</button></h3>
-        <div id="recipeList"></div>
+    <div id="shopOverlay">
+      <div id="shopPanel">
+        <h3>🏪 Cửa hàng <button id="shopClose">✕</button></h3>
+        <div id="shopCoinRow">🪙 <span id="shopCoinCount">0</span> xu</div>
+        <div id="shopTabs">
+          <div class="shopTab active" data-tab="buy">Mua đồ</div>
+          <div class="shopTab" data-tab="sell">Bán đồ</div>
+        </div>
+        <div id="shopList"></div>
       </div>
     </div>
   </div>
@@ -364,12 +403,13 @@
   };
 
   // ---------- TÚI ĐỒ (INVENTORY) ----------
-  const inventory = { wood:0, stone:0, fiber:0 };
+  const inventory = { wood:0, stone:0, fiber:0, coin:20 };
   const ITEM_META = {
     wood:  { icon:'🪵', name:'Gỗ' },
     stone: { icon:'🪨', name:'Đá' },
     fiber: { icon:'🌾', name:'Sợi cỏ' },
     fish:  { icon:'🐟', name:'Cá' },
+    coin:  { icon:'🪙', name:'Xu' },
     axe:   { icon:'🪓', name:'Rìu' },
     pickaxe:{icon:'⛏️', name:'Cuốc' },
     rod:   { icon:'🎣', name:'Cần câu' },
@@ -380,13 +420,6 @@
     inventory[id] = (inventory[id]||0) + n;
     renderInventory();
     if (typeof renderHotbar === 'function') renderHotbar();
-  }
-  function hasItems(cost) {
-    return Object.entries(cost).every(([k,v]) => (inventory[k]||0) >= v);
-  }
-  function payItems(cost) {
-    Object.entries(cost).forEach(([k,v]) => { inventory[k] -= v; });
-    renderInventory();
   }
   function renderInventory() {
     const bar = document.getElementById('invBar');
@@ -401,19 +434,35 @@
   }
   renderInventory();
 
-  // ---------- CÔNG THỨC CHẾ TẠO ----------
-  const recipes = [
+  // ---------- CỬA HÀNG: MUA ĐỒ ----------
+  // Toàn bộ vật phẩm trước đây chế tạo được nay chuyển sang mua bằng xu 🪙
+  const SHOP_BUY_ITEMS = [
     { id:'axe', name:'Rìu gỗ', icon:'🪓', desc:'Chặt cây nhanh & mạnh hơn',
-      cost:{wood:3}, onCraft:()=>{ playerTools.axe = true; addItem('axe',1); } },
+      price:15, kind:'tool', onBuy:()=>{ playerTools.axe = true; addItem('axe',1); } },
     { id:'pickaxe', name:'Cuốc gỗ', icon:'⛏️', desc:'Đào đá nhanh & mạnh hơn',
-      cost:{wood:2, stone:1}, onCraft:()=>{ playerTools.pickaxe = true; addItem('pickaxe',1); } },
+      price:20, kind:'tool', onBuy:()=>{ playerTools.pickaxe = true; addItem('pickaxe',1); } },
     { id:'rod', name:'Cần câu', icon:'🎣', desc:'Đứng cạnh nước để câu cá',
-      cost:{wood:3, fiber:2}, onCraft:()=>{ playerTools.rod = true; addItem('rod',1); } },
+      price:25, kind:'tool', onBuy:()=>{ playerTools.rod = true; addItem('rod',1); } },
     { id:'campfire', name:'Bếp lửa', icon:'🔥', desc:'Đặt 1 bếp lửa gần bạn',
-      cost:{wood:5, stone:2}, onCraft:()=> placeBuilding('campfire') },
+      price:35, kind:'building', onBuy:()=> placeBuilding('campfire') },
     { id:'wall', name:'Tường gỗ', icon:'🧱', desc:'Đặt 1 bức tường chắn đường',
-      cost:{wood:4}, onCraft:()=> placeBuilding('wall') },
+      price:15, kind:'building', onBuy:()=> placeBuilding('wall') },
+    { id:'apple', name:'Táo', icon:'🍎', desc:'Ăn ngay, hồi 15 HP',
+      price:5, kind:'food', heal:15 },
+    { id:'bread', name:'Bánh mì', icon:'🍞', desc:'Ăn ngay, hồi 35 HP',
+      price:10, kind:'food', heal:35 },
+    { id:'feast', name:'Mâm cỗ đầy', icon:'🍗', desc:'Ăn ngay, hồi đầy 100 HP',
+      price:22, kind:'food', heal:100 },
   ];
+
+  // ---------- CỬA HÀNG: BÁN ĐỒ ----------
+  const SHOP_SELL_ITEMS = [
+    { id:'wood', name:'Gỗ', icon:'🪵', price:2 },
+    { id:'stone', name:'Đá', icon:'🪨', price:3 },
+    { id:'fiber', name:'Sợi cỏ', icon:'🌾', price:1 },
+    { id:'fish', name:'Cá', icon:'🐟', price:4 },
+  ];
+
   const playerTools = { axe:false, pickaxe:false, rod:false };
   const buildings = [];
 
@@ -438,7 +487,7 @@
     });
   }
   function equipItem(id) {
-    if ((inventory[id]||0) <= 0) { showMessage('Bạn chưa có ' + ITEM_META[id].name + '! Vào Chế tạo để làm.', 1600); return; }
+    if ((inventory[id]||0) <= 0) { showMessage('Bạn chưa có ' + ITEM_META[id].name + '! Vào Cửa hàng để mua.', 1600); return; }
     equipped = (equipped === id) ? null : id;
     showMessage(equipped ? `Đang cầm ${ITEM_META[id].icon} ${ITEM_META[id].name}` : 'Đã cất công cụ', 1100);
     renderHotbar();
@@ -461,43 +510,108 @@
     showMessage(`Đã đặt ${ITEM_META[type].icon} ${ITEM_META[type].name}!`);
   }
 
-  function renderRecipes() {
-    const list = document.getElementById('recipeList');
-    list.innerHTML = recipes.map(r => {
-      const costTxt = Object.entries(r.cost).map(([k,v]) => `${v} ${ITEM_META[k].icon}`).join('  ');
-      const owned = (r.id === 'axe' && playerTools.axe) || (r.id === 'pickaxe' && playerTools.pickaxe) || (r.id === 'rod' && playerTools.rod);
-      const can = hasItems(r.cost) && !owned;
-      return `
-        <div class="recipeCard">
-          <div class="recipeInfo">
-            <b>${r.icon} ${r.name}</b>${owned ? ' <span style="opacity:.7">(đã có)</span>' : ''}<br>
-            ${r.desc}
-            <div class="recipeCost">Cần: ${costTxt}</div>
-          </div>
-          <button class="recipeBtn" data-id="${r.id}" ${can ? '' : 'disabled'}>${owned ? 'OK' : 'Chế tạo'}</button>
-        </div>`;
-    }).join('');
-    list.querySelectorAll('.recipeBtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const r = recipes.find(rc => rc.id === btn.dataset.id);
-        if (!r || !hasItems(r.cost)) return;
-        payItems(r.cost);
-        r.onCraft();
-        showMessage(`Đã chế tạo ${r.icon} ${r.name}!`);
-        renderRecipes();
+  // ---------- GIAO DIỆN CỬA HÀNG ----------
+  let shopTab = 'buy';
+
+  function renderShop() {
+    document.getElementById('shopCoinCount').textContent = inventory.coin || 0;
+    const list = document.getElementById('shopList');
+
+    if (shopTab === 'buy') {
+      list.innerHTML = SHOP_BUY_ITEMS.map(it => {
+        const owned = (it.id === 'axe' && playerTools.axe) || (it.id === 'pickaxe' && playerTools.pickaxe) || (it.id === 'rod' && playerTools.rod);
+        const isTool = it.kind === 'tool';
+        const can = (inventory.coin||0) >= it.price && !(isTool && owned);
+        const btnLabel = (isTool && owned) ? 'OK' : (it.kind === 'food' ? 'Mua & ăn' : 'Mua');
+        return `
+          <div class="recipeCard">
+            <div class="recipeInfo">
+              <b>${it.icon} ${it.name}</b>${(isTool && owned) ? ' <span style="opacity:.7">(đã có)</span>' : ''}<br>
+              ${it.desc}
+              <div class="recipeCost">Giá: ${it.price} 🪙</div>
+            </div>
+            <button class="recipeBtn" data-id="${it.id}" ${can ? '' : 'disabled'}>${btnLabel}</button>
+          </div>`;
+      }).join('');
+      list.querySelectorAll('.recipeBtn').forEach(btn => {
+        btn.addEventListener('click', () => buyItem(btn.dataset.id));
       });
-    });
+    } else {
+      list.innerHTML = SHOP_SELL_ITEMS.map(it => {
+        const owned = inventory[it.id] || 0;
+        const can = owned > 0;
+        return `
+          <div class="recipeCard">
+            <div class="recipeInfo">
+              <b>${it.icon} ${it.name}</b><br>
+              Bạn có: ${owned}
+              <div class="recipeCost">Giá bán: ${it.price} 🪙 / cái</div>
+            </div>
+            <button class="recipeBtn sellBtn" data-id="${it.id}" ${can ? '' : 'disabled'}>Bán 1</button>
+          </div>`;
+      }).join('');
+      list.querySelectorAll('.sellBtn').forEach(btn => {
+        btn.addEventListener('click', () => sellItem(btn.dataset.id));
+      });
+    }
   }
 
-  const craftOverlay = document.getElementById('craftOverlay');
-  const craftBtn = document.getElementById('craftBtn');
-  function openCraft() { renderRecipes(); craftOverlay.style.display = 'flex'; }
-  function closeCraft() { craftOverlay.style.display = 'none'; }
-  craftBtn.addEventListener('click', openCraft);
-  craftBtn.addEventListener('touchstart', e => { e.preventDefault(); openCraft(); });
-  document.getElementById('craftClose').addEventListener('click', closeCraft);
-  craftOverlay.addEventListener('click', e => { if (e.target === craftOverlay) closeCraft(); });
-  window.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'c') openCraft(); });
+  function buyItem(id) {
+    const it = SHOP_BUY_ITEMS.find(x => x.id === id);
+    if (!it) return;
+    if ((inventory.coin||0) < it.price) { showMessage('Không đủ xu 🪙!', 1200); return; }
+
+    if (it.kind === 'food') {
+      inventory.coin -= it.price;
+      player.hp = Math.min(player.maxHp, player.hp + it.heal);
+      renderInventory();
+      renderHealthBar();
+      showMessage(`${it.icon} Đã ăn ${it.name}, hồi ${it.heal} HP!`, 1600);
+    } else {
+      const owned = (it.id === 'axe' && playerTools.axe) || (it.id === 'pickaxe' && playerTools.pickaxe) || (it.id === 'rod' && playerTools.rod);
+      if (owned) return;
+      inventory.coin -= it.price;
+      it.onBuy();
+      renderInventory();
+      showMessage(`Đã mua ${it.icon} ${it.name}!`, 1400);
+    }
+    renderShop();
+  }
+
+  function sellItem(id) {
+    const it = SHOP_SELL_ITEMS.find(x => x.id === id);
+    if (!it || (inventory[id]||0) <= 0) return;
+    inventory[id] -= 1;
+    inventory.coin = (inventory.coin||0) + it.price;
+    renderInventory();
+    showMessage(`Đã bán ${it.icon} ${it.name} +${it.price} 🪙`, 1200);
+    renderShop();
+  }
+
+  const shopOverlay = document.getElementById('shopOverlay');
+  const shopBtn = document.getElementById('shopBtn');
+  function openShop() { renderShop(); shopOverlay.style.display = 'flex'; }
+  function closeShop() { shopOverlay.style.display = 'none'; }
+  shopBtn.addEventListener('click', openShop);
+  shopBtn.addEventListener('touchstart', e => { e.preventDefault(); openShop(); });
+  document.getElementById('shopClose').addEventListener('click', closeShop);
+  shopOverlay.addEventListener('click', e => { if (e.target === shopOverlay) closeShop(); });
+  window.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'c') openShop(); });
+  document.querySelectorAll('.shopTab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      shopTab = tab.dataset.tab;
+      document.querySelectorAll('.shopTab').forEach(t => t.classList.toggle('active', t === tab));
+      renderShop();
+    });
+  });
+
+  // ---------- THANH SỨC KHOẺ (HP) ----------
+  function renderHealthBar() {
+    const pct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
+    document.getElementById('hpBarFill').style.width = pct + '%';
+    document.getElementById('hpText').textContent = Math.round(player.hp) + '/' + player.maxHp;
+  }
+  renderHealthBar();
 
 
   const interactables = []; // đã bỏ NPC / rương báu khỏi thế giới
@@ -511,6 +625,12 @@
     dir: 'down',
     frame: 0, frameTimer: 0
   };
+
+  // ---------- ĐÓI / SỨC KHOẺ THEO THỜI GIAN ----------
+  let hungerTimer = 0;
+  const HUNGER_INTERVAL = 25;   // cứ mỗi 25 giây mất 1 HP
+  const HUNGER_MIN_HP = 15;     // không tụt máu quá mức này (mua đồ ăn ở Cửa hàng để hồi)
+  const LOW_HP_SPEED_THRESHOLD = 30; // dưới ngưỡng này di chuyển chậm hơn vì đói
 
   // đưa player ra khỏi tile solid nếu spawn trúng chướng ngại
   (function ensureSafeSpawn(){
@@ -797,6 +917,17 @@
   let lastTime = performance.now();
 
   function update(dt) {
+    // đói dần theo thời gian; mua đồ ăn ở Cửa hàng để hồi HP
+    hungerTimer += dt;
+    if (hungerTimer >= HUNGER_INTERVAL) {
+      hungerTimer = 0;
+      if (player.hp > HUNGER_MIN_HP) {
+        player.hp = Math.max(HUNGER_MIN_HP, player.hp - 1);
+        renderHealthBar();
+      }
+    }
+    const speedFactor = player.hp <= LOW_HP_SPEED_THRESHOLD ? 0.65 : 1;
+
     // gộp input bàn phím + joystick
     const kv = keyboardVector();
     let dx = kv.dx + joyVec.dx;
@@ -809,8 +940,8 @@
       if (Math.abs(dx) > Math.abs(dy)) player.dir = dx > 0 ? 'right' : 'left';
       else player.dir = dy > 0 ? 'down' : 'up';
 
-      const moveX = dx * player.speed * dt;
-      const moveY = dy * player.speed * dt;
+      const moveX = dx * player.speed * speedFactor * dt;
+      const moveY = dy * player.speed * speedFactor * dt;
 
       // di chuyển trục X rồi kiểm tra va chạm riêng biệt (trượt theo tường)
       const nextX = player.x + moveX;
@@ -1076,8 +1207,10 @@ auth.onAuthStateChanged(user => {
         player.x = data.pos.x;
         player.y = data.pos.y;
       }
+      if (typeof data.hp === 'number') player.hp = Math.max(1, Math.min(player.maxHp, data.hp));
       renderInventory();
       renderHotbar();
+      renderHealthBar();
       showMessage('☁️ Đã tải tiến trình đã lưu', 1600);
     }).catch(()=>{});
   }
@@ -1088,6 +1221,7 @@ auth.onAuthStateChanged(user => {
       inventory,
       tools: playerTools,
       pos: { x: player.x, y: player.y },
+      hp: player.hp,
       updatedAt: firebase.database.ServerValue.TIMESTAMP
     }).catch(()=>{});
   }
