@@ -623,6 +623,7 @@ function toast(msg){
 
 /* ---- Nhận diện tài khoản chung với hệ Chat (nt_myId) để đồng bộ dữ liệu, không có UI đăng nhập/tài khoản riêng ---- */
 let cloudSynced = false;
+let presenceStarted = false;
 function initSharedAccount(){
   const sharedId = (function(){ try{ return localStorage.getItem('nt_myId'); }catch(e){ return null; } })();
   currentUser = sharedId ? { uid: sharedId, displayName: sharedId } : null;
@@ -632,9 +633,23 @@ function initSharedAccount(){
       cloudSynced = true;
       syncCloudState();
     }
+    if(!presenceStarted){
+      presenceStarted = true;
+      setOnlinePresence();
+    }
   }
   updatePlayerNameDisplay();
   updateHeader();
+}
+
+/* Báo trạng thái đang online cho tài khoản chung, để bảng quản trị (tab Đang online) thấy được người đang chơi câu cá */
+function setOnlinePresence(){
+  const ref = db.ref('presence/'+currentUser.uid);
+  ref.set({ online:true, nickname: state.nickname || currentUser.uid, ts: Date.now() }).catch(()=>{});
+  ref.onDisconnect().set({ online:false, nickname: state.nickname || currentUser.uid, ts: Date.now() });
+  setInterval(()=>{
+    if(currentUser) ref.update({ ts: Date.now() }).catch(()=>{});
+  }, 30000);
 }
 
 /* Tải tiến trình đã lưu trên đám mây gắn với tài khoản chung (nếu có) rồi đồng bộ 2 chiều */
