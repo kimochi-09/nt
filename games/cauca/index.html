@@ -843,6 +843,15 @@ function startCast(){
   castBtn.textContent='⏳ Đang chờ...';
 }
 
+/* Hiển thị icon cá: hỗ trợ cả emoji lẫn ảnh do quản trị viên tự chọn (đồng bộ qua fishData/{id}/icon) */
+function fishIconHtml(icon, sizePx){
+  const size = sizePx || 28;
+  if(typeof icon === 'string' && icon.startsWith('data:image')){
+    return `<img src="${icon}" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;vertical-align:middle;">`;
+  }
+  return escapeHtml(icon||'🐟');
+}
+
 let pendingFish = null;
 let requiredHits = 3;
 let currentHits = 0;
@@ -851,7 +860,7 @@ function biteFish(){
   SoundEngine.sfx.bite();
   pendingFish = rollFish();
   fishingState='biting';
-  fishSilhouette.textContent = pendingFish.icon;
+  fishSilhouette.innerHTML = fishIconHtml(pendingFish.icon, 60);
   fishSilhouette.style.display='block';
   hook.style.top='170px';
   castBtn.textContent='💥 THU CẦN!';
@@ -865,7 +874,7 @@ function biteFish(){
   currentHits = 0;
   missCount = 0;
 
-  statusText.textContent = `🎣 ${pendingFish.icon} ${pendingFish.name} đã cắn câu! (0/${requiredHits})`;
+  statusText.innerHTML = `🎣 ${fishIconHtml(pendingFish.icon, 22)} ${escapeHtml(pendingFish.name)} đã cắn câu! (0/${requiredHits})`;
 
   startRhythmLoop();
 
@@ -1001,8 +1010,8 @@ function showCatchPopup(fish, weight){
   const pop = document.createElement('div');
   pop.className='catchPopup';
   pop.innerHTML = `
-    <div class="cfish">${fish.icon}</div>
-    <div class="cname">${fish.name}</div>
+    <div class="cfish">${fishIconHtml(fish.icon, 54)}</div>
+    <div class="cname">${escapeHtml(fish.name)}</div>
     <div class="crarity bg-${r.color}">${r.label}</div>
     <div class="cweight">Cân nặng: ${weight}kg</div>
     <div class="ccoin">+ Đã thêm vào kho đồ 🎒</div>
@@ -1087,8 +1096,8 @@ function renderCollection(){
     const r = RARITIES[fish.rarity];
     cell.innerHTML = `
       ${caught ? `<div class="fcount">x${caught.count}</div>` : ''}
-      <div class="fic">${caught ? fish.icon : '❔'}</div>
-      <div class="fnm r-${r.color}">${caught ? fish.name : '???'}</div>
+      <div class="fic">${caught ? fishIconHtml(fish.icon, 26) : '❔'}</div>
+      <div class="fnm r-${r.color}">${caught ? escapeHtml(fish.name) : '???'}</div>
     `;
     grid.appendChild(cell);
   });
@@ -1112,9 +1121,9 @@ function renderInventory(){
     const item = document.createElement('div');
     item.className='invItem';
     item.innerHTML = `
-      <div class="fic">${fish.icon}</div>
+      <div class="fic">${fishIconHtml(fish.icon, 28)}</div>
       <div class="iinfo">
-        <div class="iname">${fish.name} <span class="r-${r.color}" style="font-size:10.5px;">(${r.label})</span></div>
+        <div class="iname">${escapeHtml(fish.name)} <span class="r-${r.color}" style="font-size:10.5px;">(${r.label})</span></div>
         <div class="iprice">${fish.price.toLocaleString('vi-VN')} xu / con</div>
       </div>
       <div class="iqty">x${qty}</div>
