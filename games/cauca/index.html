@@ -331,6 +331,26 @@
 
   ::-webkit-scrollbar{width:5px;}
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15); border-radius:10px;}
+
+  /* FLOATING WORLD-CHAT BUBBLE */
+  #chatBubbleBtn{
+    position:absolute; right:14px; bottom:calc(var(--nav-h) + 16px);
+    width:54px; height:54px; border-radius:50%;
+    background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400;
+    border:none; box-shadow:0 6px 14px rgba(0,0,0,.45), 0 0 0 3px rgba(255,255,255,.1);
+    font-size:24px; z-index:80; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0;
+  }
+  #chatBubbleBtn:active{transform:scale(.92);}
+  #chatUnreadBadge{
+    position:absolute; top:-3px; right:-3px; background:#ff4757; color:#fff;
+    font-size:10.5px; font-weight:800; min-width:18px; height:18px; border-radius:9px;
+    display:none; align-items:center; justify-content:center; padding:0 4px;
+    border:2px solid var(--bg-deep);
+  }
+  #chatUnreadBadge.show{display:flex;}
+  #panel-worldchat{display:none; flex-direction:column;}
+  #panel-worldchat.show{display:flex;}
 </style>
 </head>
 <body>
@@ -339,7 +359,7 @@
   <!-- HEADER -->
   <div id="header">
     <button class="back-btn" onclick="goBack()">←</button>
-    <div style="flex:1;"></div>
+    <div id="playerName" style="flex:1; padding-left:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
     <div style="display:flex; gap:6px;">
       <div class="stat"><span class="ic">🪙</span><span id="coinDisplay">0</span></div>
       <div class="stat"><span class="ic">🐟</span><span id="fishCountDisplay">0/60</span></div>
@@ -413,6 +433,25 @@
     </div>
     <div class="panelBody" id="invList" style="display:flex; flex-direction:column;"></div>
   </div>
+
+  <!-- WORLD CHAT PANEL (chat chung với người khác) -->
+  <div class="panel" id="panel-worldchat">
+    <div class="panelHeader">
+      <span class="phTitle">💬 Chat Chung</span>
+      <button class="closeBtn" id="closeWorldChatBtn">✕</button>
+    </div>
+    <div id="chatMessages"></div>
+    <div id="chatInputBar">
+      <input type="text" id="worldChatInput" placeholder="Nhắn gì đó cho mọi người..." maxlength="300">
+      <button id="worldChatSendBtn">➤</button>
+    </div>
+  </div>
+
+  <!-- FLOATING CHAT BUBBLE -->
+  <button id="chatBubbleBtn" title="Chat chung với người khác">
+    💬
+    <span id="chatUnreadBadge">0</span>
+  </button>
 
 </div>
 
@@ -595,13 +634,46 @@ function toast(msg){
 }
 
 /* ---- Nhận diện tài khoản chung với hệ Chat (nt_myId) để đồng bộ dữ liệu, không có UI đăng nhập/tài khoản riêng ---- */
+let cloudSynced = false;
 function initSharedAccount(){
   const sharedId = (function(){ try{ return localStorage.getItem('nt_myId'); }catch(e){ return null; } })();
   currentUser = sharedId ? { uid: sharedId, displayName: sharedId } : null;
   if(currentUser){
     state.nickname = state.nickname || sharedId;
+    if(!cloudSynced){
+      cloudSynced = true;
+      syncCloudState();
+    }
   }
+  updatePlayerNameDisplay();
   updateHeader();
+}
+
+/* Tải tiến trình đã lưu trên đám mây gắn với tài khoản chung (nếu có) rồi đồng bộ 2 chiều */
+function syncCloudState(){
+  if(!currentUser) return;
+  db.ref('users/'+currentUser.uid+'/gameState').once('value').then(snap=>{
+    const remote = snap.val();
+    if(remote){
+      // Có tiến trình trên đám mây (ví dụ đăng nhập từ thiết bị/trình duyệt khác) -> ưu tiên dùng bản đám mây
+      const nickname = state.nickname, avatar = state.avatar;
+      state = Object.assign(getDefaultState(), remote);
+      state.nickname = remote.nickname || nickname;
+      state.avatar = remote.avatar || avatar;
+      try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+      toast('✅ Đã đồng bộ tiến trình từ tài khoản chung!');
+    } else {
+      // Chưa có dữ liệu trên đám mây cho tài khoản này -> đẩy tiến trình hiện tại lên
+      db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{});
+    }
+    updateHeader();
+  }).catch(()=>{});
+}
+
+function updatePlayerNameDisplay(){
+  const el = document.getElementById('playerName');
+  if(!el) return;
+  el.textContent = currentUser ? ('👤 ' + currentUser.uid) : ('🎣 Khách #' + state.playerId);
 }
 auth.onAuthStateChanged(()=>{ initSharedAccount(); });
 initSharedAccount();
@@ -620,6 +692,110 @@ function spawnBubbles(){
   }
 }
 spawnBubbles();
+
+/* ============== WORLD CHAT (bong bóng chat chung với người khác) ============== */
+const WORLD_CHAT_ROOM = 'world_fishing'; // phòng chat chung, dùng chung Firebase với hệ thống Chat
+const CHAT_LASTREAD_KEY = 'fishingWorld_chatLastRead';
+const chatBubbleBtn = document.getElementById('chatBubbleBtn');
+const chatUnreadBadge = document.getElementById('chatUnreadBadge');
+const panelWorldChat = document.getElementById('panel-worldchat');
+const chatMessagesEl = document.getElementById('chatMessages');
+const worldChatInput = document.getElementById('worldChatInput');
+const worldChatSendBtn = document.getElementById('worldChatSendBtn');
+const closeWorldChatBtn = document.getElementById('closeWorldChatBtn');
+
+function myChatName(){
+  return currentUser ? currentUser.uid : ('Khách#' + state.playerId);
+}
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let pausedPanelId = null;
+let worldChatUnread = 0;
+function isWorldChatOpen(){ return panelWorldChat.classList.contains('show'); }
+let worldChatReady = false; // để không tính tin nhắn cũ là "chưa đọc" khi vừa mở app
+let lastReadTs = Number((function(){ try{ return localStorage.getItem(CHAT_LASTREAD_KEY); }catch(e){ return 0; } })() || 0);
+
+function openWorldChat(){
+  const shown = document.querySelector('.panel.show');
+  pausedPanelId = shown ? shown.id : null;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  panelWorldChat.classList.add('show');
+  worldChatUnread = 0;
+  updateChatBadge();
+  lastReadTs = Date.now();
+  try{ localStorage.setItem(CHAT_LASTREAD_KEY, String(lastReadTs)); }catch(e){}
+  setTimeout(()=>{ chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight; }, 60);
+}
+function closeWorldChat(){
+  panelWorldChat.classList.remove('show');
+  if(pausedPanelId){
+    const p = document.getElementById(pausedPanelId);
+    if(p) p.classList.add('show');
+  }
+}
+chatBubbleBtn.addEventListener('click', ()=>{ SoundEngine.unlock(); openWorldChat(); });
+closeWorldChatBtn.addEventListener('click', closeWorldChat);
+
+function updateChatBadge(){
+  if(worldChatUnread>0 && !isWorldChatOpen()){
+    chatUnreadBadge.classList.add('show');
+    chatUnreadBadge.textContent = worldChatUnread>9 ? '9+' : String(worldChatUnread);
+  } else {
+    chatUnreadBadge.classList.remove('show');
+  }
+}
+
+function renderChatMsg(key, m){
+  if(!m || document.getElementById('cm_'+key)) return;
+  const row = document.createElement('div');
+  row.id = 'cm_'+key;
+  if(m.sys){
+    row.className='msg sys';
+    row.innerHTML = `<div class="bubble2">${escapeHtml(m.t)}</div>`;
+  } else {
+    const me = m.s === myChatName();
+    row.className = 'msg' + (me?' me':'');
+    const time = new Date(m.ts||Date.now()).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    row.innerHTML = `
+      <div class="av">${escapeHtml((m.s||'?').slice(0,1).toUpperCase())}</div>
+      <div>
+        ${me?'':`<div class="name">${escapeHtml(m.s)}</div>`}
+        <div class="bubble2">${escapeHtml(m.t)}</div>
+        <div class="msgTime">${time}</div>
+      </div>
+    `;
+  }
+  chatMessagesEl.appendChild(row);
+  while(chatMessagesEl.childElementCount > 80){ chatMessagesEl.removeChild(chatMessagesEl.firstChild); }
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  if(worldChatReady && !m.sys && m.s !== myChatName() && !isWorldChatOpen()){
+    worldChatUnread++;
+    updateChatBadge();
+  }
+}
+
+db.ref('chats/' + WORLD_CHAT_ROOM).limitToLast(60).on('child_added', (snap)=>{
+  renderChatMsg(snap.key, snap.val());
+});
+setTimeout(()=>{ worldChatReady = true; }, 1500);
+
+function sendWorldChat(){
+  const val = worldChatInput.value.trim();
+  if(!val) return;
+  worldChatInput.value = '';
+  db.ref('chats/' + WORLD_CHAT_ROOM).push({ s: myChatName(), t: val, ts: Date.now() }).catch(()=>{
+    toast('Không gửi được tin nhắn, kiểm tra mạng!');
+  });
+}
+worldChatSendBtn.addEventListener('click', sendWorldChat);
+worldChatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendWorldChat(); } });
+
+/* Gửi thông báo hệ thống vào chat chung (ví dụ khi ai đó mua cần câu mới) */
+function addSystemChatMsg(text){
+  db.ref('chats/' + WORLD_CHAT_ROOM).push({ s:'system', t:text, ts:Date.now(), sys:true }).catch(()=>{});
+}
 
 /* ============== FISHING LOGIC ============== */
 let fishingState = "idle"; // idle -> waiting -> biting -> reeling
