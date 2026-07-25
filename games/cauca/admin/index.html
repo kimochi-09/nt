@@ -155,7 +155,7 @@
       <div class="field">
         <label>Hoặc chọn ảnh từ máy</label>
         <div style="display:flex; align-items:center; gap:8px;">
-          <img id="newFishImgPreview" style="display:none; width:40px; height:40px; object-fit:cover; border-radius:8px; border:1px solid var(--border);">
+          <img id="newFishImgPreview" style="display:none; width:40px; height:40px; object-fit:contain; background:rgba(255,255,255,.06); border-radius:8px; border:1px solid var(--border);">
           <input type="file" id="newFishImgInput" accept="image/*" style="font-size:12px; max-width:150px;">
         </div>
       </div>
@@ -444,7 +444,7 @@ function renderFish(){
       <td>
         <div style="display:flex; align-items:center; gap:6px;">
           ${iconIsImg
-            ? `<img src="${f.icon}" style="width:32px; height:32px; object-fit:cover; border-radius:8px; border:1px solid var(--border);">`
+            ? `<img src="${f.icon}" style="width:32px; height:32px; object-fit:contain; background:rgba(255,255,255,.06); border-radius:8px; border:1px solid var(--border);">`
             : `<input type="text" class="miniInput" style="width:44px; text-align:center; font-size:18px;" value="${escapeHtml(f.icon||'')}" data-id="${id}" data-field="icon" maxlength="4">`}
           <input type="file" accept="image/*" data-imgfor="${id}" style="display:none;">
           <button class="btn btnGhost rowBtn" data-action="pickimg" data-id="${id}" title="Chọn ảnh từ máy" style="padding:6px 8px;">🖼</button>
