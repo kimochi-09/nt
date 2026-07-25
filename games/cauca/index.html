@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🎣 Câu Cá </title>
+<title>🎣 Fishing World: Chat & Chill</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -922,7 +922,7 @@ function startRhythmLoop(){
   rhythmDir = 1;
   rhythmWrap.style.display='block';
   // speed scales with rarity (harder fish move faster) and rod speed bonus
-  const rarityMult = {common:1, uncommon:1.15, rare:1.35, epic:1.55, mythic:1.8}[pendingFish.rarity] || 1;
+  const rarityMult = {common:1, uncommon:1.15, rare:1.35, epic:1.75, mythic:2.05}[pendingFish.rarity] || 1;
   rhythmSpeed = (1.4 + Math.random()*0.4) * rarityMult;
 
   function tick(){
@@ -1095,7 +1095,15 @@ function renderCollection(){
   const caughtCount = Object.keys(state.caughtIds).length;
   document.getElementById('collectionProg').textContent = caughtCount + '/' + FISH_LIST.length;
 
-  FISH_LIST.forEach(fish=>{
+  const rarityOrder = {common:0, uncommon:1, rare:2, epic:3, mythic:4};
+  const sortedFish = [...FISH_LIST].sort((a,b)=>{
+    const ra = rarityOrder[a.rarity] ?? 99;
+    const rb = rarityOrder[b.rarity] ?? 99;
+    if(ra !== rb) return ra - rb;
+    return (a.id > b.id) ? 1 : (a.id < b.id ? -1 : 0);
+  });
+
+  sortedFish.forEach(fish=>{
     const caught = state.caughtIds[fish.id];
     const cell = document.createElement('div');
     cell.className = 'fishCell' + (caught?'':' locked');
