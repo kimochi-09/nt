@@ -522,16 +522,6 @@ function fishDataToFirebaseObj(list){
   return obj;
 }
 
-const RARITY_ORDER = {common:0, uncommon:1, rare:2, epic:3, mythic:4};
-function sortFishListByRarity(list){
-  return list.slice().sort((a,b)=>{
-    const ra = RARITY_ORDER[a.rarity] ?? 99;
-    const rb = RARITY_ORDER[b.rarity] ?? 99;
-    if(ra !== rb) return ra - rb;
-    return String(a.name||'').localeCompare(String(b.name||''), 'vi');
-  });
-}
-
 function attachFishDataSync(){
   db.ref('fishData').on('value', (snap)=>{
     const val = snap.val();
@@ -547,15 +537,11 @@ function attachFishDataSync(){
       return {id: isNaN(id)?id:Number(id), name:f.name, rarity:f.rarity, icon:f.icon, price:Number(f.price)||0};
     });
     if(list.length){
-      // Luôn sắp xếp danh sách cá từ Thường -> Thần Thoại, kể cả khi vừa thêm loài cá mới
-      FISH_LIST = sortFishListByRarity(list);
+      FISH_LIST = list;
       fishDataLoaded = true;
-      // Cập nhật lại tổng số loài cá (thay cho số 60 cố định) ở mọi nơi hiển thị
-      updateFishTotalDisplays();
       // Cập nhật lại giao diện nếu đang mở, để thấy thay đổi ngay khi admin sửa
       try{ if(typeof renderShop==='function') renderShop(); }catch(e){}
       try{ if(typeof renderInventory==='function') renderInventory(); }catch(e){}
-      try{ if(typeof renderCollection==='function') renderCollection(); }catch(e){}
     }
   });
 }
@@ -623,18 +609,8 @@ const rhythmHint = document.getElementById('rhythmHint');
 function updateHeader(){
   coinDisplay.textContent = state.coins.toLocaleString('vi-VN');
   const caughtCount = Object.keys(state.caughtIds).length;
-  fishCountDisplay.textContent = caughtCount + "/" + FISH_LIST.length;
+  fishCountDisplay.textContent = caughtCount + "/60";
   document.getElementById('shopCoin').textContent = "🪙 " + state.coins.toLocaleString('vi-VN');
-}
-
-/* Cập nhật lại các chỗ hiển thị tổng số loài cá (header + sổ tay) khi danh sách cá thay đổi (thêm/xoá cá ở trang quản trị) */
-function updateFishTotalDisplays(){
-  updateHeader();
-  const progEl = document.getElementById('collectionProg');
-  if(progEl){
-    const caughtCount = Object.keys(state.caughtIds).length;
-    progEl.textContent = caughtCount + '/' + FISH_LIST.length;
-  }
 }
 
 function toast(msg){
@@ -871,7 +847,7 @@ function startCast(){
 function fishIconHtml(icon, sizePx){
   const size = sizePx || 28;
   if(typeof icon === 'string' && icon.startsWith('data:image')){
-    return `<img src="${icon}" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;vertical-align:middle;">`;
+    return `<img src="${icon}" style="width:${size}px;height:${size}px;object-fit:contain;background:rgba(255,255,255,.06);border-radius:6px;vertical-align:middle;">`;
   }
   return escapeHtml(icon||'🐟');
 }
@@ -1111,7 +1087,7 @@ function renderCollection(){
   const grid = document.getElementById('fishGrid');
   grid.innerHTML='';
   const caughtCount = Object.keys(state.caughtIds).length;
-  document.getElementById('collectionProg').textContent = caughtCount + '/' + FISH_LIST.length;
+  document.getElementById('collectionProg').textContent = caughtCount + '/60';
 
   FISH_LIST.forEach(fish=>{
     const caught = state.caughtIds[fish.id];
