@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🎣 Fishing World: Chat & Chill</title>
+<title>🎣 Câu Cá </title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -542,6 +542,8 @@ function attachFishDataSync(){
       // Cập nhật lại giao diện nếu đang mở, để thấy thay đổi ngay khi admin sửa
       try{ if(typeof renderShop==='function') renderShop(); }catch(e){}
       try{ if(typeof renderInventory==='function') renderInventory(); }catch(e){}
+      try{ if(typeof updateHeader==='function') updateHeader(); }catch(e){}
+      try{ if(typeof renderCollection==='function') renderCollection(); }catch(e){}
     }
   });
 }
@@ -609,7 +611,7 @@ const rhythmHint = document.getElementById('rhythmHint');
 function updateHeader(){
   coinDisplay.textContent = state.coins.toLocaleString('vi-VN');
   const caughtCount = Object.keys(state.caughtIds).length;
-  fishCountDisplay.textContent = caughtCount + "/60";
+  fishCountDisplay.textContent = caughtCount + "/" + FISH_LIST.length;
   document.getElementById('shopCoin').textContent = "🪙 " + state.coins.toLocaleString('vi-VN');
 }
 
@@ -1091,7 +1093,7 @@ function renderCollection(){
   const grid = document.getElementById('fishGrid');
   grid.innerHTML='';
   const caughtCount = Object.keys(state.caughtIds).length;
-  document.getElementById('collectionProg').textContent = caughtCount + '/60';
+  document.getElementById('collectionProg').textContent = caughtCount + '/' + FISH_LIST.length;
 
   FISH_LIST.forEach(fish=>{
     const caught = state.caughtIds[fish.id];
