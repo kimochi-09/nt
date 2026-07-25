@@ -552,7 +552,7 @@ const RODS = [
   {id:"thuytinh", name:"Cần Sợi Thủy Tinh", icon:"🪶", price:1000, bonus:{uncommon:10}, desc:"+10% tỷ lệ gặp cá Hiếm."},
   {id:"carbon", name:"Cần Carbon Hiện Đại", icon:"⚙️", price:10000, bonus:{rareUp:20, speed:0.15}, desc:"+20% tỷ lệ gặp cá Quý trở lên. Giảm 15% thời gian chờ."},
   {id:"hoanggia", name:"Cần Câu Hoàng Gia", icon:"👑", price:50000, bonus:{epic:35, sellBonus:0.10}, desc:"+35% tỷ lệ gặp cá Huyền Thoại. +10% tiền bán cá."},
-  {id:"poseidon", name:"Cần Định Mệnh Poseidon", icon:"🔱", price:200000, bonus:{mythicEpic:50, noMiss:false}, desc:"+50% tỷ lệ gặp cá Thần Thoại & Huyền Thoại. Không bao giờ câu trượt!"}
+  {id:"poseidon", name:"Cần Định Mệnh Poseidon", icon:"🔱", price:200000, bonus:{mythicEpic:50, noMiss:true}, desc:"+50% tỷ lệ gặp cá Thần Thoại & Huyền Thoại. Không bao giờ câu trượt!"}
 ];
 
 /* ============== STATE ============== */
@@ -820,6 +820,10 @@ function resetVisual(){
 castBtn.addEventListener('click', ()=>{
   SoundEngine.unlock();
   if(fishingState==='idle'){
+    if(!fishDataLoaded){
+      statusText.textContent='Đang đồng bộ dữ liệu cá... vui lòng đợi 1 chút ⏳';
+      return;
+    }
     startCast();
   } else if(fishingState==='biting'){
     tryReelHit();
