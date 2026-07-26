@@ -206,7 +206,7 @@
   <div class="panelBox" id="tab-monster">
     <h2>Thêm thủy quái mới</h2>
     <div style="background:rgba(193,99,255,.08); border:1px solid rgba(193,99,255,.3); border-radius:12px; padding:12px 14px; margin-bottom:14px; font-size:12.5px; color:var(--text-dim); line-height:1.6;">
-      Cứ <b style="color:#c163ff;">4 phút</b> sẽ có <b style="color:#c163ff;">1 con thủy quái</b> xuất hiện ngẫu nhiên từ danh sách bên dưới cho <b>tất cả người chơi</b> cùng câu chung. Ai từng nhấn câu cũng nhận thưởng xu khi hạ gục xong.
+      Cứ <b style="color:#c163ff;">4 phút</b> sẽ có <b style="color:#c163ff;">1 con thủy quái</b> xuất hiện ngẫu nhiên từ danh sách bên dưới cho <b>tất cả người chơi</b> cùng câu chung (cơ chế nhấn đúng nhịp giống câu cá thường). Chỉ người ra đòn <b>kết liễu (câu nhanh nhất)</b> mới nhận được cá và xu thưởng.
     </div>
     <div class="addFishForm">
       <div class="field">
@@ -241,7 +241,7 @@
     </div>
     <div class="tblWrap">
       <table>
-        <thead><tr><th>Icon</th><th>Tên thủy quái</th><th>Số lần nhấn để hạ gục</th><th>Thưởng xu</th><th>Hành động</th></tr></thead>
+        <thead><tr><th>Icon</th><th>Tên thủy quái</th><th>Số lần nhấn để hạ gục</th><th>Thưởng xu (người nhanh nhất)</th><th>Hành động</th></tr></thead>
         <tbody id="monsterBody"></tbody>
       </table>
       <div class="empty" id="monsterEmpty" style="display:none;">Chưa có thủy quái nào.</div>
@@ -770,8 +770,9 @@ function renderBossStatus(){
   box.innerHTML = `
     <div>${iconIsImg ? `<img src="${b.icon}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;">` : (b.icon||'🐙')} <b>${escapeHtml(b.name||'')}</b></div>
     <div>Trạng thái: ${defeated ? '<span style="color:var(--good);">Đã bị hạ gục</span>' : `<span style="color:var(--gold);">Đang bị đánh (${hp}/${hpMax})</span>`}</div>
+    ${defeated && b.defeatedBy ? `<div>🏆 Người câu nhanh nhất: <b>${escapeHtml(b.defeatedBy)}</b></div>` : ''}
     <div>Số người đã tham gia câu: ${totalPlayers}</div>
-    <div>Thưởng xu mỗi người: ${(Number(b.price)||0).toLocaleString('vi-VN')}</div>
+    <div>Thưởng xu (chỉ người nhanh nhất): ${(Number(b.price)||0).toLocaleString('vi-VN')}</div>
   `;
 }
 
