@@ -56,6 +56,21 @@
   #header .stat .ic{font-size:15px;}
   #playerName{font-size:12px; color:var(--text-dim); font-weight:600;}
 
+  /* WORLD BOSS HEADER BUTTON (thủy quái chung, cùng nhau đánh) */
+  #bossBtn{
+    display:flex; align-items:center; gap:4px; flex-shrink:0; cursor:pointer;
+    background:linear-gradient(180deg,#3a1f5c,#241040); border:1px solid rgba(193,99,255,.5);
+    color:var(--text); border-radius:20px; padding:5px 10px; font-weight:800; font-size:12px;
+    margin-left:6px;
+  }
+  #bossBtn .bossIc{font-size:15px;}
+  #bossBtn.bossActive{
+    background:linear-gradient(180deg,#5c1f2a,#3a0f14); border-color:#ff5c5c;
+    animation:bossPulse 1.1s infinite;
+  }
+  @keyframes bossPulse{ 0%,100%{box-shadow:0 0 0 rgba(255,92,92,.5);} 50%{box-shadow:0 0 10px rgba(255,92,92,.7);} }
+  #bossHitBtn:active{transform:scale(.95);}
+
   /* ACCOUNT BUTTON */
   #accountBtn{
     display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.06);
@@ -320,11 +335,13 @@
   .r-rare{color:var(--rare);}
   .r-epic{color:var(--epic);}
   .r-mythic{color:var(--mythic);}
+  .r-boss{color:#c163ff;}
   .bg-common{background:rgba(185,199,211,.2); color:var(--common);}
   .bg-uncommon{background:rgba(61,220,132,.2); color:var(--uncommon);}
   .bg-rare{background:rgba(79,179,255,.2); color:var(--rare);}
   .bg-epic{background:rgba(193,99,255,.2); color:var(--epic);}
   .bg-mythic{background:rgba(255,122,69,.2); color:var(--mythic);}
+  .bg-boss{background:rgba(193,99,255,.28); color:#c163ff;}
 
   #toastWrap{position:absolute; top:56px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none;}
   .toast{background:rgba(0,0,0,.75); color:#fff; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; animation:toastIn .3s;}
@@ -353,6 +370,7 @@
   <div id="header">
     <button class="back-btn" onclick="goBack()">←</button>
     <div id="playerName" style="flex:1; padding-left:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+    <button id="bossBtn" title="Thủy quái chung"><span class="bossIc">🐙</span><span id="bossBtnText">--:--</span></button>
     <div style="display:flex; gap:6px;">
       <div class="stat"><span class="ic">🪙</span><span id="coinDisplay">0</span></div>
       <div class="stat"><span class="ic">🐟</span><span id="fishCountDisplay">0/60</span></div>
@@ -441,6 +459,46 @@
     </div>
   </div>
 
+  <!-- WORLD BOSS PANEL (thủy quái chung, câu chung cho mọi người, cơ chế nhịp giống câu cá thường) -->
+  <div class="panel" id="panel-boss">
+    <div class="panelHeader">
+      <span class="phTitle">🐙 Thủy Quái Đại Chiến</span>
+      <button class="closeBtn" data-close>✕</button>
+    </div>
+    <div class="panelBody" style="text-align:center;">
+      <div id="bossLoading" style="padding:40px 10px; color:var(--text-dim);">Đang tải dữ liệu thủy quái... ⏳</div>
+      <div id="bossContent" style="display:none;">
+        <div id="bossIconBig" style="font-size:70px; margin:6px 0 4px;"></div>
+        <div id="bossNameBig" style="font-size:19px; font-weight:800;"></div>
+
+        <div id="bossDefeatedBox" style="display:none;">
+          <div style="color:var(--uncommon); font-weight:700; margin:14px 0 6px;">✅ Đã bị hạ gục!</div>
+          <div id="bossWinnerLine" style="font-size:13px; margin-bottom:6px;"></div>
+          <div style="font-size:13px; color:var(--text-dim);">Thủy quái mới xuất hiện sau <b id="bossNextIn" style="color:var(--gold);"></b></div>
+        </div>
+
+        <div id="bossFightBox">
+          <div style="margin:14px 0 4px; font-size:13px; color:var(--text-dim);">Máu thủy quái</div>
+          <div style="width:100%; height:18px; background:rgba(0,0,0,.35); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.15); margin-bottom:6px;">
+            <div id="bossHpFill" style="height:100%; width:0%; background:linear-gradient(90deg,#ff5c5c,#ff9a5c); transition:width .2s;"></div>
+          </div>
+          <div id="bossHpText" style="font-weight:800; font-size:16px; margin-bottom:14px;"></div>
+
+          <div id="bossRhythmTrack" style="position:relative; width:100%; max-width:320px; margin:0 auto; height:22px; background:rgba(0,0,0,.4); border-radius:12px; border:1px solid rgba(255,255,255,.25); overflow:hidden;">
+            <div id="bossRhythmZone" style="position:absolute; top:0; bottom:0; background:rgba(61,220,132,.45); border-left:2px solid var(--uncommon); border-right:2px solid var(--uncommon);"></div>
+            <div id="bossRhythmCursor" style="position:absolute; top:-4px; bottom:-4px; width:5px; background:#fff; border-radius:3px; box-shadow:0 0 8px rgba(255,255,255,.8); left:0%;"></div>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-dim); margin-top:5px; font-weight:700;">Nhấn đúng lúc con trỏ vào vùng xanh!</div>
+
+          <button id="bossHitBtn" style="margin-top:16px; background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400; border:none; border-radius:40px; padding:16px 38px; font-size:16px; font-weight:800; box-shadow:0 6px 0 #9e6f00; cursor:pointer;">🎣 CÂU THỦY QUÁI!</button>
+        </div>
+
+        <div style="margin-top:18px; font-size:12.5px; color:var(--text-dim);">Bạn đã câu trúng: <b id="bossMyTaps" style="color:var(--gold);">0</b> lần &nbsp;|&nbsp; Số người tham gia: <b id="bossTotalPlayers" style="color:var(--gold);">0</b></div>
+        <div style="margin-top:6px; font-size:12px; color:var(--text-dim);">Chỉ người ra đòn <b>kết liễu (nhanh nhất)</b> mới nhận được cá + <b id="bossPriceText" style="color:var(--gold);">0 🪙</b>. Nhấn trật nhịp thì không tính!</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -482,7 +540,8 @@ const RARITIES = {
   uncommon: {label:"Hiếm",       color:"uncommon", weight:30, priceRange:[100,300],     icons:["🐠"]},
   rare:     {label:"Quý",        color:"rare",     weight:14, priceRange:[500,1500],    icons:["🐡"]},
   epic:     {label:"Huyền Thoại",color:"epic",     weight:5,  priceRange:[3000,8000],   icons:["🦑"]},
-  mythic:   {label:"Thần Thoại", color:"mythic",   weight:1,  priceRange:[20000,50000], icons:["🐙"]}
+  mythic:   {label:"Thần Thoại", color:"mythic",   weight:1,  priceRange:[20000,50000], icons:["🐙"]},
+  boss:     {label:"Thủy Quái",  color:"boss",     weight:0,  priceRange:[0,0],         icons:["🐙"]}
 };
 
 const commonNames = ["Cá chép","Cá rô phi","Cá diếc","Cá quả","Cá trắm","Cá mè","Cá rô đồng","Cá lóc","Cá sặc","Cá bống","Cá linh","Cá thiểu","Cá lăng","Cá he","Cá đối","Cá nục","Cá cơm","Cá liệt","Cá tra","Cá basa"];
@@ -611,7 +670,8 @@ const rhythmHint = document.getElementById('rhythmHint');
 function updateHeader(){
   coinDisplay.textContent = state.coins.toLocaleString('vi-VN');
   const caughtCount = Object.keys(state.caughtIds).length;
-  fishCountDisplay.textContent = caughtCount + "/" + FISH_LIST.length;
+  const totalCount = FISH_LIST.length + (typeof MONSTER_LIST!=='undefined' ? MONSTER_LIST.length : 0);
+  fishCountDisplay.textContent = caughtCount + "/" + totalCount;
   document.getElementById('shopCoin').textContent = "🪙 " + state.coins.toLocaleString('vi-VN');
 }
 
@@ -858,6 +918,18 @@ function fishIconHtml(icon, sizePx){
   return escapeHtml(icon||'🐟');
 }
 
+/* Tra cứu thông tin 1 mục trong kho đồ / sổ tay: hỗ trợ cả cá thường (FISH_LIST, id số)
+   lẫn cá thủy quái đã câu được (id dạng "m_xxx", tra trong MONSTER_LIST) */
+function findFishById(id){
+  if(typeof id === 'string' && id.indexOf('m_')===0){
+    const mid = id.slice(2);
+    const m = (typeof MONSTER_LIST!=='undefined' ? MONSTER_LIST : []).find(x=>String(x.id)===mid);
+    if(m) return {id, name:m.name, icon:m.icon, price:m.price, rarity:'boss'};
+    return {id, name:'Thủy quái bí ẩn', icon:'🐙', price:0, rarity:'boss'};
+  }
+  return FISH_LIST.find(f=>f.id==id);
+}
+
 let pendingFish = null;
 let requiredHits = 3;
 let currentHits = 0;
@@ -1006,8 +1078,8 @@ function landFish(){
 }
 
 function generateWeight(rarity){
-  const ranges = {common:[0.2,3], uncommon:[1,8], rare:[5,40], epic:[30,300], mythic:[80,900]};
-  const [lo,hi] = ranges[rarity];
+  const ranges = {common:[0.2,3], uncommon:[1,8], rare:[5,40], epic:[30,300], mythic:[80,900], boss:[150,2000]};
+  const [lo,hi] = ranges[rarity] || ranges.common;
   return Math.round((lo + Math.random()*(hi-lo))*10)/10;
 }
 
@@ -1093,10 +1165,14 @@ function renderCollection(){
   const grid = document.getElementById('fishGrid');
   grid.innerHTML='';
   const caughtCount = Object.keys(state.caughtIds).length;
-  document.getElementById('collectionProg').textContent = caughtCount + '/' + FISH_LIST.length;
+  const totalCount = FISH_LIST.length + (typeof MONSTER_LIST!=='undefined' ? MONSTER_LIST.length : 0);
+  document.getElementById('collectionProg').textContent = caughtCount + '/' + totalCount;
 
-  const rarityOrder = {common:0, uncommon:1, rare:2, epic:3, mythic:4};
-  const sortedFish = [...FISH_LIST].sort((a,b)=>{
+  const rarityOrder = {common:0, uncommon:1, rare:2, epic:3, mythic:4, boss:5};
+  const monsterAsFish = (typeof MONSTER_LIST!=='undefined' ? MONSTER_LIST : []).map(m=>({
+    id: 'm_'+m.id, name: m.name, icon: m.icon, price: m.price, rarity: 'boss'
+  }));
+  const sortedFish = [...FISH_LIST, ...monsterAsFish].sort((a,b)=>{
     const ra = rarityOrder[a.rarity] ?? 99;
     const rb = rarityOrder[b.rarity] ?? 99;
     if(ra !== rb) return ra - rb;
@@ -1128,9 +1204,10 @@ function renderInventory(){
   }
   let totalValue = 0;
   ids.forEach(id=>{
-    const fish = FISH_LIST.find(f=>f.id==id);
+    const fish = findFishById(id);
+    if(!fish) return;
     const qty = state.inventory[id];
-    const r = RARITIES[fish.rarity];
+    const r = RARITIES[fish.rarity] || RARITIES.common;
     totalValue += fish.price*qty;
     const item = document.createElement('div');
     item.className='invItem';
@@ -1148,7 +1225,8 @@ function renderInventory(){
   wrap.querySelectorAll('[data-sell-id]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.getAttribute('data-sell-id');
-      const fish = FISH_LIST.find(f=>f.id==id);
+      const fish = findFishById(id);
+      if(!fish) return;
       const qty = state.inventory[id]||0;
       if(qty<=0) return;
       SoundEngine.sfx.sell();
@@ -1183,12 +1261,300 @@ function renderInventory(){
 
 /* ============== SELL DONE ============== */
 
+/* ============== WORLD BOSS (Thủy Quái chung cho mọi người) ==============
+   Cứ mỗi 4 phút (tính theo mốc giờ tuyệt đối, giống nhau cho mọi người chơi)
+   sẽ có 1 con thủy quái xuất hiện. Ai cũng có thể nhấn "Câu" để trừ máu
+   thủy quái, cần đủ số lần nhấn quy định (mặc định 13, admin có thể chỉnh)
+   để hạ gục. Ai từng ra tay đều nhận thưởng xu khi thủy quái bị hạ gục. */
+const BOSS_CYCLE_MS = 4*60*1000; // 4 phút / lần xuất hiện
+const BOSS_HP_DEFAULT = 13;
+
+let MONSTER_LIST = [
+  {id:"kraken_co_dai", name:"Thủy Quái Viễn Cổ", icon:"🐙", price:2000, hp:13},
+  {id:"xa_tinh_bien",  name:"Xà Tinh Biển Sâu",  icon:"🐍", price:2500, hp:13}
+];
+let monsterDataLoaded = false;
+
+function attachMonsterDataSync(){
+  db.ref('monsterFishData').on('value', (snap)=>{
+    const val = snap.val();
+    if(!val){
+      if(!monsterDataLoaded){
+        const obj = {};
+        MONSTER_LIST.forEach(m=>{ obj[m.id] = {name:m.name, icon:m.icon, price:m.price, hp:m.hp}; });
+        db.ref('monsterFishData').set(obj).catch(()=>{});
+      }
+      return;
+    }
+    const list = Object.keys(val).map(id=>{
+      const m = val[id];
+      return {id, name:m.name, icon:m.icon, price:Number(m.price)||0, hp:Math.max(1, Number(m.hp)||BOSS_HP_DEFAULT)};
+    });
+    if(list.length){ MONSTER_LIST = list; monsterDataLoaded = true; }
+  }, ()=>{});
+}
+attachMonsterDataSync();
+
+let worldBossState = null;
+const bossBtn = document.getElementById('bossBtn');
+const bossBtnText = document.getElementById('bossBtnText');
+const panelBoss = document.getElementById('panel-boss');
+const bossLoading = document.getElementById('bossLoading');
+const bossContent = document.getElementById('bossContent');
+const bossIconBig = document.getElementById('bossIconBig');
+const bossNameBig = document.getElementById('bossNameBig');
+const bossDefeatedBox = document.getElementById('bossDefeatedBox');
+const bossFightBox = document.getElementById('bossFightBox');
+const bossWinnerLine = document.getElementById('bossWinnerLine');
+const bossHpFill = document.getElementById('bossHpFill');
+const bossHpText = document.getElementById('bossHpText');
+const bossMyTaps = document.getElementById('bossMyTaps');
+const bossTotalPlayers = document.getElementById('bossTotalPlayers');
+const bossPriceText = document.getElementById('bossPriceText');
+const bossHitBtn = document.getElementById('bossHitBtn');
+const bossRhythmTrack = document.getElementById('bossRhythmTrack');
+const bossRhythmZone = document.getElementById('bossRhythmZone');
+const bossRhythmCursor = document.getElementById('bossRhythmCursor');
+
+function myBossUid(){ return currentUser ? currentUser.uid : ('khach_'+state.playerId); }
+function currentBossCycle(){ return Math.floor(Date.now()/BOSS_CYCLE_MS); }
+function timeToNextCycle(){ return Math.max(0, (currentBossCycle()+1)*BOSS_CYCLE_MS - Date.now()); }
+function fmtMMSS(ms){
+  const s = Math.max(0, Math.ceil(ms/1000));
+  const m = Math.floor(s/60), ss = s%60;
+  return m+":"+String(ss).padStart(2,'0');
+}
+
+/* Bất kỳ ai vào game cũng có thể "gọi" thủy quái xuất hiện đúng chu kỳ,
+   dùng transaction để chỉ 1 bản ghi được tạo dù nhiều người cùng lúc kiểm tra */
+function ensureBossSpawn(){
+  if(!monsterDataLoaded || !MONSTER_LIST.length) return;
+  const cyc = currentBossCycle();
+  db.ref('worldBoss').transaction((cur)=>{
+    if(cur && cur.cycle === cyc) return; // đã có quái cho chu kỳ này -> không đổi gì
+    const m = MONSTER_LIST[Math.floor(Math.random()*MONSTER_LIST.length)];
+    return {
+      cycle: cyc,
+      monsterId: m.id,
+      name: m.name,
+      icon: m.icon,
+      price: m.price,
+      hpMax: m.hp,
+      hp: m.hp,
+      spawnedAt: Date.now(),
+      defeated: false,
+      contributors: {},
+      claims: {}
+    };
+  }).catch(()=>{});
+}
+setTimeout(ensureBossSpawn, 2000);
+setInterval(ensureBossSpawn, 5000);
+
+db.ref('worldBoss').on('value', (snap)=>{
+  worldBossState = snap.val();
+  renderBossUI();
+  maybeClaimBossReward();
+}, ()=>{});
+
+/* Chỉ cập nhật nội dung (không đập lại toàn bộ innerHTML) để không làm gián
+   đoạn thanh nhịp đang chạy khi có người khác câu trúng ở cùng thời điểm */
+function renderBossUI(){
+  if(!worldBossState){
+    bossLoading.style.display = 'block';
+    bossContent.style.display = 'none';
+    bossBtnText.textContent = '...';
+    return;
+  }
+  bossLoading.style.display = 'none';
+  bossContent.style.display = 'block';
+
+  const b = worldBossState;
+  const hpMax = Number(b.hpMax)||BOSS_HP_DEFAULT;
+  const hp = Math.max(0, Number(b.hp)||0);
+  const defeated = !!b.defeated || hp<=0;
+  const myTaps = (b.contributors && b.contributors[myBossUid()]) || 0;
+  const totalPlayers = b.contributors ? Object.keys(b.contributors).length : 0;
+  const iWon = defeated && b.defeatedBy === myBossUid();
+
+  if(defeated){
+    bossBtn.classList.remove('bossActive');
+    bossBtnText.textContent = '💤 ' + fmtMMSS(timeToNextCycle());
+  } else {
+    bossBtn.classList.add('bossActive');
+    bossBtnText.textContent = hp+'/'+hpMax;
+  }
+
+  bossIconBig.innerHTML = fishIconHtml(b.icon, 70);
+  bossNameBig.textContent = b.name;
+  bossHpFill.style.width = Math.round((hp/hpMax)*100)+'%';
+  bossHpText.textContent = hp+' / '+hpMax;
+  bossMyTaps.textContent = myTaps;
+  bossTotalPlayers.textContent = totalPlayers;
+  bossPriceText.textContent = (Number(b.price)||0).toLocaleString('vi-VN') + ' 🪙';
+
+  if(defeated){
+    bossFightBox.style.display = 'none';
+    bossDefeatedBox.style.display = 'block';
+    document.getElementById('bossNextIn').textContent = fmtMMSS(timeToNextCycle());
+    bossWinnerLine.innerHTML = b.defeatedBy
+      ? `🏆 Người câu nhanh nhất: <b style="color:var(--gold);">${escapeHtml(b.defeatedBy)}</b>${iWon ? ' (là bạn!) 🎉' : ''}`
+      : '';
+    stopBossRhythmLoop();
+  } else {
+    bossFightBox.style.display = 'block';
+    bossDefeatedBox.style.display = 'none';
+    if(bossPanelOpen && !bossRhythmAnim) startBossRhythmLoop();
+  }
+}
+
+/* ---- Cơ chế nhịp giống hệt câu cá thường: nhấn đúng lúc con trỏ vào vùng xanh mới trừ máu quái ---- */
+let bossRhythmAnim = null;
+let bossRhythmPos = 0;
+let bossRhythmDir = 1;
+let bossRhythmSpeed = 1.7;
+let bossZoneStart = 40, bossZoneWidth = 20;
+let bossPanelOpen = false;
+
+function randomizeBossZone(){
+  bossZoneWidth = 18 + Math.random()*4;
+  bossZoneStart = Math.random()*(100-bossZoneWidth);
+  bossRhythmZone.style.left = bossZoneStart+'%';
+  bossRhythmZone.style.width = bossZoneWidth+'%';
+}
+
+function startBossRhythmLoop(){
+  randomizeBossZone();
+  bossRhythmPos = 0;
+  bossRhythmDir = 1;
+  bossRhythmSpeed = 1.7 + Math.random()*0.6;
+  function tick(){
+    if(!bossPanelOpen){ bossRhythmAnim = null; return; }
+    bossRhythmPos += bossRhythmSpeed * bossRhythmDir;
+    if(bossRhythmPos >= 100){ bossRhythmPos = 100; bossRhythmDir = -1; }
+    if(bossRhythmPos <= 0){ bossRhythmPos = 0; bossRhythmDir = 1; }
+    bossRhythmCursor.style.left = bossRhythmPos+'%';
+    bossRhythmAnim = requestAnimationFrame(tick);
+  }
+  bossRhythmAnim = requestAnimationFrame(tick);
+}
+
+function stopBossRhythmLoop(){
+  if(bossRhythmAnim){ cancelAnimationFrame(bossRhythmAnim); bossRhythmAnim = null; }
+}
+
+function tryHitBoss(){
+  SoundEngine.unlock();
+  if(!worldBossState || worldBossState.defeated || Number(worldBossState.hp)<=0) return;
+  const inZone = bossRhythmPos >= bossZoneStart && bossRhythmPos <= bossZoneStart+bossZoneWidth;
+  if(inZone){
+    SoundEngine.sfx.hit();
+    hitWorldBoss();
+    randomizeBossZone(); // đổi vùng cho lần nhấn tiếp theo
+  } else {
+    SoundEngine.sfx.miss();
+    bossRhythmTrack.classList.add('missFlash');
+    setTimeout(()=>bossRhythmTrack.classList.remove('missFlash'), 300);
+    toast('❌ Nhấn trật nhịp rồi, thử lại!');
+  }
+}
+bossHitBtn.addEventListener('click', tryHitBoss);
+
+function hitWorldBoss(){
+  const uid = myBossUid();
+  db.ref('worldBoss').transaction((cur)=>{
+    if(!cur) return cur;
+    if(cur.defeated || Number(cur.hp)<=0) return cur;
+    cur.hp = Math.max(0, (Number(cur.hp)||0) - 1);
+    cur.contributors = cur.contributors || {};
+    cur.contributors[uid] = (cur.contributors[uid]||0) + 1;
+    if(cur.hp<=0){
+      // Người ra đòn kết liễu (nhanh nhất bấm trúng nhịp lúc máu về 0) là người duy nhất được thưởng
+      cur.defeated = true;
+      cur.defeatedBy = uid;
+      cur.defeatedAt = Date.now();
+    }
+    return cur;
+  }).catch(()=>{});
+}
+
+/* Chỉ người ra đòn kết liễu (câu nhanh nhất) mới nhận được cá + thưởng xu.
+   Dùng transaction trên nhánh claims để tránh phát thưởng trùng nhiều lần/thiết bị. */
+function maybeClaimBossReward(){
+  if(!worldBossState || !worldBossState.defeated) return;
+  const uid = myBossUid();
+  if(worldBossState.defeatedBy !== uid) return; // không phải người kết liễu -> không có thưởng
+  if(worldBossState.claims && worldBossState.claims[uid]) return;
+  db.ref('worldBoss/claims/'+uid).transaction((cur)=>{
+    if(cur) return; // đã nhận rồi
+    return true;
+  }).then((res)=>{
+    if(res.committed && res.snapshot.val()===true){
+      const reward = Number(worldBossState.price)||0;
+      const invId = 'm_' + worldBossState.monsterId;
+      const weight = generateWeight('boss');
+      // Lưu thủy quái vào túi đồ + sổ tay, tính chung vào tổng số lượng cá
+      state.inventory[invId] = (state.inventory[invId]||0) + 1;
+      if(!state.caughtIds[invId]) state.caughtIds[invId] = {count:0, maxWeight:0};
+      state.caughtIds[invId].count++;
+      if(weight > state.caughtIds[invId].maxWeight) state.caughtIds[invId].maxWeight = weight;
+      state.coins += reward;
+      saveState();
+      updateHeader();
+      renderInventory();
+      renderCollection();
+      showBossCatchPopup(worldBossState, reward, weight);
+    }
+  }).catch(()=>{});
+}
+
+/* Popup ăn mừng dành riêng cho người câu được thủy quái (giống popup bắt cá thường) */
+function showBossCatchPopup(boss, reward, weight){
+  SoundEngine.sfx.catchFish && SoundEngine.sfx.catchFish('mythic');
+  const pop = document.createElement('div');
+  pop.className = 'catchPopup';
+  pop.style.borderColor = '#c163ff';
+  pop.innerHTML = `
+    <div class="cfish">${fishIconHtml(boss.icon, 54)}</div>
+    <div class="cname">${escapeHtml(boss.name)}</div>
+    <div class="crarity bg-boss">🏆 Câu nhanh nhất! ${weight?('· '+weight+'kg'):''}</div>
+    <div class="ccoin">+ ${reward.toLocaleString('vi-VN')} 🪙 và đã cho vào túi đồ!</div>
+    <button class="cclose">Tuyệt vời!</button>
+  `;
+  gameArea.appendChild(pop);
+  pop.querySelector('.cclose').addEventListener('click', ()=> pop.remove());
+  setTimeout(()=>{ if(pop.parentNode) pop.remove(); }, 4500);
+}
+
+function openBossPanel(){
+  SoundEngine.unlock();
+  SoundEngine.sfx.open();
+  document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  panelBoss.classList.add('show');
+  bossPanelOpen = true;
+  if(worldBossState && !worldBossState.defeated && Number(worldBossState.hp)>0 && !bossRhythmAnim){
+    startBossRhythmLoop();
+  }
+}
+bossBtn.addEventListener('click', openBossPanel);
+
+setInterval(()=>{
+  const el = document.getElementById('bossNextIn');
+  if(el) el.textContent = fmtMMSS(timeToNextCycle());
+  if(worldBossState && (worldBossState.defeated || Number(worldBossState.hp)<=0)){
+    bossBtnText.textContent = '💤 ' + fmtMMSS(timeToNextCycle());
+  }
+}, 1000);
+
 /* ============== NAV ============== */
 const navBtns = document.querySelectorAll('.navBtn');
 function goToGameTab(){
   navBtns.forEach(b=>b.classList.remove('active'));
   document.querySelector('.navBtn[data-panel="game"]').classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  bossPanelOpen = false;
+  stopBossRhythmLoop();
 }
 navBtns.forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1198,6 +1564,8 @@ navBtns.forEach(btn=>{
     btn.classList.add('active');
     const target = btn.getAttribute('data-panel');
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+    bossPanelOpen = false;
+    stopBossRhythmLoop();
     if(target!=='game'){
       document.getElementById('panel-'+target).classList.add('show');
       if(target==='shop') renderShop();
