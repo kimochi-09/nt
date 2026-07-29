@@ -495,7 +495,7 @@
       </div>
       <div class="rankListHead">Các mốc hạng</div>
       <div id="rankList"></div>
-      <div class="rankInfoNote">💡 Mỗi lần câu được cá sẽ cộng điểm rank theo độ hiếm: Thường +2 · Hiếm +4 · Quý +6 · Huyền Thoại +8 · Thần Thoại +10 điểm.</div>
+      <div class="rankInfoNote">💡 Thường +2 · Hiếm +4 · Quý +6 · Huyền Thoại +8 · Thần Thoại +10 điểm.</div>
     </div>
   </div>
 
@@ -829,7 +829,7 @@ function syncCloudState(){
       state.nickname = remote.nickname || nickname;
       state.avatar = remote.avatar || avatar;
       try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
-      toast('✅ Đã đồng bộ tiến trình từ tài khoản chung!');
+      toast('✅ Đã gọi hồn về');
     } else {
       // Chưa có dữ liệu trên đám mây cho tài khoản này -> đẩy tiến trình hiện tại lên
       db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{});
