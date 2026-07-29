@@ -354,6 +354,7 @@
     <button class="back-btn" onclick="goBack()">←</button>
     <div id="playerName" style="flex:1; padding-left:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
     <div style="display:flex; gap:6px;">
+      <button class="stat" id="leaderboardBtn" onclick="window.open('bangxephang.html','_blank')" style="border:none; cursor:pointer; color:var(--text); font-family:inherit;"><span class="ic">🏆</span></button>
       <div class="stat"><span class="ic">🪙</span><span id="coinDisplay">0</span></div>
       <div class="stat"><span class="ic">🐟</span><span id="fishCountDisplay">0/60</span></div>
     </div>
@@ -626,8 +627,23 @@ function toast(msg){
 /* ---- Nhận diện tài khoản chung với hệ Chat (nt_myId) để đồng bộ dữ liệu, không có UI đăng nhập/tài khoản riêng ---- */
 let cloudSynced = false;
 let presenceStarted = false;
+const OWNER_KEY = "fishingWorld_ownerUid";
 function initSharedAccount(){
   const sharedId = (function(){ try{ return localStorage.getItem('nt_myId'); }catch(e){ return null; } })();
+  const ownerKey = sharedId || '__guest__';
+  let savedOwner = null;
+  try{ savedOwner = localStorage.getItem(OWNER_KEY); }catch(e){}
+  if(savedOwner !== null && savedOwner !== ownerKey){
+    // Máy này vừa đổi sang một tài khoản khác (tạo mới hoặc đăng nhập tài khoản khác)
+    // -> xoá sạch tiến trình (xu, đồ đạc...) đang lưu tạm trên máy của tài khoản cũ,
+    // để tài khoản mới không bị "thừa hưởng" nhầm số xu của tài khoản trước.
+    state = getDefaultState();
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+    cloudSynced = false;
+    presenceStarted = false;
+  }
+  try{ localStorage.setItem(OWNER_KEY, ownerKey); }catch(e){}
+
   currentUser = sharedId ? { uid: sharedId, displayName: sharedId } : null;
   if(currentUser){
     state.nickname = state.nickname || sharedId;
