@@ -79,6 +79,73 @@
         }
         .sidebar-title:hover { text-decoration: underline dotted; }
         .sidebar-title .rename-ic { font-size: 12px; opacity: .6; margin-left: 4px; }
+
+        #rename-modal {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            background: rgba(6, 8, 20, .6); backdrop-filter: blur(3px);
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        #rename-modal .rn-box {
+            width: 100%; max-width: 340px;
+            background: linear-gradient(165deg, #1b2138, #12162a);
+            border: 1px solid rgba(155, 48, 208, .35);
+            border-radius: 18px;
+            padding: 22px 20px 18px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03) inset;
+            animation: rnPop .18s ease-out;
+        }
+        @keyframes rnPop {
+            from { opacity: 0; transform: translateY(10px) scale(.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        #rename-modal .rn-icon {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: linear-gradient(135deg, #9b30d0, #5e1fb0);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin: 0 auto 12px;
+            box-shadow: 0 6px 16px rgba(155,48,208,.4);
+        }
+        #rename-modal h3 {
+            margin: 0 0 6px; text-align: center;
+            font-size: 16.5px; font-weight: 800; color: #eef1ff;
+        }
+        #rename-modal p {
+            margin: 0 0 16px; text-align: center;
+            font-size: 12.5px; color: #8a91b0; line-height: 1.4;
+        }
+        #rename-modal input {
+            width: 100%; box-sizing: border-box;
+            background: #0e1224; border: 1.5px solid #2c3352;
+            border-radius: 12px; padding: 12px 14px;
+            font-size: 15px; color: #eef1ff; font-family: inherit;
+            outline: none; transition: border-color .15s;
+        }
+        #rename-modal input:focus { border-color: #9b30d0; }
+        #rename-modal .rn-count {
+            text-align: right; font-size: 11px; color: #5c6485;
+            margin: 5px 2px 16px;
+        }
+        #rename-modal .rn-actions {
+            display: flex; gap: 10px;
+        }
+        #rename-modal .rn-actions button {
+            flex: 1; border: none; border-radius: 12px;
+            padding: 11px 0; font-size: 14px; font-weight: 700;
+            font-family: inherit; cursor: pointer; transition: transform .1s, filter .15s;
+        }
+        #rename-modal .rn-actions button:active { transform: scale(.96); }
+        #rename-modal .rn-cancel {
+            background: #1c2540; color: #9aa2c4;
+        }
+        #rename-modal .rn-cancel:hover { filter: brightness(1.2); }
+        #rename-modal .rn-ok {
+            background: linear-gradient(135deg, #9b30d0, #7b1fc7); color: #fff;
+        }
+        #rename-modal .rn-ok:hover { filter: brightness(1.1); }
+        #rename-modal .rn-err {
+            color: #ff6b81; font-size: 12px; text-align: center;
+            margin: -8px 0 12px; display: none;
+        }
         .exit-btn {
             border: none; background: #1c2540; color: #4a5878;
             font-size: 11px; font-family: inherit; cursor: pointer;
@@ -1015,6 +1082,21 @@
     <div class="ctx-item danger" id="ctx-recall" onclick="ctxRecall()">🗑️ Thu hồi</div>
 </div>
 
+<div id="rename-modal">
+    <div class="rn-box">
+        <div class="rn-icon">✏️</div>
+        <h3>Đổi tên hiển thị</h3>
+        <p>đổi tên.</p>
+        <input type="text" id="rn-input" maxlength="20" placeholder="Nhập tên mới..." autocomplete="off">
+        <div class="rn-count"><span id="rn-count">0</span>/20</div>
+        <div class="rn-err" id="rn-err">Tên không được để trống.</div>
+        <div class="rn-actions">
+            <button class="rn-cancel" onclick="closeRenameModal()">Huỷ</button>
+            <button class="rn-ok" onclick="confirmRename()">Lưu</button>
+        </div>
+    </div>
+</div>
+
 <div id="settings-modal">
     <div class="modal-content">
         <h3>Tùy chỉnh</h3>
@@ -1117,15 +1199,39 @@
         if(!myId) return;
         db.ref('user_profiles/' + myId).once('value').then(s => {
             const current = (s.exists() && s.val().displayName) ? s.val().displayName : myId;
-            const input = prompt('Nhập tên hiển thị mới (tối đa 20 ký tự):', current);
-            if(input === null) return;
-            const name = input.trim().slice(0, 20);
-            if(!name) { alert('Tên không được để trống.'); return; }
-            db.ref('user_profiles/' + myId).update({ displayName: name }).then(() => {
-                setSidebarTitle(name);
-            }).catch(() => {
-                alert('Không thể đổi tên, vui lòng thử lại.');
-            });
+            openRenameModal(current);
+        });
+    }
+
+    function openRenameModal(current) {
+        const modal = document.getElementById('rename-modal');
+        const input = document.getElementById('rn-input');
+        const count = document.getElementById('rn-count');
+        const err = document.getElementById('rn-err');
+        err.style.display = 'none';
+        input.value = current || '';
+        count.textContent = input.value.length;
+        modal.style.display = 'flex';
+        setTimeout(() => { input.focus(); input.select(); }, 50);
+        input.oninput = () => { count.textContent = input.value.length; };
+        input.onkeydown = (e) => { if(e.key === 'Enter') confirmRename(); if(e.key === 'Escape') closeRenameModal(); };
+    }
+
+    function closeRenameModal() {
+        document.getElementById('rename-modal').style.display = 'none';
+    }
+
+    function confirmRename() {
+        const input = document.getElementById('rn-input');
+        const err = document.getElementById('rn-err');
+        const name = input.value.trim().slice(0, 20);
+        if(!name) { err.style.display = 'block'; return; }
+        db.ref('user_profiles/' + myId).update({ displayName: name }).then(() => {
+            setSidebarTitle(name);
+            closeRenameModal();
+        }).catch(() => {
+            err.textContent = 'Không thể đổi tên, vui lòng thử lại.';
+            err.style.display = 'block';
         });
     }
 
