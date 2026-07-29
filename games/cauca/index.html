@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🎣 Fishing World: Chat & Chill</title>
+<title>🎣 Câu Cá</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -294,7 +294,8 @@
   /* CHAT */
   #chatMessages{flex:1; overflow-y:auto; padding:10px 12px; display:flex; flex-direction:column; gap:8px;}
   .msg{display:flex; gap:8px; align-items:flex-start; max-width:85%;}
-  .msg .av{font-size:20px; flex-shrink:0; width:26px; height:26px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center;}
+  .msg .av{font-size:20px; flex-shrink:0; width:26px; height:26px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--panel);}
+  .msg .av img{width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;}
   .msg .bubble2{background:var(--panel); border-radius:14px 14px 14px 4px; padding:8px 12px; font-size:13.5px; word-break:break-word; overflow-wrap:anywhere;}
   .msg .name{font-size:11px; color:var(--text-dim); font-weight:700; margin-bottom:2px;}
   .msg .msgTime{font-size:10px; color:var(--text-dim); opacity:.65; margin-top:2px;}
@@ -729,6 +730,18 @@ function escapeHtml(str){
   return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Lấy avatar + tên hiển thị đã đổi (đồng bộ với app nhắn tin) cho mỗi người gửi,
+// có cache lại để không phải gọi Firebase nhiều lần cho cùng 1 người.
+const chatProfileCache = {};
+function fetchChatProfile(uid){
+  if(chatProfileCache[uid]) return Promise.resolve(chatProfileCache[uid]);
+  return db.ref('user_profiles/' + uid).once('value').then(s=>{
+    const p = (s.exists() && s.val()) || {};
+    chatProfileCache[uid] = p;
+    return p;
+  }).catch(()=>({}));
+}
+
 let worldChatUnread = 0;
 function isWorldChatOpen(){ return panelWorldChat.classList.contains('show'); }
 let worldChatReady = false; // để không tính tin nhắn cũ là "chưa đọc" khi vừa mở app
@@ -755,20 +768,37 @@ function renderChatMsg(key, m){
   if(m.sys){
     row.className='msg sys';
     row.innerHTML = `<div class="bubble2">${escapeHtml(m.t)}</div>`;
+    chatMessagesEl.appendChild(row);
   } else {
     const me = m.s === myChatName();
     row.className = 'msg' + (me?' me':'');
     const time = new Date(m.ts||Date.now()).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    const cached = chatProfileCache[m.s];
+    const displayName = (cached && cached.displayName) ? cached.displayName : m.s;
+    const avatarHtml = (cached && cached.avatar) ? `<img src="${escapeHtml(cached.avatar)}" alt="">` : '👤';
     row.innerHTML = `
-      <div class="av">👤</div>
+      <div class="av">${avatarHtml}</div>
       <div>
-        <div class="name">${escapeHtml(m.s)}</div>
+        <div class="name">${escapeHtml(displayName)}</div>
         <div class="bubble2">${escapeHtml(m.t)}</div>
         <div class="msgTime">${time}</div>
       </div>
     `;
+    chatMessagesEl.appendChild(row);
+    if(!cached){
+      fetchChatProfile(m.s).then(p=>{
+        if(!p) return;
+        if(p.avatar){
+          const avEl = row.querySelector('.av');
+          if(avEl) avEl.innerHTML = `<img src="${escapeHtml(p.avatar)}" alt="">`;
+        }
+        if(p.displayName){
+          const nameEl = row.querySelector('.name');
+          if(nameEl) nameEl.textContent = p.displayName;
+        }
+      });
+    }
   }
-  chatMessagesEl.appendChild(row);
   while(chatMessagesEl.childElementCount > 80){ chatMessagesEl.removeChild(chatMessagesEl.firstChild); }
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
   if(worldChatReady && !m.sys && m.s !== myChatName() && !isWorldChatOpen()){
