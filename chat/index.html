@@ -75,7 +75,10 @@
             font-size: 17px; font-weight: 800;
             color: #dce8ff; flex: 1;
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            cursor: pointer;
         }
+        .sidebar-title:hover { text-decoration: underline dotted; }
+        .sidebar-title .rename-ic { font-size: 12px; opacity: .6; margin-left: 4px; }
         .exit-btn {
             border: none; background: #1c2540; color: #4a5878;
             font-size: 11px; font-family: inherit; cursor: pointer;
@@ -780,7 +783,7 @@
         <div class="sidebar-header">
             <img id="my-avatar" src="https://via.placeholder.com/44" onclick="document.getElementById('fileInput').click()" title="Đổi ảnh đại diện">
             <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="uploadImage(this)">
-            <span class="sidebar-title" id="sidebar-title">Tên</span>
+            <span class="sidebar-title" id="sidebar-title" onclick="renameDisplayName()" title="Bấm để đổi tên hiển thị">Tên<span class="rename-ic">✏️</span></span>
             <button class="game-entry-btn" onclick="window.location.href='https://ngancte.fun/games/'" title="Trò chơi">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 7H17C19.2091 7 21 8.79086 21 11V15C21 16.6569 19.6569 18 18 18C17.2596 18 16.5847 17.7311 16.0645 17.2646L14.5 15.5H9.5L7.9355 17.2646C7.41527 17.7311 6.74041 18 6 18C4.34315 18 3 16.6569 3 15V11C3 8.79086 4.79086 7 7 7Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
@@ -1067,12 +1070,13 @@
         if(user && savedId) {
             myId = savedId;
             document.getElementById('chat-screen').style.display = 'flex';
-            document.getElementById('sidebar-title').textContent = myId;
+            setSidebarTitle(myId);
             db.ref('user_profiles/' + myId).on('value', s => {
                 if(s.exists() && s.val().avatar) {
                     document.getElementById('my-avatar').src = s.val().avatar;
                     avatars[myId] = s.val().avatar;
                 }
+                setSidebarTitle(s.exists() && s.val().displayName ? s.val().displayName : myId);
             });
             loadFriends();
             loadStickers();
@@ -1096,6 +1100,32 @@
         localStorage.removeItem('nt_myId');
         auth.signOut().finally(() => {
             window.location.href = '/';
+        });
+    }
+
+    // ===== ĐỔI TÊN HIỂN THỊ =====
+    function setSidebarTitle(name) {
+        const el = document.getElementById('sidebar-title');
+        el.innerHTML = escapeHtmlName(name) + '<span class="rename-ic">✏️</span>';
+    }
+
+    function escapeHtmlName(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renameDisplayName() {
+        if(!myId) return;
+        db.ref('user_profiles/' + myId).once('value').then(s => {
+            const current = (s.exists() && s.val().displayName) ? s.val().displayName : myId;
+            const input = prompt('Nhập tên hiển thị mới (tối đa 20 ký tự):', current);
+            if(input === null) return;
+            const name = input.trim().slice(0, 20);
+            if(!name) { alert('Tên không được để trống.'); return; }
+            db.ref('user_profiles/' + myId).update({ displayName: name }).then(() => {
+                setSidebarTitle(name);
+            }).catch(() => {
+                alert('Không thể đổi tên, vui lòng thử lại.');
+            });
         });
     }
 
