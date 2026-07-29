@@ -107,12 +107,21 @@ const listEl = document.getElementById('list');
 const updatedEl = document.getElementById('updatedAt');
 const medals = ['🥇','🥈','🥉'];
 
+let totalFishCount = 60; // sẽ được thay bằng số thật lấy từ Firebase (fishData)
+
 function loadLeaderboard(){
   statusEl.style.display = 'block';
   statusEl.textContent = 'Đang tải bảng xếp hạng...';
   listEl.innerHTML = '';
 
-  db.ref('users').once('value').then(snap => {
+  const fishDataPromise = db.ref('fishData').once('value').then(snap => {
+    const val = snap.val();
+    if(val){
+      totalFishCount = Object.keys(val).length;
+    }
+  }).catch(()=>{});
+
+  fishDataPromise.then(() => db.ref('users').once('value')).then(snap => {
     const val = snap.val() || {};
     const rows = [];
     Object.keys(val).forEach(uid => {
@@ -143,7 +152,7 @@ function loadLeaderboard(){
         <div class="avatarIc">${r.avatar}</div>
         <div class="rInfo">
           <div class="rName">${escapeHtml(r.nickname)}${r.uid===myId?' (Bạn)':''}</div>
-          <div class="rSub">🐟 ${r.fishCount}/60 loài cá</div>
+          <div class="rSub">🐟 ${r.fishCount}/${totalFishCount} loài cá</div>
         </div>
         <div class="rCoin">🪙 ${r.coins.toLocaleString('vi-VN')}</div>
       `;
