@@ -628,11 +628,11 @@ const RARITY_RANK_POINTS = { common:2, uncommon:4, rare:6, epic:8, mythic:10 };
 const RANKS = [
   {name:"Tân Thủ",      icon:"💩", color:"common",   min:0},
   {name:"Nghiệp Dư",    icon:"🤡", color:"uncommon", min:100},
-  {name:"Chuyên Nghiệp",icon:"👻", color:"rare",     min:200},
+  {name:"Chuyên Nghiệp",icon:"👻", color:"rare",     min:250},
   {name:"Cao Thủ",      icon:"💀", color:"epic",     min:500},
   {name:"Chí Tôn",      icon:"☠️", color:"mythic",   min:1000}
 ];
-const RANK_MAX_POINTS = 2000; // mốc điểm tối đa để "max" hạng Chí Tôn
+const RANK_MAX_POINTS = 5000; // mốc điểm tối đa để "max" hạng Chí Tôn
 
 function getRankIndex(points){
   let idx = 0;
