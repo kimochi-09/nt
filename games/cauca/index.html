@@ -251,6 +251,7 @@
   .rodInfo{flex:1;}
   .rodInfo .rname{font-weight:800; font-size:14.5px;}
   .rodInfo .rdesc{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .rodInfo .rdur{font-size:11.5px; color:var(--gold); margin-top:3px; font-weight:700;}
   .rodBtn{
     background:var(--gold); color:#3a2400; border:none; border-radius:10px; padding:9px 12px;
     font-weight:800; font-size:12.5px; white-space:nowrap;
@@ -688,11 +689,11 @@ function getRankData(points){
 }
 
 const RODS = [
-  {id:"tre", name:"Cần Tre Tân Thủ", icon:"🎋", price:0, bonus:{}, desc:"Cần mặc định cho người mới chơi."},
-  {id:"thuytinh", name:"Cần Sợi Thủy Tinh", icon:"🪶", price:1000, bonus:{uncommon:10}, desc:"+10% tỷ lệ gặp cá Hiếm."},
-  {id:"carbon", name:"Cần Carbon Hiện Đại", icon:"⚙️", price:10000, bonus:{rareUp:20, speed:0.15}, desc:"+20% tỷ lệ gặp cá Quý trở lên. Giảm 15% thời gian chờ."},
-  {id:"hoanggia", name:"Cần Câu Hoàng Gia", icon:"👑", price:50000, bonus:{epic:35, sellBonus:0.10}, desc:"+35% tỷ lệ gặp cá Huyền Thoại. +10% tiền bán cá."},
-  {id:"poseidon", name:"Cần Định Mệnh Poseidon", icon:"🔱", price:200000, bonus:{mythicEpic:50, noMiss:false}, desc:"+50% tỷ lệ gặp cá Thần Thoại & Huyền Thoại. Không bao giờ câu trượt!"}
+  {id:"tre", name:"Cần Tre Tân Thủ", icon:"🎋", price:0, durability:20, bonus:{}, desc:"Cần mặc định cho người mới chơi. Độ bền: 20 lượt câu."},
+  {id:"thuytinh", name:"Cần Sợi Thủy Tinh", icon:"🪶", price:1000, durability:25, bonus:{uncommon:10}, desc:"+10% tỷ lệ gặp cá Hiếm. Độ bền: 25 lượt câu."},
+  {id:"carbon", name:"Cần Carbon Hiện Đại", icon:"⚙️", price:10000, durability:30, bonus:{rareUp:20, speed:0.15}, desc:"+20% tỷ lệ gặp cá Quý trở lên. Giảm 15% thời gian chờ. Độ bền: 30 lượt câu."},
+  {id:"hoanggia", name:"Cần Câu Hoàng Gia", icon:"👑", price:50000, durability:35, bonus:{epic:35, sellBonus:0.10}, desc:"+35% tỷ lệ gặp cá Huyền Thoại. +10% tiền bán cá. Độ bền: 35 lượt câu."},
+  {id:"poseidon", name:"Cần Định Mệnh Poseidon", icon:"🔱", price:200000, durability:40, bonus:{mythicEpic:50, noMiss:false}, desc:"+50% tỷ lệ gặp cá Thần Thoại & Huyền Thoại. Không bao giờ câu trượt! Độ bền: 40 lượt câu."}
 ];
 
 /* ============== STATE ============== */
@@ -702,6 +703,7 @@ function getDefaultState(){
     coins: 100,
     ownedRods: ["tre"],
     equippedRod: "tre",
+    rodDurability: {tre: RODS.find(r=>r.id==="tre").durability}, // rodId -> độ bền còn lại
     inventory: {},      // fishId -> count
     caughtIds: {},       // fishId -> {count, maxWeight}
     rankPoints: 0,        // điểm rank tích luỹ, dùng để leo hạng
@@ -721,6 +723,26 @@ function loadLocalState(){
       state = Object.assign(state, parsed);
     }
   }catch(e){}
+  ensureRodDurability();
+}
+/* Vá dữ liệu cũ: đảm bảo mỗi cần đang sở hữu đều có độ bền hợp lệ
+   (người chơi đã lưu game từ trước khi có tính năng độ bền) */
+function ensureRodDurability(){
+  if(!state.rodDurability) state.rodDurability = {};
+  (state.ownedRods||[]).forEach(id=>{
+    if(typeof state.rodDurability[id] !== 'number'){
+      const rod = RODS.find(r=>r.id===id);
+      state.rodDurability[id] = rod ? rod.durability : 20;
+    }
+  });
+  // nếu cần đang trang bị đã bị mất (hết bền ở phiên trước) thì về lại cần Tre
+  if(!state.ownedRods.includes(state.equippedRod)){
+    state.equippedRod = 'tre';
+    if(!state.ownedRods.includes('tre')) state.ownedRods.push('tre');
+    if(typeof state.rodDurability['tre'] !== 'number'){
+      state.rodDurability['tre'] = RODS.find(r=>r.id==='tre').durability;
+    }
+  }
 }
 function saveState(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
@@ -1286,6 +1308,40 @@ function tryReelHit(){
 let missCount = 0;
 const maxMisses = 3;
 
+/* Trừ 1 độ bền của cần đang trang bị sau mỗi lượt câu (dù câu được cá hay sổng cá).
+   Nếu về 0, cần bị hỏng và mất luôn -> phải mua cần mới. */
+function useRodDurability(){
+  const rodId = state.equippedRod;
+  if(!state.rodDurability) state.rodDurability = {};
+  if(typeof state.rodDurability[rodId] !== 'number'){
+    const rod = RODS.find(r=>r.id===rodId);
+    state.rodDurability[rodId] = rod ? rod.durability : 20;
+  }
+  state.rodDurability[rodId] = Math.max(0, state.rodDurability[rodId] - 1);
+
+  if(state.rodDurability[rodId] <= 0 && rodId !== 'tre'){
+    const brokenRod = RODS.find(r=>r.id===rodId);
+    // mất cần: xoá khỏi kho, xoá độ bền lưu, tự chuyển về cần Tre mặc định
+    state.ownedRods = state.ownedRods.filter(id=>id!==rodId);
+    delete state.rodDurability[rodId];
+    state.equippedRod = 'tre';
+    if(!state.ownedRods.includes('tre')) state.ownedRods.push('tre');
+    if(typeof state.rodDurability['tre'] !== 'number'){
+      state.rodDurability['tre'] = RODS.find(r=>r.id==='tre').durability;
+    }
+    saveState();
+    updateHeader();
+    toast(`💔 ${brokenRod ? brokenRod.name : 'Cần câu'} đã hết độ bền và bị hỏng! Đã tự chuyển về Cần Tre Tân Thủ.`);
+  } else if(state.rodDurability[rodId] <= 0 && rodId === 'tre'){
+    // cần Tre mặc định: reset lại độ bền để người chơi luôn có cần dùng miễn phí
+    state.rodDurability['tre'] = RODS.find(r=>r.id==='tre').durability;
+    saveState();
+    toast('🎋 Cần Tre Tân Thủ đã mòn, được cấp lại độ bền miễn phí!');
+  } else {
+    saveState();
+  }
+}
+
 function fishEscape(){
   SoundEngine.sfx.escape();
   clearTimeout(biteTimeout);
@@ -1295,6 +1351,8 @@ function fishEscape(){
   statusText.textContent='😭 Cá đã sổng mất vì nhấn lệch nhịp! Thử lại nhé.';
   castBtn.textContent='🎣 THẢ CÂU';
   resetVisual();
+  useRodDurability();
+  updateHeader();
 }
 
 function landFish(){
@@ -1324,6 +1382,7 @@ function landFish(){
 
   saveState();
   updateHeader();
+  useRodDurability();
   SoundEngine.sfx.catchFish(fish.rarity);
   showCatchPopup(fish, weight, rankPts, rankedUp ? RANKS[newRankIdx] : null);
 }
@@ -1366,6 +1425,11 @@ function renderShop(){
     const card = document.createElement('div');
     card.className = 'rodCard' + (owned?' owned':'') + (equipped?' equipped':'');
     let btnHtml;
+    let durHtml = '';
+    if(owned){
+      const dur = (state.rodDurability && state.rodDurability[rod.id] != null) ? state.rodDurability[rod.id] : rod.durability;
+      durHtml = `<div class="rdur">🔧 Độ bền: ${dur}/${rod.durability}</div>`;
+    }
     if(equipped){
       btnHtml = `<button class="rodBtn equippedBtn">Đang dùng</button>`;
     } else if(owned){
@@ -1379,6 +1443,7 @@ function renderShop(){
       <div class="rodInfo">
         <div class="rname">${rod.name}</div>
         <div class="rdesc">${rod.desc}</div>
+        ${durHtml}
       </div>
       ${btnHtml}
     `;
@@ -1394,6 +1459,8 @@ function renderShop(){
         state.coins -= rod.price;
         state.ownedRods.push(id);
         state.equippedRod = id;
+        if(!state.rodDurability) state.rodDurability = {};
+        state.rodDurability[id] = rod.durability;
         saveState();
         updateHeader();
         renderShop();
