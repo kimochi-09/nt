@@ -531,6 +531,7 @@
       <span class="phTitle">💬 Chat Chung</span>
       <button class="closeBtn" data-close>✕</button>
     </div>
+    <button id="btnGoArena" style="margin:10px 12px 0; padding:11px; border:none; border-radius:14px; font-weight:800; font-size:14px; background:linear-gradient(180deg,var(--gold),var(--gold-dark)); color:#3a2600; cursor:pointer;">⚔️ Đấu Trường - Câu cá đối kháng, cược coin!</button>
     <div id="chatMessages"></div>
     <div id="chatInputBar">
       <input type="text" id="worldChatInput" placeholder="Nhắn gì đó cho mọi người..." maxlength="300">
@@ -1084,6 +1085,11 @@ function sendWorldChat(){
   });
 }
 worldChatSendBtn.addEventListener('click', sendWorldChat);
+
+const btnGoArena = document.getElementById('btnGoArena');
+if(btnGoArena){
+  btnGoArena.addEventListener('click', ()=>{ window.location.href = 'dautruong/index.html'; });
+}
 worldChatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendWorldChat(); } });
 
 /* ============== FISHING LOGIC ============== */
