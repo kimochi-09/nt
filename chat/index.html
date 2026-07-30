@@ -915,7 +915,7 @@
         </div>
         <div class="input-area">
             <button class="input-action-btn" title="Ảnh" onclick="document.getElementById('chat-img-input').click()">🖼️</button>
-            <input type="file" id="chat-img-input" accept="image/*" style="display:none;" onchange="sendImage(this)">
+            <input type="file" id="chat-img-input" accept="image/*" multiple style="display:none;" onchange="sendImage(this)">
 
             <input type="text" id="msg-input" placeholder="Aa" onkeypress="if(event.key==='Enter') sendMsg()" oninput="onTyping()">
             <button class="input-action-btn" id="voice-btn" title="Ghi âm" onclick="toggleVoiceRecording()">🎤</button>
@@ -1808,18 +1808,28 @@
     }
 
     function sendImage(input) {
-        if(!input.files || !input.files[0] || !toId) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const room = myId < toId ? myId + toId : toId + myId;
-            db.ref('chats/' + room).push({
-                s: myId,
-                t: '',
-                img: e.target.result,
-                ts: Date.now()
-            });
-        };
-        reader.readAsDataURL(input.files[0]);
+        if(!input.files || !input.files.length || !toId) return;
+        const room = myId < toId ? myId + toId : toId + myId;
+        const files = Array.from(input.files);
+
+        // Gửi lần lượt từng ảnh, giữ đúng thứ tự đã chọn
+        function sendOne(index) {
+            if(index >= files.length) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                db.ref('chats/' + room).push({
+                    s: myId,
+                    t: '',
+                    img: e.target.result,
+                    ts: Date.now()
+                }, () => {
+                    sendOne(index + 1);
+                });
+            };
+            reader.readAsDataURL(files[index]);
+        }
+
+        sendOne(0);
         input.value = '';
     }
 
