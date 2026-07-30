@@ -695,6 +695,31 @@ const RODS = [
   {id:"hoanggia", name:"Cần Câu Hoàng Gia", icon:"👑", price:50000, durability:35, bonus:{epic:35, sellBonus:0.10}, desc:"+35% tỷ lệ gặp cá Huyền Thoại. +10% tiền bán cá. Độ bền: 35 lượt câu."},
   {id:"poseidon", name:"Cần Định Mệnh Poseidon", icon:"🔱", price:200000, durability:40, bonus:{mythicEpic:50, noMiss:false}, desc:"+50% tỷ lệ gặp cá Thần Thoại & Huyền Thoại. Không bao giờ câu trượt! Độ bền: 40 lượt câu."}
 ];
+// Độ bền gốc của từng cần (mốc "tối đa" mặc định khi admin chưa tuỳ chỉnh)
+const RODS_BASE_DURABILITY = {};
+RODS.forEach(r=>{ RODS_BASE_DURABILITY[r.id] = r.durability; });
+
+/* ============== CẤU HÌNH ĐỘ BỀN CẦN CÂU (đồng bộ từ trang quản trị) ==============
+   Admin có thể chỉnh số lượt câu tối đa của mỗi cần, và bật/tắt hoàn toàn cơ chế
+   hao mòn độ bền (khi tắt, cần dùng vĩnh viễn, không bao giờ hỏng). */
+let DURABILITY_ENABLED = true;
+function attachRodConfigSync(){
+  db.ref('rodConfig').on('value', (snap)=>{
+    const val = snap.val();
+    DURABILITY_ENABLED = !(val && val.durabilityEnabled === false);
+    if(val && val.durability){
+      RODS.forEach(rod=>{
+        const d = Number(val.durability[rod.id]);
+        rod.durability = (d > 0) ? d : RODS_BASE_DURABILITY[rod.id];
+        // cập nhật lại số trong phần mô tả (vd: "Độ bền: 20 lượt câu.") cho khớp giá trị mới
+        rod.desc = rod.desc.replace(/Độ bền: \d+ lượt câu\./, `Độ bền: ${rod.durability} lượt câu.`);
+      });
+    }
+    try{ if(typeof renderShop==='function') renderShop(); }catch(e){}
+    try{ if(typeof updateHeader==='function') updateHeader(); }catch(e){}
+  }, ()=>{});
+}
+attachRodConfigSync();
 
 /* ============== STATE ============== */
 const SAVE_KEY = "fishingWorld_save_v1";
@@ -1311,6 +1336,11 @@ const maxMisses = 3;
 /* Trừ 1 độ bền của cần đang trang bị sau mỗi lượt câu (dù câu được cá hay sổng cá).
    Nếu về 0, cần bị hỏng và mất luôn -> phải mua cần mới. */
 function useRodDurability(){
+  if(!DURABILITY_ENABLED){
+    // Tính năng độ bền đang bị admin tắt: cần câu dùng vĩnh viễn, không hao mòn.
+    saveState();
+    return;
+  }
   const rodId = state.equippedRod;
   if(!state.rodDurability) state.rodDurability = {};
   if(typeof state.rodDurability[rodId] !== 'number'){
@@ -1427,8 +1457,12 @@ function renderShop(){
     let btnHtml;
     let durHtml = '';
     if(owned){
-      const dur = (state.rodDurability && state.rodDurability[rod.id] != null) ? state.rodDurability[rod.id] : rod.durability;
-      durHtml = `<div class="rdur">🔧 Độ bền: ${dur}/${rod.durability}</div>`;
+      if(!DURABILITY_ENABLED){
+        durHtml = `<div class="rdur">♾️ Độ bền: Không giới hạn</div>`;
+      } else {
+        const dur = (state.rodDurability && state.rodDurability[rod.id] != null) ? state.rodDurability[rod.id] : rod.durability;
+        durHtml = `<div class="rdur">🔧 Độ bền: ${dur}/${rod.durability}</div>`;
+      }
     }
     if(equipped){
       btnHtml = `<button class="rodBtn equippedBtn">Đang dùng</button>`;
