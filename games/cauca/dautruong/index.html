@@ -111,30 +111,37 @@
   #waitPanel.hidden{display:none;}
   .waitHeader{display:flex; align-items:center; justify-content:space-between; padding:14px; border-bottom:1px solid rgba(255,255,255,.08);}
   .waitHeader .roomCode{font-weight:800; font-size:14px; background:rgba(255,255,255,.08); padding:6px 12px; border-radius:20px; letter-spacing:1px;}
-  .waitBody{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; gap:20px;}
-  .betPill{background:rgba(255,211,92,.12); border:1px solid var(--gold); color:var(--gold); font-weight:800; padding:8px 18px; border-radius:30px; font-size:14px;}
-  .playersRow{display:flex; align-items:center; gap:22px;}
-  .playerSlot{display:flex; flex-direction:column; align-items:center; gap:8px; width:110px;}
-  .playerSlot .pav{width:64px; height:64px; border-radius:50%; background:var(--panel-light); display:flex; align-items:center; justify-content:center; font-size:28px; border:2px solid rgba(255,255,255,.15);}
-  .playerSlot.ready .pav{border-color:var(--uncommon); box-shadow:0 0 16px rgba(61,220,132,.5);}
-  .playerSlot .pname{font-size:12.5px; font-weight:700; text-align:center; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .playerSlot .pstatus{font-size:11px; color:var(--text-dim);}
-  .vsIcon{font-size:22px; opacity:.7;}
-  .countdownNum{font-size:64px; font-weight:900; color:var(--gold); text-shadow:0 4px 16px rgba(0,0,0,.5);}
-  .waitStatusText{color:var(--text-dim); font-size:13.5px; text-align:center;}
-  .leaveRoomBtn{background:rgba(255,92,92,.15); color:var(--danger); border:1px solid var(--danger); border-radius:12px; padding:12px 20px; font-weight:800; font-size:13.5px;}
+  .waitBody{flex:1; display:flex; flex-direction:column; align-items:center; padding:16px 16px 20px; gap:14px; overflow-y:auto;}
+  .betPill{background:rgba(255,211,92,.12); border:1px solid var(--gold); color:var(--gold); font-weight:800; padding:8px 18px; border-radius:30px; font-size:14px; flex-shrink:0;}
+  .playersList{width:100%; max-width:400px; display:flex; flex-direction:column; gap:8px;}
+  .pRow{display:flex; align-items:center; gap:10px; background:var(--panel-light); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:9px 12px;}
+  .pRow.isReady{border-color:var(--uncommon); box-shadow:0 0 12px rgba(61,220,132,.25);}
+  .pRow .pav{width:38px; height:38px; border-radius:50%; background:var(--panel); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; border:2px solid rgba(255,255,255,.15);}
+  .pRow.isReady .pav{border-color:var(--uncommon);}
+  .pRow .pinfo{flex:1; min-width:0;}
+  .pRow .pname{font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .pRow .pname .hostTag{color:var(--gold); font-size:10.5px; font-weight:800; margin-left:5px;}
+  .pRow .pready{font-size:11px; color:var(--text-dim); font-weight:700;}
+  .pRow.isReady .pready{color:var(--uncommon);}
+  .countdownNum{font-size:64px; font-weight:900; color:var(--gold); text-shadow:0 4px 16px rgba(0,0,0,.5); flex-shrink:0;}
+  .waitStatusText{color:var(--text-dim); font-size:13.5px; text-align:center; flex-shrink:0;}
+  .waitActionsRow{display:flex; gap:10px; width:100%; max-width:400px; flex-shrink:0;}
+  .readyBtn{flex:1; border:none; border-radius:12px; padding:13px; font-weight:800; font-size:14px; background:rgba(255,255,255,.08); color:var(--text); border:1px solid rgba(255,255,255,.15);}
+  .readyBtn.isReady{background:linear-gradient(180deg,#5ee89a,var(--uncommon)); color:#04351d; border-color:var(--uncommon);}
+  .startBattleBtn{flex:1; border:none; border-radius:12px; padding:13px; font-weight:800; font-size:14px; background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400;}
+  .startBattleBtn:disabled{opacity:.4;}
+  .leaveRoomBtn{background:rgba(255,92,92,.15); color:var(--danger); border:1px solid var(--danger); border-radius:12px; padding:12px 20px; font-weight:800; font-size:13.5px; flex-shrink:0;}
 
   /* BATTLE SCREEN */
   #battlePanel{position:fixed; inset:0; background:linear-gradient(180deg,#1c6ea3 0%, #0f4f7f 40%, #072f4d 100%); z-index:160; display:flex; flex-direction:column;}
   #battlePanel.hidden{display:none;}
   .battleTop{display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:rgba(2,20,34,.5);}
   .battleTimer{font-size:22px; font-weight:900; color:var(--gold); background:rgba(0,0,0,.3); padding:4px 16px; border-radius:20px;}
-  .scoreBoard{display:flex; align-items:center; justify-content:space-between; padding:10px 16px; gap:10px;}
-  .scoreCard{flex:1; background:rgba(0,0,0,.25); border-radius:12px; padding:10px 12px; text-align:center;}
+  .scoreBoard{display:flex; flex-wrap:wrap; padding:8px 12px; gap:8px; max-height:118px; overflow-y:auto;}
+  .scoreCard{flex:1 1 calc(50% - 8px); min-width:120px; background:rgba(0,0,0,.25); border-radius:12px; padding:8px 10px; text-align:center;}
   .scoreCard.me{border:1px solid var(--gold);}
-  .scoreCard .scName{font-size:11.5px; color:var(--text-dim); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .scoreCard .scPts{font-size:22px; font-weight:900; color:var(--gold); margin-top:2px;}
-  .battleVs{font-size:16px; font-weight:800; color:var(--text-dim);}
+  .scoreCard .scName{font-size:11px; color:var(--text-dim); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .scoreCard .scPts{font-size:19px; font-weight:900; color:var(--gold); margin-top:2px;}
 
   .battleArea{flex:1; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;}
   #bFishIcon{font-size:56px; display:none; animation:wiggle .4s infinite alternate;}
@@ -170,6 +177,11 @@
   .resultBox .rtitle.draw{color:var(--rare);}
   .resultRow{display:flex; justify-content:space-between; padding:9px 4px; border-bottom:1px solid rgba(255,255,255,.08); font-size:13.5px;}
   .resultRow span:first-child{color:var(--text-dim);}
+  .rkRow{display:flex; align-items:center; gap:8px; padding:7px 4px; border-bottom:1px solid rgba(255,255,255,.06); font-size:12.5px;}
+  .rkRow .rkPos{width:20px; font-weight:900; color:var(--gold); flex-shrink:0;}
+  .rkRow .rkName{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700;}
+  .rkRow.me .rkName{color:var(--gold);}
+  .rkRow .rkPts{font-weight:800; flex-shrink:0;}
   .resultCoin{font-size:19px; font-weight:900; color:var(--gold); margin:14px 0;}
   .resultCloseBtn{width:100%; border:none; border-radius:12px; padding:13px; font-weight:800; font-size:14.5px; background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400; margin-top:6px;}
 
@@ -277,7 +289,7 @@
         <button data-v="5000">5.000</button>
         <button data-v="10000">10.000</button>
       </div>
-      <div class="modalHint">Cả hai người chơi đặt cược bằng nhau. Đấu trong 60 giây, ai câu được nhiều điểm hơn thắng và nhận 80% tổng xu cược. Điểm ở đây KHÔNG cộng vào điểm Rank chính.</div>
+      <div class="modalHint">Không giới hạn số người tham gia. Mỗi người đặt cược bằng nhau. Đấu trong 60 giây, ai câu được nhiều điểm nhất thắng và nhận trọn 80% tổng xu cược cả phòng. Điểm ở đây KHÔNG cộng vào điểm Rank chính.</div>
       <div class="modalActions">
         <button class="cancelBtn" data-cancel>Huỷ</button>
         <button class="okBtn" id="confirmCreateBtn">Tạo phòng</button>
@@ -307,24 +319,16 @@
     </div>
     <div class="waitBody">
       <div class="betPill" id="waitBetPill">Cược: 0 🪙</div>
-      <div class="playersRow" id="waitPlayersRow">
-        <div class="playerSlot" id="slotHost">
-          <div class="pav" id="slotHostAv">👤</div>
-          <div class="pname" id="slotHostName">—</div>
-          <div class="pstatus" id="slotHostStatus">Chủ phòng</div>
-        </div>
-        <div class="vsIcon">⚔️</div>
-        <div class="playerSlot" id="slotGuest">
-          <div class="pav" id="slotGuestAv">❓</div>
-          <div class="pname" id="slotGuestName">Đang chờ...</div>
-          <div class="pstatus" id="slotGuestStatus">—</div>
-        </div>
-      </div>
+      <div class="playersList" id="playersList"></div>
       <div id="countdownWrap" style="display:none; text-align:center;">
         <div class="waitStatusText" style="margin-bottom:8px;">Trận đấu bắt đầu sau</div>
         <div class="countdownNum" id="countdownNum">3</div>
       </div>
-      <div class="waitStatusText" id="waitStatusText">Đang chờ người thách đấu tham gia...</div>
+      <div class="waitStatusText" id="waitStatusText">Đang chờ người chơi khác tham gia...</div>
+      <div class="waitActionsRow">
+        <button class="readyBtn" id="readyBtn">✅ Sẵn sàng</button>
+        <button class="startBattleBtn hidden" id="startBattleBtn" disabled>🚀 Bắt đầu</button>
+      </div>
       <button class="leaveRoomBtn" id="leaveRoomBtn2">🚪 Rời phòng</button>
     </div>
   </div>
@@ -335,17 +339,7 @@
       <div style="font-weight:800; font-size:13px;">⚔️ Đang đấu</div>
       <div class="battleTimer" id="battleTimer">60</div>
     </div>
-    <div class="scoreBoard">
-      <div class="scoreCard me">
-        <div class="scName" id="myScoreName">Bạn</div>
-        <div class="scPts" id="myScorePts">0</div>
-      </div>
-      <div class="battleVs">VS</div>
-      <div class="scoreCard">
-        <div class="scName" id="oppScoreName">Đối thủ</div>
-        <div class="scPts" id="oppScorePts">0</div>
-      </div>
-    </div>
+    <div class="scoreBoard" id="scoreBoard"></div>
     <div class="battleArea">
       <div id="bFishIcon">🐟</div>
       <div id="bStatusText">Nhấn "Thả câu" để bắt đầu!</div>
@@ -364,8 +358,7 @@
     <div class="resultBox">
       <div class="rbig" id="resultBig">🏆</div>
       <div class="rtitle" id="resultTitle">Bạn thắng!</div>
-      <div class="resultRow"><span>Điểm của bạn</span><span id="resultMyPts">0</span></div>
-      <div class="resultRow"><span>Điểm đối thủ</span><span id="resultOppPts">0</span></div>
+      <div id="resultRanking" style="text-align:left; margin:6px 0 4px; max-height:180px; overflow-y:auto;"></div>
       <div class="resultRow"><span>Tổng xu cược</span><span id="resultPot">0 🪙</span></div>
       <div class="resultCoin" id="resultCoinText">+0 🪙</div>
       <button class="resultCloseBtn" id="resultCloseBtn">Về Đấu Trường</button>
@@ -501,21 +494,31 @@ function toast(msg){
 const roomList = document.getElementById('roomList');
 function renderRoomList(rooms){
   roomList.innerHTML = '';
-  const waiting = Object.keys(rooms||{})
-    .map(id=>Object.assign({id}, rooms[id]))
-    .filter(r=>r.status==='waiting' && r.hostUid !== myUid());
+  const all = Object.keys(rooms||{}).map(id=>Object.assign({id}, rooms[id]));
+  // dọn rác: phòng waiting mà không còn ai trong players (host thoát đột ngột không kịp xoá)
+  all.forEach(r=>{
+    const count = r.players ? Object.keys(r.players).length : 0;
+    if(r.status==='waiting' && count===0){
+      db.ref('arenaRooms/'+r.id).remove();
+    }
+  });
+  const waiting = all.filter(r=>{
+    const count = r.players ? Object.keys(r.players).length : 0;
+    return r.status==='waiting' && count>0 && !(r.players && r.players[myUid()]);
+  });
   if(waiting.length===0){
     roomList.innerHTML = `<div class="emptyHint">Chưa có phòng nào đang chờ. Tạo phòng mới để rủ bạn bè vào đấu! ⚔️</div>`;
     return;
   }
   waiting.forEach(r=>{
+    const count = r.players ? Object.keys(r.players).length : 0;
     const card = document.createElement('div');
     card.className='roomCard';
     card.innerHTML = `
       <div class="ric">⚔️</div>
       <div class="rinfo">
         <div class="rname">${escapeHtml(r.hostName||r.hostUid)}</div>
-        <div class="rmeta">Cược: ${(r.bet||0).toLocaleString('vi-VN')} 🪙 · Mã: ${r.id}</div>
+        <div class="rmeta">Cược: ${(r.bet||0).toLocaleString('vi-VN')} 🪙 · ${count} người · Mã: ${r.id}</div>
       </div>
       <button class="rjoin" data-join="${r.id}">Vào đấu</button>
     `;
@@ -575,13 +578,12 @@ function createRoom(bet){
   const roomData = {
     hostUid: myUid(),
     hostName: myDisplayName(),
-    hostAvatar: localState.avatar || '👤',
-    guestUid: null,
-    guestName: null,
-    guestAvatar: null,
     bet: bet,
     status: 'waiting', // waiting -> countdown -> battling -> finished
     createdAt: Date.now(),
+    players: {
+      [myUid()]: { name: myDisplayName(), avatar: localState.avatar || '👤', ready: false, joinedAt: Date.now() }
+    },
     scores: {},
     startAt: null
   };
@@ -612,18 +614,26 @@ function attemptJoinRoom(code){
     const room = snap.val();
     if(!room){ toast('❌ Không tìm thấy phòng này'); return; }
     if(room.status !== 'waiting'){ toast('❌ Phòng này đã bắt đầu đấu hoặc đã kết thúc'); return; }
-    if(room.hostUid === myUid()){ toast('❌ Bạn không thể tự vào phòng của chính mình'); return; }
+    const existingCount = room.players ? Object.keys(room.players).length : 0;
+    if(existingCount===0){
+      toast('❌ Phòng này đã bị đóng.');
+      ref.remove();
+      return;
+    }
+    if(room.players && room.players[myUid()]){
+      enterWaitingRoom(code, room.hostUid === myUid());
+      return;
+    }
     if((localState.coins||0) < room.bet){ toast('❌ Bạn không đủ xu để tham gia (cần '+room.bet.toLocaleString('vi-VN')+' 🪙)'); return; }
-    ref.child('guestUid').transaction(cur=>{
-      if(cur) return; // đã có người khác vào trước
-      return myUid();
+    ref.child('players/'+myUid()).transaction(cur=>{
+      if(cur) return; // đã tham gia rồi (tránh double-click)
+      return { name: myDisplayName(), avatar: localState.avatar||'👤', ready: false, joinedAt: Date.now() };
     }).then(res=>{
-      if(!res.committed || res.snapshot.val() !== myUid()){
-        toast('❌ Phòng vừa có người khác vào trước, thử phòng khác nhé!');
+      if(!res.committed){
+        toast('❌ Không vào được phòng, thử lại sau.');
         return;
       }
-      ref.update({ guestName: myDisplayName(), guestAvatar: localState.avatar||'👤' });
-      enterWaitingRoom(code, false);
+      enterWaitingRoom(code, room.hostUid === myUid());
     }).catch(()=>{
       toast('❌ Không vào được phòng, thử lại sau.');
     });
@@ -634,16 +644,15 @@ function attemptJoinRoom(code){
 const waitPanel = document.getElementById('waitPanel');
 const waitRoomCode = document.getElementById('waitRoomCode');
 const waitBetPill = document.getElementById('waitBetPill');
-const slotHostName = document.getElementById('slotHostName');
-const slotGuestName = document.getElementById('slotGuestName');
-const slotGuestAv = document.getElementById('slotGuestAv');
-const slotHostEl = document.getElementById('slotHost');
-const slotGuestEl = document.getElementById('slotGuest');
+const playersList = document.getElementById('playersList');
 const waitStatusText = document.getElementById('waitStatusText');
 const countdownWrap = document.getElementById('countdownWrap');
 const countdownNum = document.getElementById('countdownNum');
+const readyBtn = document.getElementById('readyBtn');
+const startBattleBtn = document.getElementById('startBattleBtn');
 
 let countdownStartedLocally = false;
+let myReadyState = false;
 
 function enterWaitingRoom(id, asHost){
   currentRoomId = id;
@@ -652,19 +661,29 @@ function enterWaitingRoom(id, asHost){
   waitPanel.classList.remove('hidden');
   if(typeof updateChatSendRoomBtn === 'function') updateChatSendRoomBtn();
   countdownStartedLocally = false;
+  myReadyState = false;
   countdownWrap.style.display='none';
   waitStatusText.style.display='block';
+  readyBtn.classList.remove('isReady');
+  readyBtn.textContent='✅ Sẵn sàng';
+  startBattleBtn.classList.toggle('hidden', !asHost);
 
   if(roomListener) roomRef.off('value', roomListener);
   roomRef = db.ref('arenaRooms/'+id);
   roomListener = roomRef.on('value', snap=>{
     const room = snap.val();
     if(!room){
-      // phòng bị xoá (đối phương rời / kết thúc)
+      // phòng bị xoá (host rời / kết thúc)
       if(currentRoomId === id){
         toast('⚠️ Phòng đã đóng.');
         leaveToLobby();
       }
+      return;
+    }
+    if(room.players && !room.players[myUid()] && room.status==='waiting'){
+      // bị kick / tự rời ở tab khác
+      toast('⚠️ Bạn đã rời khỏi phòng.');
+      leaveToLobby();
       return;
     }
     renderWaitingRoom(room);
@@ -675,33 +694,64 @@ function enterWaitingRoom(id, asHost){
         runCountdownThenBattle(room);
       }
     }
-    if(room.status === 'finished'){
-      // được xử lý trong onBattleEnd, nhưng phòng ngừa trường hợp client bị lệch
-    }
   });
 }
 
 function renderWaitingRoom(room){
   waitBetPill.textContent = 'Cược: ' + (room.bet||0).toLocaleString('vi-VN') + ' 🪙 mỗi người';
-  slotHostName.textContent = room.hostName || room.hostUid;
-  if(room.guestUid){
-    slotGuestName.textContent = room.guestName || room.guestUid;
-    slotGuestAv.textContent = room.guestAvatar || '👤';
-    slotGuestEl.classList.add('ready');
-    slotHostEl.classList.add('ready');
-    waitStatusText.textContent = 'Đã đủ 2 người chơi! Chuẩn bị vào trận...';
-    // Chỉ host kích hoạt đếm ngược để tránh 2 bên cùng set trùng lặp
-    if(isHost && room.status === 'waiting'){
-      db.ref('arenaRooms/'+currentRoomId).update({ status:'countdown', countdownAt: Date.now() });
-    }
-  } else {
-    slotGuestName.textContent = 'Đang chờ...';
-    slotGuestAv.textContent = '❓';
-    slotGuestEl.classList.remove('ready');
-    slotHostEl.classList.remove('ready');
-    waitStatusText.textContent = 'Đang chờ người thách đấu tham gia...';
+  const players = room.players || {};
+  const ids = Object.keys(players).sort((a,b)=> (players[a].joinedAt||0) - (players[b].joinedAt||0));
+  playersList.innerHTML = ids.map(uid=>{
+    const p = players[uid];
+    const isMe = uid === myUid();
+    const isHostP = uid === room.hostUid;
+    return `
+      <div class="pRow ${p.ready?'isReady':''}">
+        <div class="pav">${escapeHtml(p.avatar||'👤')}</div>
+        <div class="pinfo">
+          <div class="pname">${escapeHtml(p.name||uid)}${isHostP?'<span class="hostTag">CHỦ PHÒNG</span>':''}${isMe?' (bạn)':''}</div>
+        </div>
+        <div class="pready">${p.ready?'✅ Sẵn sàng':'⏳ Chưa sẵn sàng'}</div>
+      </div>
+    `;
+  }).join('');
+
+  const count = ids.length;
+  const readyCount = ids.filter(uid=>players[uid].ready).length;
+  waitStatusText.textContent = count<2
+    ? 'Đang chờ thêm người chơi tham gia... (tối thiểu 2 người)'
+    : `${readyCount}/${count} người đã sẵn sàng`;
+
+  const me = players[myUid()];
+  myReadyState = !!(me && me.ready);
+  readyBtn.classList.toggle('isReady', myReadyState);
+  readyBtn.textContent = myReadyState ? '✅ Đã sẵn sàng' : '✅ Sẵn sàng';
+
+  if(isHost){
+    startBattleBtn.disabled = !(count>=2 && readyCount===count);
   }
 }
+
+readyBtn.addEventListener('click', ()=>{
+  if(!currentRoomId) return;
+  const next = !myReadyState;
+  db.ref('arenaRooms/'+currentRoomId+'/players/'+myUid()+'/ready').set(next);
+});
+
+startBattleBtn.addEventListener('click', ()=>{
+  if(!currentRoomId || !isHost) return;
+  db.ref('arenaRooms/'+currentRoomId).once('value').then(snap=>{
+    const room = snap.val();
+    if(!room) return;
+    const players = room.players || {};
+    const ids = Object.keys(players);
+    if(ids.length<2){ toast('❌ Cần tối thiểu 2 người chơi để bắt đầu.'); return; }
+    if(!ids.every(uid=>players[uid].ready)){ toast('❌ Vẫn còn người chưa sẵn sàng.'); return; }
+    const scores = {};
+    ids.forEach(uid=>{ scores[uid]=0; });
+    db.ref('arenaRooms/'+currentRoomId).update({ status:'countdown', countdownAt: Date.now(), scores: scores });
+  });
+});
 
 function runCountdownThenBattle(room){
   waitStatusText.style.display='none';
@@ -716,8 +766,7 @@ function runCountdownThenBattle(room){
       if(isHost){
         db.ref('arenaRooms/'+currentRoomId).update({
           status:'battling',
-          startAt: Date.now(),
-          scores: { [room.hostUid]:0, [room.guestUid]:0 }
+          startAt: Date.now()
         });
       }
       startBattleScreen(room);
@@ -733,10 +782,10 @@ document.getElementById('leaveRoomBtn2').addEventListener('click', leaveRoomManu
 function leaveRoomManually(){
   if(!currentRoomId) { leaveToLobby(); return; }
   if(isHost){
-    // Host rời -> xoá luôn phòng
+    // Chủ phòng rời -> xoá luôn phòng
     db.ref('arenaRooms/'+currentRoomId).remove();
   } else {
-    db.ref('arenaRooms/'+currentRoomId).update({ guestUid:null, guestName:null, guestAvatar:null, status:'waiting' });
+    db.ref('arenaRooms/'+currentRoomId+'/players/'+myUid()).remove();
   }
   leaveToLobby();
 }
@@ -752,10 +801,7 @@ function leaveToLobby(){
 /* ============== BATTLE SCREEN ============== */
 const battlePanel = document.getElementById('battlePanel');
 const battleTimer = document.getElementById('battleTimer');
-const myScorePts = document.getElementById('myScorePts');
-const oppScorePts = document.getElementById('oppScorePts');
-const myScoreName = document.getElementById('myScoreName');
-const oppScoreName = document.getElementById('oppScoreName');
+const scoreBoardEl = document.getElementById('scoreBoard');
 const bFishIcon = document.getElementById('bFishIcon');
 const bStatusText = document.getElementById('bStatusText');
 const bRhythmWrap = document.getElementById('bRhythmWrap');
@@ -767,8 +813,9 @@ const BATTLE_DURATION = 60; // giây
 let battleEndAt = 0;
 let battleTickInterval = null;
 let myScore = 0;
-let oppUid = null;
 let battleFinishedLocally = false;
+let battlePlayersMeta = {}; // uid -> {name, avatar}
+let battleScoresListener = null;
 
 let fState = 'idle'; // idle -> waiting -> biting
 let waitTimer=null, biteTimeout=null;
@@ -781,11 +828,11 @@ function startBattleScreen(room){
   battlePanel.classList.remove('hidden');
   battleFinishedLocally = false;
   myScore = 0;
-  oppUid = (room.hostUid === myUid()) ? room.guestUid : room.hostUid;
-  myScoreName.textContent = myDisplayName();
-  oppScoreName.textContent = (myUid()===room.hostUid) ? (room.guestName||'Đối thủ') : (room.hostName||'Đối thủ');
-  myScorePts.textContent = '0';
-  oppScorePts.textContent = '0';
+  battlePlayersMeta = {};
+  const players = room.players || {};
+  Object.keys(players).forEach(uid=>{
+    battlePlayersMeta[uid] = { name: players[uid].name || uid, avatar: players[uid].avatar || '👤' };
+  });
   battleEndAt = (room.startAt || Date.now()) + BATTLE_DURATION*1000;
 
   // Trừ tiền cược ngay khi trận bắt đầu (đã kiểm tra đủ xu lúc tạo/vào phòng)
@@ -795,9 +842,12 @@ function startBattleScreen(room){
   resetBattleVisual();
   bStatusText.textContent = 'Nhấn "Thả câu" để bắt đầu!';
 
-  // theo dõi điểm đối thủ theo thời gian thực
-  db.ref('arenaRooms/'+currentRoomId+'/scores/'+oppUid).on('value', snap=>{
-    oppScorePts.textContent = (snap.val()||0).toString();
+  renderScoreBoard(room.scores || {});
+
+  // theo dõi điểm tất cả người chơi theo thời gian thực
+  if(battleScoresListener) db.ref('arenaRooms/'+currentRoomId+'/scores').off('value', battleScoresListener);
+  battleScoresListener = db.ref('arenaRooms/'+currentRoomId+'/scores').on('value', snap=>{
+    renderScoreBoard(snap.val() || {});
   });
 
   if(battleTickInterval) clearInterval(battleTickInterval);
@@ -810,13 +860,28 @@ function startBattleScreen(room){
     }
   }, 250);
 
-  // theo dõi trạng thái phòng để phát hiện khi trận đã 'finished' (do đối phương hoặc host xử lý)
+  // theo dõi trạng thái phòng để phát hiện khi trận đã 'finished' (do người chơi khác hoặc host xử lý)
   db.ref('arenaRooms/'+currentRoomId+'/status').on('value', snap=>{
     if(snap.val()==='finished' && !battleFinishedLocally){
       battleFinishedLocally = true;
       db.ref('arenaRooms/'+currentRoomId).once('value').then(s=>showResult(s.val()));
     }
   });
+}
+
+function renderScoreBoard(scores){
+  const uids = Object.keys(battlePlayersMeta);
+  uids.sort((a,b)=> (scores[b]||0) - (scores[a]||0));
+  scoreBoardEl.innerHTML = uids.map(uid=>{
+    const meta = battlePlayersMeta[uid];
+    const isMe = uid === myUid();
+    return `
+      <div class="scoreCard ${isMe?'me':''}">
+        <div class="scName">${escapeHtml(meta.avatar)} ${escapeHtml(meta.name)}${isMe?' (bạn)':''}</div>
+        <div class="scPts">${scores[uid]||0}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 function resetBattleVisual(){
@@ -943,7 +1008,7 @@ function onBattleTimeUp(){
   bCastBtn.disabled = true;
   bStatusText.textContent = '⏱️ Hết giờ! Đang tổng kết kết quả...';
 
-  // Chỉ host tính toán kết quả cuối và ghi vào phòng, để tránh 2 bên ghi đè lẫn nhau
+  // Chỉ host tính toán kết quả cuối và ghi vào phòng, để tránh nhiều người ghi đè lẫn nhau
   if(isHost){
     db.ref('arenaRooms/'+currentRoomId).once('value').then(snap=>{
       const room = snap.val();
@@ -955,41 +1020,49 @@ function onBattleTimeUp(){
 
 function finalizeBattle(room){
   const scores = room.scores || {};
-  const hostScore = scores[room.hostUid] || 0;
-  const guestScore = scores[room.guestUid] || 0;
+  const players = room.players || {};
+  const uids = Object.keys(players);
   const bet = room.bet || 0;
-  const pot = bet*2;
+  const pot = bet * uids.length;
   const reward = Math.round(pot*0.8);
-  let winnerUid = null;
-  if(hostScore > guestScore) winnerUid = room.hostUid;
-  else if(guestScore > hostScore) winnerUid = room.guestUid;
-  // hoà: không ai thắng, mỗi người được hoàn lại 90% cược của mình (giữ 10% phí đấu trường)
+
+  // người điểm cao nhất thắng; nếu nhiều người bằng điểm cao nhất -> hoà (chia đều)
+  let topScore = -1;
+  uids.forEach(uid=>{ const s = scores[uid]||0; if(s>topScore) topScore = s; });
+  const topUids = uids.filter(uid=> (scores[uid]||0) === topScore);
+  const winnerUid = topUids.length===1 ? topUids[0] : null;
+
+  const finalScores = {};
+  uids.forEach(uid=>{ finalScores[uid] = scores[uid]||0; });
+
   db.ref('arenaRooms/'+currentRoomId).update({
     status:'finished',
-    finalHostScore: hostScore,
-    finalGuestScore: guestScore,
+    finalScores: finalScores,
     winnerUid: winnerUid,
+    tiedUids: winnerUid ? null : topUids,
     reward: reward,
     finishedAt: Date.now()
   }).then(()=>{
-    payoutBattle(room, winnerUid, hostScore, guestScore, reward);
+    payoutBattle(room, winnerUid, topUids, reward);
   });
 }
 
-function payoutBattle(room, winnerUid, hostScore, guestScore, reward){
+function payoutBattle(room, winnerUid, topUids, reward){
   const bet = room.bet||0;
+  const players = room.players || {};
+  const uids = Object.keys(players);
   if(winnerUid){
     db.ref('users/'+winnerUid+'/gameState/coins').transaction(cur=> (cur||0) + reward);
   } else {
-    // hoà: hoàn 90% cược cho mỗi người
-    const refund = Math.round(bet*0.9);
-    db.ref('users/'+room.hostUid+'/gameState/coins').transaction(cur=> (cur||0) + refund);
-    db.ref('users/'+room.guestUid+'/gameState/coins').transaction(cur=> (cur||0) + refund);
+    // hoà giữa nhiều người điểm cao nhất: chia đều phần thưởng cho nhóm hoà, người còn lại mất cược
+    const share = Math.round(reward / topUids.length);
+    topUids.forEach(uid=>{
+      db.ref('users/'+uid+'/gameState/coins').transaction(cur=> (cur||0) + share);
+    });
   }
   // tự xoá phòng sau 15s để dọn danh sách
-  setTimeout(()=>{ db.ref('arenaRooms/'+room_idOf(room)).remove(); }, 15000);
+  setTimeout(()=>{ db.ref('arenaRooms/'+currentRoomId).remove(); }, 15000);
 }
-function room_idOf(){ return currentRoomId; }
 
 /* ============== RESULT ============== */
 const resultOverlay = document.getElementById('resultOverlay');
@@ -1000,30 +1073,44 @@ function showResult(room){
   stopRhythm();
   battlePanel.classList.add('hidden');
 
-  const hostScore = room.finalHostScore||0;
-  const guestScore = room.finalGuestScore||0;
-  const myIsHost = myUid()===room.hostUid;
-  const myFinal = myIsHost ? hostScore : guestScore;
-  const oppFinal = myIsHost ? guestScore : hostScore;
+  const scores = room.finalScores || room.scores || {};
+  const players = room.players || {};
   const bet = room.bet||0;
-  const pot = bet*2;
+  const uids = Object.keys(players);
+  const pot = bet * uids.length;
+  const ranked = uids.slice().sort((a,b)=> (scores[b]||0) - (scores[a]||0));
 
   const big = document.getElementById('resultBig');
   const title = document.getElementById('resultTitle');
   const coinText = document.getElementById('resultCoinText');
+  const rankingEl = document.getElementById('resultRanking');
 
-  if(room.winnerUid === myUid()){
-    big.textContent='🏆'; title.textContent='Bạn thắng!'; title.className='rtitle win';
+  rankingEl.innerHTML = ranked.map((uid,i)=>{
+    const p = players[uid] || {};
+    const isMe = uid === myUid();
+    return `
+      <div class="rkRow ${isMe?'me':''}">
+        <div class="rkPos">#${i+1}</div>
+        <div class="rkName">${escapeHtml(p.avatar||'👤')} ${escapeHtml(p.name||uid)}${isMe?' (bạn)':''}</div>
+        <div class="rkPts">${scores[uid]||0} điểm</div>
+      </div>
+    `;
+  }).join('');
+
+  const iAmWinner = room.winnerUid === myUid();
+  const iAmTied = !room.winnerUid && room.tiedUids && room.tiedUids.includes(myUid());
+
+  if(iAmWinner){
+    big.textContent='🏆'; title.textContent='Bạn thắng! Ăn trọn tiền cược!'; title.className='rtitle win';
     coinText.textContent = '+ ' + (room.reward||0).toLocaleString('vi-VN') + ' 🪙';
-  } else if(room.winnerUid){
+  } else if(iAmTied){
+    const share = Math.round((room.reward||0) / (room.tiedUids.length||1));
+    big.textContent='🤝'; title.textContent='Hoà điểm cao nhất!'; title.className='rtitle draw';
+    coinText.textContent = '+ ' + share.toLocaleString('vi-VN') + ' 🪙 (chia đều)';
+  } else {
     big.textContent='💔'; title.textContent='Bạn thua!'; title.className='rtitle lose';
     coinText.textContent = '- ' + bet.toLocaleString('vi-VN') + ' 🪙';
-  } else {
-    big.textContent='🤝'; title.textContent='Hoà!'; title.className='rtitle draw';
-    coinText.textContent = '+ ' + Math.round(bet*0.9).toLocaleString('vi-VN') + ' 🪙 (hoàn 90% cược)';
   }
-  document.getElementById('resultMyPts').textContent = myFinal;
-  document.getElementById('resultOppPts').textContent = oppFinal;
   document.getElementById('resultPot').textContent = pot.toLocaleString('vi-VN') + ' 🪙';
   resultOverlay.classList.remove('hidden');
   refreshMyCoinsFromCloud();
@@ -1161,8 +1248,17 @@ worldChatInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.prevent
 function updateChatSendRoomBtn(){
   chatSendRoomBtn.style.display = currentRoomId ? 'flex' : 'none';
 }
+const SEND_ROOM_COOLDOWN_MS = 30000;
+let lastSendRoomAt = 0;
 chatSendRoomBtn.addEventListener('click', ()=>{
   if(!currentRoomId) return;
+  const now = Date.now();
+  const remain = SEND_ROOM_COOLDOWN_MS - (now - lastSendRoomAt);
+  if(remain > 0){
+    toast('⏳ Vui lòng chờ ' + Math.ceil(remain/1000) + 's trước khi mời tiếp.');
+    return;
+  }
+  chatSendRoomBtn.disabled = true;
   db.ref('arenaRooms/'+currentRoomId).once('value').then(snap=>{
     const room = snap.val();
     if(!room){ toast('❌ Phòng không còn tồn tại.'); return; }
@@ -1172,9 +1268,12 @@ chatSendRoomBtn.addEventListener('click', ()=>{
       type: 'room', roomId: currentRoomId, bet: room.bet || 0
     });
   }).then(()=>{
+    lastSendRoomAt = Date.now();
     toast('✅ Đã gửi lời mời phòng vào chat!');
   }).catch(()=>{
     toast('❌ Không gửi được lời mời, thử lại sau.');
+  }).finally(()=>{
+    chatSendRoomBtn.disabled = false;
   });
 });
 
