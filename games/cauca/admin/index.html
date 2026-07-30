@@ -98,6 +98,7 @@
     <button class="tabBtn" data-tab="chat">💬 Chat</button>
     <button class="tabBtn" data-tab="fish">🐟 Danh sách cá</button>
     <button class="tabBtn" data-tab="monster">🐙 Thủy quái</button>
+    <button class="tabBtn" data-tab="rods">🎣 Cần câu</button>
   </div>
 
   <!-- PLAYERS -->
@@ -250,6 +251,37 @@
     <h2 style="margin-top:22px;">Thủy quái đang xuất hiện</h2>
     <div id="bossStatusBox" style="background:var(--panel-light); border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.8;">Đang tải...</div>
     <button class="btn btnDanger rowBtn" id="forceRespawnBtn" style="margin-top:10px;">🔄 Buộc thủy quái mới xuất hiện ngay</button>
+  </div>
+
+  <!-- RODS (CẦN CÂU) -->
+  <div class="panelBox" id="tab-rods">
+    <h2>Độ bền cần câu</h2>
+    <div style="background:rgba(255,211,92,.08); border:1px solid rgba(255,211,92,.3); border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:12.5px; color:var(--text-dim); line-height:1.6;">
+      Mỗi cần câu có <b style="color:var(--gold);">số lượt câu tối đa</b> trước khi bị hỏng (trừ Cần Tre Tân Thủ sẽ tự hồi độ bền miễn phí). Chỉnh số ở đây sẽ đồng bộ ngay cho <b>tất cả người chơi</b>. Có thể <b>tắt hẳn</b> cơ chế hao mòn để mọi cần câu dùng vĩnh viễn.
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:18px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700; font-size:14px;">Bật/tắt hao mòn độ bền cần câu</div>
+        <div class="smallDim" id="durabilityStatusText" style="margin-top:3px;">Đang tải...</div>
+      </div>
+      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="smallDim" id="durabilityToggleLabel">—</span>
+        <span style="position:relative; width:46px; height:26px; display:inline-block;">
+          <input type="checkbox" id="durabilityToggle" style="opacity:0; width:0; height:0;">
+          <span id="durabilityToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
+          <span id="durabilityToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
+        </span>
+      </label>
+    </div>
+
+    <h2 style="margin-top:4px;">Số lượt câu tối đa của từng cần</h2>
+    <div class="tblWrap">
+      <table>
+        <thead><tr><th>Icon</th><th>Tên cần câu</th><th>Giá (xu)</th><th>Độ bền mặc định</th><th>Độ bền hiện tại (lượt câu)</th><th>Hành động</th></tr></thead>
+        <tbody id="rodsBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -782,6 +814,86 @@ document.getElementById('forceRespawnBtn').addEventListener('click', async ()=>{
     await db.ref('worldBoss').remove();
     toast('Đã đặt lại — thủy quái mới sẽ xuất hiện trong vài giây.');
   }catch(err){ toast('Thao tác thất bại.'); }
+});
+
+/* ---- CẦN CÂU (RODS) — độ bền & bật/tắt hao mòn ---- */
+// Danh sách cần câu phải khớp với mảng RODS trong file game (index.html)
+const ROD_META = [
+  {id:"tre", name:"Cần Tre Tân Thủ", icon:"🎋", price:0, defaultDurability:20},
+  {id:"thuytinh", name:"Cần Sợi Thủy Tinh", icon:"🪶", price:1000, defaultDurability:25},
+  {id:"carbon", name:"Cần Carbon Hiện Đại", icon:"⚙️", price:10000, defaultDurability:30},
+  {id:"hoanggia", name:"Cần Câu Hoàng Gia", icon:"👑", price:50000, defaultDurability:35},
+  {id:"poseidon", name:"Cần Định Mệnh Poseidon", icon:"🔱", price:200000, defaultDurability:40}
+];
+
+let rodConfigCache = { durabilityEnabled:true, durability:{} };
+
+function renderDurabilityToggle(){
+  const enabled = rodConfigCache.durabilityEnabled !== false;
+  const toggle = document.getElementById('durabilityToggle');
+  const track = document.getElementById('durabilityToggleTrack');
+  const dot = document.getElementById('durabilityToggleDot');
+  const label = document.getElementById('durabilityToggleLabel');
+  const statusText = document.getElementById('durabilityStatusText');
+  toggle.checked = enabled;
+  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
+  dot.style.left = enabled ? '23px' : '3px';
+  label.textContent = enabled ? 'Đang BẬT' : 'Đang TẮT';
+  statusText.textContent = enabled
+    ? 'Cần câu sẽ hao mòn theo số lượt câu và có thể hỏng như bình thường.'
+    : 'Cần câu KHÔNG hao mòn — mọi người chơi dùng cần vĩnh viễn, không bao giờ hỏng.';
+}
+
+function renderRods(){
+  const body = document.getElementById('rodsBody');
+  body.innerHTML = '';
+  ROD_META.forEach(rod=>{
+    const dur = Number(rodConfigCache.durability[rod.id]) || rod.defaultDurability;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-size:20px;">${rod.icon}</td>
+      <td>${escapeHtml(rod.name)}</td>
+      <td>${rod.price.toLocaleString('vi-VN')}</td>
+      <td class="smallDim">${rod.defaultDurability} lượt</td>
+      <td><input type="number" class="miniInput" value="${dur}" min="1" data-rodid="${rod.id}"></td>
+      <td><button class="btn btnGhost rowBtn" data-action="saveRod" data-rodid="${rod.id}">💾 Lưu</button></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+db.ref('rodConfig').on('value', (snap)=>{
+  const val = snap.val() || {};
+  rodConfigCache = {
+    durabilityEnabled: val.durabilityEnabled !== false,
+    durability: val.durability || {}
+  };
+  renderDurabilityToggle();
+  renderRods();
+}, (err)=>showError('Không tải được cấu hình cần câu (rodConfig)', err));
+
+document.getElementById('durabilityToggle').addEventListener('change', async (e)=>{
+  const enabled = e.target.checked;
+  try{
+    await db.ref('rodConfig/durabilityEnabled').set(enabled);
+    toast(enabled ? 'Đã BẬT hao mòn độ bền — đồng bộ cho tất cả người chơi.' : 'Đã TẮT hao mòn độ bền — cần câu dùng vĩnh viễn cho tất cả người chơi.');
+  }catch(err){
+    toast('Thao tác thất bại.');
+    renderDurabilityToggle(); // revert UI nếu ghi lỗi
+  }
+});
+
+document.getElementById('rodsBody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action="saveRod"]');
+  if(!btn) return;
+  const rodId = btn.dataset.rodid;
+  const row = btn.closest('tr');
+  const input = row.querySelector(`input[data-rodid="${rodId}"]`);
+  const val = Math.max(1, Math.floor(Number(input.value)||1));
+  try{
+    await db.ref('rodConfig/durability/'+rodId).set(val);
+    toast('Đã lưu độ bền — đồng bộ cho tất cả người chơi.');
+  }catch(err){ toast('Lưu thất bại.'); }
 });
 
 function escapeHtml(str){
