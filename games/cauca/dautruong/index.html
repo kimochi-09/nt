@@ -30,7 +30,7 @@
     display:flex; align-items:center; gap:8px; padding:10px 12px;
     background:rgba(2,20,34,.9); border-bottom:1px solid rgba(255,255,255,.08); flex-shrink:0;
   }
-  #backBtn{background:rgba(255,255,255,.08); border:none; color:var(--text); font-size:16px; padding:7px 11px; border-radius:12px; cursor:pointer;}
+  #backBtn{background:rgba(255,255,255,.08); border:none; color:var(--text); font-size:16px; padding:7px 11px; border-radius:12px;}
   #headerTitle{font-weight:800; font-size:16px; flex:1;}
   #coinStat{display:flex; align-items:center; gap:4px; font-weight:700; font-size:13px; background:rgba(255,255,255,.06); padding:5px 10px; border-radius:20px;}
 
@@ -57,13 +57,12 @@
   input[type=text], input[type=number]{
     width:100%; padding:11px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.15);
     background:rgba(0,0,0,.25); color:var(--text); font-size:14px; font-weight:600;
-    user-select: auto; -webkit-user-select: auto;
   }
   label.lbl{font-size:12px; color:var(--text-dim); font-weight:700; margin-bottom:6px; display:block;}
 
   .roomListItem{
     display:flex; align-items:center; gap:10px; background:var(--panel); border-radius:14px;
-    padding:11px 12px; margin-bottom:9px; border:1px solid rgba(255,255,255,.06); cursor:pointer;
+    padding:11px 12px; margin-bottom:9px; border:1px solid rgba(255,255,255,.06);
   }
   .rliInfo{flex:1; min-width:0;}
   .rliName{font-weight:800; font-size:14px;}
@@ -82,6 +81,7 @@
   .psAvatar img{width:100%; height:100%; object-fit:cover; border-radius:50%;}
   .psName{font-weight:700; font-size:13.5px; flex:1;}
   .psTag{font-size:10.5px; color:var(--gold); font-weight:700;}
+  .slotEmpty{opacity:.35; font-style:italic; font-size:13px;}
 
   /* MATCH SCREEN */
   #matchTop{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
@@ -98,7 +98,7 @@
   #matchStatus{font-size:13px; color:var(--text-dim); min-height:34px; font-weight:600;}
   #castBtnM{
     margin-top:14px; padding:15px; width:100%; border:none; border-radius:16px; font-weight:900;
-    font-size:16px; background:linear-gradient(180deg,var(--gold),var(--gold-dark)); color:#3a2600; cursor:pointer;
+    font-size:16px; background:linear-gradient(180deg,var(--gold),var(--gold-dark)); color:#3a2600;
   }
   #castBtnM.pulled{background:linear-gradient(180deg,#ff9d5c,#e0620a); animation:pulse .4s infinite alternate;}
 
@@ -132,14 +132,14 @@
   .rrPts2{font-weight:800; color:var(--gold); font-size:14px;}
   #winnerBanner{text-align:center; font-size:17px; font-weight:900; color:var(--gold); margin-bottom:14px;}
 
-  .toastWrap{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:999; display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none;}
+  .toastWrap{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:999; display:flex; flex-direction:column; gap:6px; align-items:center;}
   .toast2{background:rgba(0,0,0,.85); color:#fff; padding:9px 16px; border-radius:20px; font-size:13px; font-weight:600; box-shadow:0 4px 14px rgba(0,0,0,.4);}
 
-  /* BONG BÓNG CHAT NỔI */
+  /* BONG BÓNG CHAT NỔI - đồng bộ với chat chung của game câu cá */
   #chatFab{
     position:absolute; right:16px; bottom:18px; width:52px; height:52px; border-radius:50%;
     background:linear-gradient(180deg,var(--gold),var(--gold-dark)); border:none; font-size:22px;
-    box-shadow:0 6px 16px rgba(0,0,0,.4); z-index:500; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,.4); z-index:500; display:flex; align-items:center; justify-content:center;
   }
   #chatFabBadge{
     position:absolute; top:-3px; right:-3px; background:#ff4757; color:#fff; font-size:10px; font-weight:800;
@@ -162,7 +162,7 @@
     border-bottom:1px solid rgba(255,255,255,.08); flex-shrink:0;
   }
   #chatOverlayHeader .phTitle2{font-weight:800; font-size:15px;}
-  #chatOverlayHeader button{background:rgba(255,255,255,.08); border:none; color:var(--text); font-size:14px; padding:6px 10px; border-radius:10px; cursor:pointer;}
+  #chatOverlayHeader button{background:rgba(255,255,255,.08); border:none; color:var(--text); font-size:14px; padding:6px 10px; border-radius:10px;}
   #chatMessages{flex:1; overflow-y:auto; padding:10px 12px; display:flex; flex-direction:column; gap:8px;}
   .msg{display:flex; gap:8px; align-items:flex-start; max-width:85%;}
   .msg .av{font-size:20px; flex-shrink:0; width:26px; height:26px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--panel);}
@@ -183,7 +183,7 @@
   }
   #chatInputBar button{
     background:var(--gold); color:#3a2400; border:none; border-radius:50%; width:42px; height:42px;
-    font-size:18px; flex-shrink:0; cursor:pointer;
+    font-size:18px; flex-shrink:0;
   }
 </style>
 </head>
@@ -197,7 +197,7 @@
 
   <div id="screens">
 
-    <!-- LOBBY -->
+    <!-- LOBBY: danh sách phòng -->
     <div class="screen show" id="screen-lobby">
       <div class="card">
         <div class="row">
@@ -295,7 +295,7 @@
   </div>
   <div class="toastWrap" id="toastWrap"></div>
 
-  <!-- BONG BÓNG CHAT NỔI -->
+  <!-- BONG BÓNG CHAT NỔI (đồng bộ chat chung với game câu cá) -->
   <button id="chatFab">💬<span id="chatFabBadge">0</span></button>
   <div id="chatOverlay">
     <div id="chatOverlayInner">
@@ -316,30 +316,20 @@
 (function(){
 "use strict";
 
-let currentRoomId = null;
-let roomListener = null;
-let iAmHost = false;
-
-/* ============== ĐIỀU HƯỚNG MÀN HÌNH ============== */
+/* ============== ĐIỀU HƯỚNG MÀN HÌNH (đặt lên đầu, không phụ thuộc Firebase) ==============
+   Đặt trước để dù Firebase load lỗi/mạng chậm thì các nút chuyển màn hình
+   (Tạo phòng / Nhập mã phòng / Huỷ) vẫn luôn bấm được. */
 const screens = document.querySelectorAll('.screen');
 function showScreen(id){
   screens.forEach(s=>s.classList.remove('show'));
-  const target = document.getElementById('screen-'+id);
-  if(target) target.classList.add('show');
+  document.getElementById('screen-'+id).classList.add('show');
 }
-
 document.getElementById('btnCreateRoom').addEventListener('click', ()=> showScreen('create'));
 document.getElementById('btnCancelCreate').addEventListener('click', ()=> showScreen('lobby'));
 document.getElementById('btnJoinCode').addEventListener('click', ()=> showScreen('joincode'));
 document.getElementById('btnCancelJoin').addEventListener('click', ()=> showScreen('lobby'));
 
-document.getElementById('backBtn').addEventListener('click', ()=>{
-  if(currentRoomId){
-    leaveRoomCleanup();
-  }
-  window.location.href = '../index.html';
-});
-
+/* Báo lỗi rõ ràng ra ngoài (thay vì im lặng đứng máy) nếu có lỗi JS bất kỳ trong lúc chạy */
 window.addEventListener('error', (e)=>{
   console.error('Lỗi script:', e.error || e.message);
   const w = document.getElementById('toastWrap');
@@ -354,7 +344,7 @@ window.addEventListener('error', (e)=>{
 
 try{
 
-/* ============== FIREBASE ============== */
+/* ============== FIREBASE (dùng chung project với game câu cá) ============== */
 const firebaseConfig = {
   apiKey: "AIzaSyDH_skpX3D9sD3zz3iiyrHnB28BIVvIMM0",
   authDomain: "hihi-c6af6.firebaseapp.com",
@@ -367,6 +357,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Nhận diện chung tài khoản với hệ Chat / game câu cá (localStorage 'nt_myId')
 function myUid(){
   let id = localStorage.getItem('nt_myId');
   if(!id){
@@ -392,7 +383,7 @@ function escapeHtml(str){
   return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-/* ============== COIN ACCOUNT ============== */
+/* ============== COIN ACCOUNT (đọc/ghi coins ở cùng chỗ với game câu cá: users/{uid}/gameState) ============== */
 let myCoins = 0;
 const coinDisplay = document.getElementById('coinDisplay');
 const coinRef = db.ref('users/' + UID + '/gameState/coins');
@@ -404,7 +395,7 @@ function myProfile(){
   return db.ref('user_profiles/' + UID).once('value').then(s=>(s.exists()&&s.val())||{});
 }
 
-/* ============== ĐỘ HIẾM CÁ + ĐIỂM ============== */
+/* ============== ĐỘ HIẾM CÁ + ĐIỂM (giống hệ thống câu cá chính, không tính vào rank tháng) ============== */
 const RARITIES = {
   common:   {label:"Thường",     color:"common",   icons:["🐟"]},
   uncommon: {label:"Hiếm",       color:"uncommon", icons:["🐠"]},
@@ -417,6 +408,8 @@ const HITS_BY_RARITY = { common:2, uncommon:3, rare:4, epic:5, mythic:6 };
 const SPEED_MULT = { common:1, uncommon:1.15, rare:1.35, epic:1.75, mythic:2.05 };
 const RARITY_WEIGHTS = { common:50, uncommon:30, rare:14, epic:5, mythic:1 };
 
+/* PRNG có seed để đồng bộ chuỗi cá + tốc độ + vùng bấm giữa mọi người chơi trong cùng trận
+   (mulberry32 - seed 32bit, nhanh & đủ tốt cho việc này) */
 function mulberry32(seed){
   return function(){
     seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
@@ -434,24 +427,35 @@ function seededPickRarity(rng){
   }
   return 'common';
 }
+/* Sinh trước một chuỗi "sự kiện cá" cố định cho cả trận, dùng chung 1 seed —
+   mọi người chơi cùng phòng sẽ thấy đúng cùng loại cá xuất hiện theo đúng thứ tự và cùng tốc độ nhịp. */
 function buildFishSequence(seed, count){
   const rng = mulberry32(seed);
   const seq = [];
   for(let i=0;i<count;i++){
     const rarity = seededPickRarity(rng);
-    const waitMs = 1200 + rng()*1800;
-    const speedMult = (1.3 + rng()*0.3) * SPEED_MULT[rarity];
-    const zoneWidth = 18 + rng()*6;
+    const waitMs = 1200 + rng()*1800;               // thời gian chờ cá cắn câu
+    const speedMult = (1.3 + rng()*0.3) * SPEED_MULT[rarity]; // tốc độ thanh nhịp
+    const zoneWidth = 18 + rng()*6;                 // độ rộng vùng bấm (giống nhau cho mọi người)
     seq.push({rarity, waitMs, speedMult, zoneWidth});
   }
   return seq;
 }
+/* Vùng bấm (vị trí) cho từng lượt hit trong 1 con cá cũng phải đồng bộ -> dùng seed phụ theo index cá + lượt hit */
 function zoneForHit(seed, fishIndex, hitIndex, zoneWidth){
   const rng = mulberry32(seed + fishIndex*1000 + hitIndex*37 + 7);
   return rng() * (100 - zoneWidth);
 }
 
-/* ============== LOBBY ============== */
+/* ============== ROUTER (chuyển màn hình) ============== */
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  if(currentRoomId){
+    leaveRoomCleanup();
+  }
+  window.location.href = '../';
+});
+
+/* ============== LOBBY: danh sách phòng đang chờ ============== */
 const roomListEl = document.getElementById('roomList');
 function genRoomCode(){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -534,6 +538,10 @@ async function joinRoom(roomId){
 }
 
 /* ============== PHÒNG CHỜ ============== */
+let currentRoomId = null;
+let roomListener = null;
+let iAmHost = false;
+
 function enterWaitingRoom(roomId){
   currentRoomId = roomId;
   document.getElementById('roomCodeBig').textContent = roomId;
@@ -561,6 +569,7 @@ function enterWaitingRoom(roomId){
     }
   });
 
+  // Gỡ mình khỏi phòng nếu đóng tab / mất kết nối giữa lúc đang ở phòng chờ (chưa vào trận)
   db.ref('arena_rooms/'+roomId+'/players/'+UID+'/connected').onDisconnect().set(false);
 }
 
@@ -603,6 +612,7 @@ async function leaveRoomCleanup(){
     const room = snap.val();
     if(room){
       if(room.hostUid === UID){
+        // Chủ phòng rời -> đóng phòng nếu chưa bắt đầu (chưa cược tiền)
         if(room.status === 'waiting'){
           await db.ref('arena_rooms/'+roomId).remove();
         }
@@ -620,7 +630,7 @@ function backToLobbyHard(){
   showScreen('lobby');
 }
 
-/* ============== BẮT ĐẦU TRẬN ============== */
+/* ============== BẮT ĐẦU TRẬN: trừ coin cược, tạo seed chung ============== */
 document.getElementById('btnStartMatch').addEventListener('click', async ()=>{
   if(!currentRoomId) return;
   const snap = await db.ref('arena_rooms/'+currentRoomId).once('value');
@@ -629,11 +639,12 @@ document.getElementById('btnStartMatch').addEventListener('click', async ()=>{
   const players = Object.keys(room.players||{});
   if(players.length < 2){ toast('⚠️ Cần tối thiểu 2 người'); return; }
 
+  // Kiểm tra & trừ coin cược của TẤT CẢ người chơi ngay lúc bắt đầu (transaction từng người)
   for(const uid of players){
     const cRef = db.ref('users/'+uid+'/gameState/coins');
     const res = await cRef.transaction(cur=>{
       cur = cur || 0;
-      if(cur < room.bet) return;
+      if(cur < room.bet) return; // abort nếu không đủ tiền
       return cur - room.bet;
     });
     if(!res.committed){
@@ -651,7 +662,7 @@ document.getElementById('btnStartMatch').addEventListener('click', async ()=>{
   });
 });
 
-/* ============== ĐẾM NGƯỢC ============== */
+/* ============== ĐẾM NGƯỢC 3-2-1 ============== */
 function runCountdown(roomId, room){
   showScreen('countdown');
   const numEl = document.getElementById('countdownNum');
@@ -678,7 +689,7 @@ let fishIndex = 0;
 let myScore = 0;
 let matchTimerIv = null;
 let matchEndAt = 0;
-let matchState = 'idle'; 
+let matchState = 'idle'; // idle | waiting | biting
 let waitTimeout = null, biteTimeout = null;
 let currentHits = 0, requiredHits = 3, missCount = 0;
 let rhythmAnim = null, rhythmPos = 0, rhythmDir = 1, rhythmSpeed = 1.6, zoneStart = 40, zoneWidth = 20;
@@ -702,7 +713,7 @@ const liveScoresEl = document.getElementById('liveScores');
 function enterMatch(roomId, room){
   showScreen('match');
   matchSeed = room.seed;
-  fishSeq = buildFishSequence(matchSeed, 200);
+  fishSeq = buildFishSequence(matchSeed, 200); // đủ nhiều sự kiện cá cho 60s, đồng bộ mọi người
   fishIndex = 0;
   myScore = 0;
   matchState = 'idle';
@@ -712,7 +723,6 @@ function enterMatch(roomId, room){
   matchStatus.textContent = 'Bấm THẢ CÂU để bắt đầu!';
   castBtnM.textContent = '🎣 THẢ CÂU';
   castBtnM.classList.remove('pulled');
-  castBtnM.disabled = false;
   fishSil.style.display = 'none';
   comboBarM.style.display = 'none';
   rhythmWrapM.style.display = 'none';
@@ -729,6 +739,7 @@ function enterMatch(roomId, room){
     }
   }, 200);
 
+  // Theo dõi điểm sống của mọi người trong phòng
   if(scoreListener) db.ref('arena_rooms/'+roomId+'/scores').off('value', scoreListener);
   scoreListener = db.ref('arena_rooms/'+roomId+'/scores').on('value', snap=>{
     const scores = snap.val() || {};
@@ -756,7 +767,7 @@ castBtnM.addEventListener('click', ()=>{
 });
 
 function startCastM(){
-  if(fishIndex >= fishSeq.length){ fishIndex = 0; }
+  if(fishIndex >= fishSeq.length){ fishIndex = 0; } // an toàn, hiếm khi chạm tới
   const data = fishSeq[fishIndex];
   matchState='waiting';
   matchStatus.textContent = 'Đang thả câu... chờ cá cắn câu 🌊';
@@ -880,9 +891,10 @@ async function endMyMatch(roomId){
   await db.ref('arena_rooms/'+roomId+'/players/'+UID+'/finished').set(true);
   await db.ref('arena_rooms/'+roomId+'/scores/'+UID).set(myScore);
 
+  // Nếu là host, theo dõi và chốt kết quả khi mọi người đã xong (hoặc timeout an toàn 15s)
   if(iAmHost){
     setTimeout(()=> tryFinalizeRoom(roomId), 500);
-    setTimeout(()=> tryFinalizeRoom(roomId, true), 15000);
+    setTimeout(()=> tryFinalizeRoom(roomId, true), 15000); // ép chốt nếu có người thoát/mất kết nối
   }
 }
 
@@ -956,6 +968,7 @@ function showResult(roomId, room){
 
 document.getElementById('btnBackLobby').addEventListener('click', async ()=>{
   if(currentRoomId && iAmHost){
+    // Chủ phòng dọn phòng sau khi xem xong kết quả
     try{ await db.ref('arena_rooms/'+currentRoomId).remove(); }catch(e){}
   } else if(currentRoomId){
     try{ await db.ref('arena_rooms/'+currentRoomId+'/players/'+UID).remove(); }catch(e){}
@@ -971,8 +984,8 @@ window.addEventListener('beforeunload', ()=>{
   }
 });
 
-/* ============== WORLD CHAT ============== */
-const WORLD_CHAT_ROOM = 'world_fishing';
+/* ============== WORLD CHAT (bong bóng chat chung, đồng bộ với game câu cá) ============== */
+const WORLD_CHAT_ROOM = 'world_fishing'; // cùng phòng chat với game câu cá chính
 const chatFab = document.getElementById('chatFab');
 const chatFabBadge = document.getElementById('chatFabBadge');
 const chatOverlay = document.getElementById('chatOverlay');
@@ -981,6 +994,8 @@ const chatMessagesEl = document.getElementById('chatMessages');
 const worldChatInput = document.getElementById('worldChatInput');
 const worldChatSendBtn = document.getElementById('worldChatSendBtn');
 
+// Tên hiển thị trong chat: dùng đúng quy tắc của game câu cá (nt_myId nếu đã "đăng nhập" chung,
+// nếu chưa thì dùng đúng playerId khách đã lưu trong game câu cá để tên khách đồng bộ giữa 2 trang).
 function myChatName(){
   let sharedId = null;
   try{ sharedId = localStorage.getItem('nt_myId'); }catch(e){}
@@ -1006,7 +1021,7 @@ function fetchChatProfile(uid){
 }
 
 let worldChatUnread = 0;
-let worldChatReady = false; 
+let worldChatReady = false; // để không tính tin nhắn cũ là "chưa đọc" khi vừa mở trang
 function isChatOpen(){ return chatOverlay.classList.contains('show'); }
 
 function updateChatFabBadge(){
