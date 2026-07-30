@@ -653,15 +653,15 @@ const RARITY_RANK_POINTS = { common:2, uncommon:4, rare:6, epic:8, mythic:10 };
 // 5 mốc hạng: Tân Thủ -> Nghiệp Dư -> Chuyên Nghiệp -> Cao Thủ -> Chí Tôn
 // "min" là điểm tối thiểu để đạt hạng đó. Mốc cuối cùng (2000) là điểm tối đa hiển thị của hạng Chí Tôn.
 const RANKS = [
-  {name:"Tân Thủ",      icon:"🥉", color:"common",   min:0},
-  {name:"Nghiệp Dư",    icon:"🥈", color:"uncommon", min:100},
-  {name:"Chuyên Nghiệp",icon:"🥇", color:"rare",     min:200},
-  {name:"Cao Thủ",      icon:"💎", color:"epic",     min:500},
-  {name:"Chí Tôn",      icon:"👑", color:"mythic",   min:1000}
+  {name:"Tân Thủ",      icon:"💩", color:"common",   min:0},
+  {name:"Nghiệp Dư",    icon:"🤡", color:"uncommon", min:500},
+  {name:"Chuyên Nghiệp",icon:"👻", color:"rare",     min:1000},
+  {name:"Cao Thủ",      icon:"💀", color:"epic",     min:5000},
+  {name:"Chí Tôn",      icon:"☠️", color:"mythic",   min:10000}
 ];
 // Không giới hạn điểm tối đa: đạt hạng Chí Tôn rồi vẫn tiếp tục tích điểm không trần,
 // thanh tiến trình trong hạng Chí Tôn sẽ lặp lại theo từng mốc 1000 điểm để thể hiện đang lên "cấp" cao hơn.
-const CHI_TON_STEP = 1000;
+const CHI_TON_STEP = 100000;
 
 function getRankIndex(points){
   let idx = 0;
