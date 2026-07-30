@@ -987,7 +987,6 @@ function landFishArena(){
   fState='idle';
   const pts = ARENA_RARITY_POINTS[pendingRarity]||2;
   myScore += pts;
-  myScorePts.textContent = myScore.toString();
   bStatusText.textContent = `🎉 Câu được cá! +${pts} điểm`;
   resetBattleVisual();
   if(currentRoomId && myUid()){
