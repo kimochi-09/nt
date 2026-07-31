@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>🎲 Bầu Cua Tôm Cá</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   :root{
     --bg-deep:#b3221a;
@@ -180,7 +183,6 @@
     <div style="display:flex; gap:8px;">
       <div class="stat"><span class="ic">🪙</span><span id="coinDisplay">0</span></div>
     </div>
-    <button id="resetBtn" title="Chơi lại từ đầu">↺</button>
   </div>
 
   <div id="gameArea">
@@ -194,7 +196,6 @@
         <div id="bowlLid"></div>
       </div>
       <div id="resultText">Đặt cược rồi bấm Lắc Xúc Xắc!</div>
-      <div id="historyRow"></div>
     </div>
 
     <div id="betTotalBar">
@@ -228,26 +229,65 @@ const FACES = [
 ];
 const CHIP_VALUES = [1000, 5000, 10000, 50000, 100000];
 
+/* ============== FIREBASE (đồng bộ xu chung tài khoản với Câu Cá) ============== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDH_skpX3D9sD3zz3iiyrHnB28BIVvIMM0",
+  authDomain: "hihi-c6af6.firebaseapp.com",
+  databaseURL: "https://hihi-c6af6-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hihi-c6af6",
+  storageBucket: "hihi-c6af6.firebasestorage.app",
+  messagingSenderId: "164013580789",
+  appId: "1:164013580789:web:94227e94c6d517170f40bc"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let currentUser = null;
+(function(){
+  try{
+    const sharedId = localStorage.getItem('nt_myId');
+    currentUser = sharedId ? { uid: sharedId } : null;
+  }catch(e){ currentUser = null; }
+})();
+
 /* ============== STATE ============== */
-const SAVE_KEY = "baucua_save_v1";
-function getDefaultState(){
-  return { coins: 100 };
-}
-let state = getDefaultState();
+// Dùng chung SAVE_KEY với game Câu Cá để xu (coins) được đồng bộ giữa 2 game
+const SAVE_KEY = "fishingWorld_save_v1";
+let state = { coins: 100 };
 function loadState(){
   try{
     const raw = localStorage.getItem(SAVE_KEY);
-    if(raw){ state = Object.assign(state, JSON.parse(raw)); }
+    if(raw){
+      state = JSON.parse(raw);
+      if(typeof state.coins !== 'number') state.coins = 100;
+    }
   }catch(e){}
 }
 function saveState(){
+  // Chỉ ghi đè lại đúng object đã đọc (đã cập nhật state.coins),
+  // các trường khác của Câu Cá (rod, inventory, rank...) được giữ nguyên.
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  // Nếu đã đăng nhập tài khoản chung -> đẩy thẳng số xu mới nhất lên Firebase
+  // để đồng bộ ngay với gameState của Câu Cá (dùng update để không đụng field khác).
+  if(currentUser){
+    db.ref('users/'+currentUser.uid+'/gameState').update({ coins: state.coins }).catch(()=>{});
+  }
 }
-loadState();
+function loadCloudCoinsThenInit(){
+  loadState();
+  if(currentUser){
+    db.ref('users/'+currentUser.uid+'/gameState/coins').once('value').then(snap=>{
+      const remote = snap.val();
+      if(typeof remote === 'number'){
+        state.coins = remote; // ưu tiên số xu mới nhất trên đám mây (đồng bộ đa thiết bị)
+        try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+      }
+      updateHeader();
+    }).catch(()=>{ updateHeader(); });
+  }
+}
 
 let bets = {};      // faceId -> so tien dang cuoc
 let selectedChip = CHIP_VALUES[0];
-let history = [];   // mang cac lan lac gan nhat, moi phan tu la [faceId,faceId,faceId]
 let isShaking = false;
 
 /* ============== DOM ============== */
@@ -258,7 +298,6 @@ const totalBetText = document.getElementById('totalBetText');
 const resultText = document.getElementById('resultText');
 const shakeBtn = document.getElementById('shakeBtn');
 const bowlLid = document.getElementById('bowlLid');
-const historyRow = document.getElementById('historyRow');
 const diceEls = [document.getElementById('dice0'), document.getElementById('dice1'), document.getElementById('dice2')];
 
 function toast(msg){
@@ -352,21 +391,6 @@ function clearWinMarks(){
   });
 }
 
-function pushHistory(roll){
-  history.unshift(roll);
-  history = history.slice(0,8);
-  historyRow.innerHTML = '';
-  history.forEach(roll=>{
-    roll.forEach(fid=>{
-      const f = FACES.find(x=>x.id===fid);
-      const span = document.createElement('span');
-      span.className = 'histIc';
-      span.textContent = f.icon;
-      historyRow.appendChild(span);
-    });
-  });
-}
-
 function doShake(){
   if(isShaking) return;
   if(totalBet()<=0){
@@ -426,8 +450,6 @@ function settleRound(roll){
   const totalPlaced = totalBet();
   const netChange = totalReturned - totalPlaced;
 
-  pushHistory(roll);
-
   if(netChange > 0){
     resultText.textContent = `🎉 Trúng! Nhận lại ${totalReturned.toLocaleString('vi-VN')} xu (lời +${netChange.toLocaleString('vi-VN')})`;
     toast('Thắng '+netChange.toLocaleString('vi-VN')+' xu! 🎉');
@@ -450,30 +472,16 @@ function settleRound(roll){
 /* ============== EVENTS ============== */
 shakeBtn.addEventListener('click', doShake);
 document.getElementById('clearBetBtn').addEventListener('click', clearBets);
-document.getElementById('resetBtn').addEventListener('click', ()=>{
-  if(isShaking) return;
-  if(!confirm('Chơi lại từ đầu với 100 xu?')) return;
-  state = getDefaultState();
-  bets = {};
-  history = [];
-  historyRow.innerHTML = '';
-  saveState();
-  updateHeader();
-  renderBetAmounts();
-  clearWinMarks();
-  resultText.textContent = 'Đặt cược rồi bấm Lắc Xúc Xắc!';
-});
-
 /* ============== INIT ============== */
 renderBoard();
 renderChips();
-updateHeader();
+loadCloudCoinsThenInit();
 renderBetAmounts();
 
 })();
 
 function goBack(){
-  window.location.href = '/games/cauca';
+  window.location.href = 'https://ngancte.fun/games/cauca';
 }
 </script>
 </body>
