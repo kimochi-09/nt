@@ -298,6 +298,17 @@
   .msg .av{font-size:20px; flex-shrink:0; width:26px; height:26px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--panel);}
   .msg .av img{width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;}
   .msg .bubble2{background:var(--panel); border-radius:14px 14px 14px 4px; padding:8px 12px; font-size:13.5px; word-break:break-word; overflow-wrap:anywhere;}
+  .roomInviteCard{
+    background:linear-gradient(135deg, rgba(255,211,92,.16), rgba(255,122,69,.16));
+    border:1px solid var(--gold); border-radius:14px; padding:10px 12px; min-width:190px;
+  }
+  .roomInviteCard .ricTitle{font-size:12.5px; font-weight:800; color:var(--gold); display:flex; align-items:center; gap:6px;}
+  .roomInviteCard .ricBet{font-size:12px; color:var(--text-dim); margin:4px 0 8px;}
+  .roomInviteCard .ricJoinBtn{
+    width:100%; border:none; border-radius:10px; padding:8px; font-weight:800; font-size:12.5px;
+    background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400;
+  }
+  .roomInviteCard .ricJoinBtn:disabled{opacity:.5;}
   .msg .name{font-size:11px; color:var(--text-dim); font-weight:700; margin-bottom:2px;}
   .msg .msgTime{font-size:10px; color:var(--text-dim); opacity:.65; margin-top:2px;}
   .msg.me .msgTime{text-align:right;}
@@ -1087,11 +1098,23 @@ function renderChatMsg(key, m){
     const cached = chatProfileCache[m.s];
     const displayName = (cached && cached.displayName) ? cached.displayName : m.s;
     const avatarHtml = (cached && cached.avatar) ? `<img src="${escapeHtml(cached.avatar)}" alt="">` : '👤';
+    let bubbleHtml;
+    if(m.type === 'room' && m.roomId){
+      const isOwnRoom = m.s === myChatName();
+      bubbleHtml = `
+        <div class="roomInviteCard" data-room-id="${escapeHtml(m.roomId)}">
+          <div class="ricTitle">⚔️ Phòng ${escapeHtml(m.roomId)}</div>
+          <div class="ricBet">Cược: ${(m.bet||0).toLocaleString('vi-VN')} 🪙 mỗi người</div>
+          <button class="ricJoinBtn" data-join-room="${escapeHtml(m.roomId)}" ${isOwnRoom?'disabled':''}>${isOwnRoom?'Phòng của bạn':'▶️ Vào chơi'}</button>
+        </div>`;
+    } else {
+      bubbleHtml = `<div class="bubble2">${escapeHtml(m.t)}</div>`;
+    }
     row.innerHTML = `
       <div class="av">${avatarHtml}</div>
       <div>
         <div class="name">${escapeHtml(displayName)}</div>
-        <div class="bubble2">${escapeHtml(m.t)}</div>
+        ${bubbleHtml}
         <div class="msgTime">${time}</div>
       </div>
     `;
@@ -1122,6 +1145,15 @@ db.ref('chats/' + WORLD_CHAT_ROOM).limitToLast(60).on('child_added', (snap)=>{
   renderChatMsg(snap.key, snap.val());
 });
 setTimeout(()=>{ worldChatReady = true; }, 1500);
+
+/* Bấm nút "Vào chơi" trên thẻ mời phòng trong chat -> sang trang Đấu Trường kèm mã phòng để tự vào */
+chatMessagesEl.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-join-room]');
+  if(!btn || btn.disabled) return;
+  const roomId = btn.getAttribute('data-join-room');
+  if(!roomId) return;
+  window.location.href = 'dautruong/?join=' + encodeURIComponent(roomId);
+});
 
 function sendWorldChat(){
   const val = worldChatInput.value.trim();
