@@ -163,12 +163,17 @@
   @keyframes pulse{ 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.08);} }
   #castBtn:disabled{opacity:.5; cursor:default;}
 
+  #fishHealthLabel{
+    position:absolute; bottom:118px; left:50%; transform:translateX(-50%);
+    font-size:11.5px; font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6);
+    display:none; z-index:16;
+  }
   #comboBar{
     position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
     width:84%; max-width:320px; height:14px; background:rgba(0,0,0,.35);
     border-radius:10px; overflow:hidden; display:none; border:2px solid var(--ink);
   }
-  #comboFill{height:100%; width:0%; background:linear-gradient(90deg,var(--gold),#fff3c0); transition:width .05s linear;}
+  #comboFill{height:100%; width:100%; background:linear-gradient(90deg,#ff3b3b,#c40000); transition:width .2s ease;}
 
   /* RHYTHM TIMING BAR */
   #rhythmWrap{
@@ -475,6 +480,7 @@
       <div id="statusText">Nhấn "Thả câu" để bắt đầu!</div>
     </div>
 
+    <div id="fishHealthLabel">❤️ Máu cá</div>
     <div id="comboBar"><div id="comboFill"></div></div>
     <div id="rhythmWrap">
       <div id="rhythmTrack">
@@ -843,6 +849,7 @@ const hook = document.getElementById('hook');
 const line = document.getElementById('line');
 const comboBar = document.getElementById('comboBar');
 const comboFill = document.getElementById('comboFill');
+const fishHealthLabel = document.getElementById('fishHealthLabel');
 const gameArea = document.getElementById('gameArea');
 const toastWrap = document.getElementById('toastWrap');
 const rhythmWrap = document.getElementById('rhythmWrap');
@@ -1232,7 +1239,8 @@ function resetVisual(){
   hook.style.top='60px';
   line.style.height='10px';
   comboBar.style.display='none';
-  comboFill.style.width='0%';
+  comboFill.style.width='100%';
+  fishHealthLabel.style.display='none';
   rhythmWrap.style.display='none';
   castBtn.classList.remove('pulled');
   stopRhythmLoop();
@@ -1291,7 +1299,8 @@ function biteFish(){
   castBtn.textContent='💥 THU CẦN!';
   castBtn.classList.add('pulled');
   comboBar.style.display='block';
-  comboFill.style.width='0%';
+  comboFill.style.width='100%';
+  fishHealthLabel.style.display='block';
 
   // Higher rarity fish require more successful hits & move faster
   const hitsByRarity = {common:2, uncommon:3, rare:4, epic:5, mythic:6};
@@ -1366,21 +1375,23 @@ function tryReelHit(){
   if(inZone){
     SoundEngine.sfx.hit();
     currentHits++;
-    comboFill.style.width = Math.round((currentHits/requiredHits)*100)+'%';
-    statusText.textContent = `✅ Đúng nhịp! (${currentHits}/${requiredHits})`;
+    const healthPct = Math.max(0, Math.round(((requiredHits-currentHits)/requiredHits)*100));
+    comboFill.style.width = healthPct+'%';
+    statusText.textContent = `🩸 Cá tụt máu! (${currentHits}/${requiredHits})`;
     if(currentHits >= requiredHits){
       landFish();
       return;
     }
     randomizeZone(); // new zone position for next hit, keeps challenge going
   } else {
-    // Miss! penalize progress and flash red, risk losing the fish
+    // Miss! fish regains blood/health, risk losing the fish
     SoundEngine.sfx.miss();
     gameArea.classList.add('missFlash');
     setTimeout(()=>gameArea.classList.remove('missFlash'), 300);
     currentHits = Math.max(0, currentHits - 1);
-    comboFill.style.width = Math.round((currentHits/requiredHits)*100)+'%';
-    statusText.textContent = `❌ Nhấn lệch nhịp! Cẩn thận, cá sắp sổng (${currentHits}/${requiredHits})`;
+    const healthPct = Math.max(0, Math.round(((requiredHits-currentHits)/requiredHits)*100));
+    comboFill.style.width = healthPct+'%';
+    statusText.textContent = `💢 Cá hồi máu! Cẩn thận, cá sắp sổng (${currentHits}/${requiredHits})`;
     missCount++;
     if(missCount >= maxMisses){
       fishEscape();
@@ -1435,7 +1446,7 @@ function fishEscape(){
   stopRhythmLoop();
   fishingState='idle';
   currentHits=0; missCount=0;
-  statusText.textContent='😭 Cá đã sổng mất vì nhấn lệch nhịp! Thử lại nhé.';
+  statusText.textContent='😭 Cá đã hồi đủ máu và sổng mất! Thử lại nhé.';
   castBtn.textContent='🎣 THẢ CÂU';
   resetVisual();
   useRodDurability();
