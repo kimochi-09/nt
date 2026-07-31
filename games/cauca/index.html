@@ -456,13 +456,16 @@
 
   <!-- HEADER -->
   <div id="header">
-    <button class="back-btn" onclick="goBack()">←</button>
-    <div id="playerName" style="flex:1; padding-left:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <button class="stat" id="playerNameBtn" style="border:2px solid var(--ink); cursor:pointer; color:var(--text); font-family:inherit;">
+        <span class="ic">👤</span>
+      </button>
+    </div>
     <div style="display:flex; gap:6px;">
-      <button class="stat" id="leaderboardBtn" onclick="window.location.href='bangxephang/index.html'" style="border:none; cursor:pointer; color:var(--text); font-family:inherit;"><span class="ic">🏆</span></button>
       <button class="stat" id="rankBtn"><span class="ic" id="rankIcon">🥉</span></button>
-      <div class="stat"><span class="ic">🪙</span><span id="coinDisplay">0</span></div>
-      <div class="stat"><span class="ic">🐟</span><span id="fishCountDisplay">0/60</span></div>
+      <button class="stat" id="leaderboardBtn" onclick="window.location.href='bangxephang/index.html'" style="border:none; cursor:pointer; color:var(--text); font-family:inherit;"><span class="ic">🪙</span><span id="coinDisplay">0</span></button>
+      <div class="stat"><span id="fishCountDisplay">0</span><span class="ic">🔥</span></div>
     </div>
   </div>
 
@@ -822,8 +825,12 @@ loadLocalState();
 /* Tự động reset điểm rank vào đầu mỗi tháng, để mọi người leo lại "rank tháng" mới.
    So sánh tháng lưu lần trước (rankMonth, dạng "YYYY-MM") với tháng hiện tại. */
 function currentMonthKey(){
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  // Luôn tính theo giờ Việt Nam (Asia/Ho_Chi_Minh), không phụ thuộc múi giờ máy của người chơi
+  const fmt = new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Ho_Chi_Minh', year:'numeric', month:'2-digit'});
+  const parts = fmt.formatToParts(new Date());
+  const y = parts.find(p=>p.type==='year').value;
+  const m = parts.find(p=>p.type==='month').value;
+  return y + '-' + m;
 }
 function checkMonthlyRankReset(){
   const nowKey = currentMonthKey();
@@ -860,8 +867,8 @@ const rhythmHint = document.getElementById('rhythmHint');
 
 function updateHeader(){
   coinDisplay.textContent = state.coins.toLocaleString('vi-VN');
-  const caughtCount = Object.keys(state.caughtIds).length;
-  fishCountDisplay.textContent = caughtCount + "/" + FISH_LIST.length;
+  const streak = state.catchStreak || 0;
+  fishCountDisplay.textContent = streak;
   document.getElementById('shopCoin').textContent = "🪙 " + state.coins.toLocaleString('vi-VN');
   const rd = getRankData(state.rankPoints||0);
   const rankIconEl = document.getElementById('rankIcon');
@@ -918,12 +925,17 @@ function renderRankLeaderboard(){
   db.ref('users').once('value').then(snap=>{
     const val = snap.val() || {};
     const myUid = currentUser ? currentUser.uid : null;
+    const nowKey = currentMonthKey();
     const rows = Object.keys(val).map(uid=>{
       const gs = (val[uid] && val[uid].gameState) || {};
+      // Nếu người chơi chưa vô game từ khi sang tháng mới, rankMonth trên Firebase
+      // vẫn còn là tháng cũ -> coi điểm rank của họ là 0 cho tháng này, tránh hiện
+      // điểm "ảo" còn sót lại (điểm thật sẽ tự về 0 ngay khi họ mở game).
+      const stillCurrentSeason = gs.rankMonth === nowKey;
       return {
         uid,
         nickname: gs.nickname || uid,
-        rankPoints: gs.rankPoints || 0
+        rankPoints: stillCurrentSeason ? (gs.rankPoints || 0) : 0
       };
     }).filter(r => r.rankPoints > 0 || r.uid === myUid);
 
@@ -1446,6 +1458,7 @@ function fishEscape(){
   stopRhythmLoop();
   fishingState='idle';
   currentHits=0; missCount=0;
+  state.catchStreak = 0;
   statusText.textContent='😭 Cá đã hồi đủ máu và sổng mất! Thử lại nhé.';
   castBtn.textContent='🎣 THẢ CÂU';
   resetVisual();
@@ -1470,6 +1483,8 @@ function landFish(){
   if(!state.caughtIds[fish.id]) state.caughtIds[fish.id] = {count:0, maxWeight:0};
   state.caughtIds[fish.id].count++;
   if(weight > state.caughtIds[fish.id].maxWeight) state.caughtIds[fish.id].maxWeight = weight;
+  state.catchStreak = (state.catchStreak||0) + 1;
+  if(!state.bestCatchStreak || state.catchStreak > state.bestCatchStreak) state.bestCatchStreak = state.catchStreak;
 
   // Cộng điểm rank theo độ hiếm và kiểm tra thăng hạng
   const oldRankIdx = getRankIndex(state.rankPoints||0);
@@ -1702,6 +1717,34 @@ if(rankBtnEl){
   });
 }
 const rankLbRefreshBtn = document.getElementById('rankLbRefreshBtn');
+
+/* Nút tên người chơi ở header: mở modal Profile */
+const playerNameBtnEl = document.getElementById('playerNameBtn');
+const profileOverlayEl = document.getElementById('profileOverlay');
+function openProfileModal(){
+  SoundEngine.unlock();
+  SoundEngine.sfx.open();
+  const rd = getRankData(state.rankPoints||0);
+  document.getElementById('profileAvatar').textContent = state.avatar || '👤';
+  document.getElementById('profileNickname').textContent = currentUser ? currentUser.uid : ('🎣 Khách #' + state.playerId);
+  document.getElementById('profileRank').textContent = (rd.rank.icon||'') + ' ' + (rd.rank.name||'');
+  document.getElementById('profileCoins').textContent = (state.coins||0).toLocaleString('vi-VN');
+  document.getElementById('profileStreak').textContent = (state.catchStreak||0) + '🔥';
+  const caughtCount = Object.keys(state.caughtIds||{}).length;
+  document.getElementById('profileFishCount').textContent = caughtCount + '/' + FISH_LIST.length;
+  profileOverlayEl.style.display = 'flex';
+}
+if(playerNameBtnEl){
+  playerNameBtnEl.addEventListener('click', openProfileModal);
+}
+const profileCloseBtnEl = document.getElementById('profileCloseBtn');
+if(profileCloseBtnEl){
+  profileCloseBtnEl.addEventListener('click', ()=>{ SoundEngine.sfx.click(); profileOverlayEl.style.display='none'; });
+}
+if(profileOverlayEl){
+  profileOverlayEl.addEventListener('click', (e)=>{ if(e.target===profileOverlayEl) profileOverlayEl.style.display='none'; });
+}
+
 if(rankLbRefreshBtn){
   rankLbRefreshBtn.addEventListener('click', ()=>{
     SoundEngine.sfx.click();
@@ -1741,5 +1784,18 @@ function goBack(){
   window.location.href = '/games';
 }
 </script>
+  <div id="profileOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border:2px solid var(--ink); border-radius:16px; padding:20px; width:min(320px,86vw); text-align:center; position:relative;">
+      <button id="profileCloseBtn" style="position:absolute; top:8px; right:10px; border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+      <div id="profileAvatar" style="font-size:48px; line-height:1;">👤</div>
+      <div id="profileNickname" style="font-weight:800; font-size:18px; margin-top:6px;"></div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px; text-align:left;">
+        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🥇 Rank</span><span id="profileRank" style="font-weight:800;"></span></div>
+        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🪙 Xu</span><span id="profileCoins" style="font-weight:800;"></span></div>
+        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🔥 Chuỗi câu</span><span id="profileStreak" style="font-weight:800;"></span></div>
+        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🐟 Loài cá đã câu</span><span id="profileFishCount" style="font-weight:800;"></span></div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
