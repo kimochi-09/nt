@@ -1030,7 +1030,7 @@ function syncCloudState(){
       state.avatar = remote.avatar || avatar;
       try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
       checkMonthlyRankReset();
-      toast('✅ Đã đồng bộ tiến trình từ tài khoản chung!');
+      toast('✅ Đã gọi hồn về');
     } else {
       // Chưa có dữ liệu trên đám mây cho tài khoản này -> đẩy tiến trình hiện tại lên
       db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{});
