@@ -8,22 +8,23 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   :root{
-    --bg-deep:#04263f;
-    --bg-mid:#0a4a72;
-    --gold:#ffd35c;
+    --bg-deep:#1288c9;
+    --bg-mid:#29b6f6;
+    --gold:#ffcd3c;
     --gold-dark:#e0a900;
-    --panel:#0e2f4a;
-    --panel-light:#123a5c;
-    --text:#eaf6ff;
-    --text-dim:#9fc4de;
-    --silver:#cfd8e3;
-    --bronze:#d99a5b;
+    --panel:#ffffff;
+    --panel-light:#fff3cf;
+    --text:#111318;
+    --text-dim:#4a6274;
+    --silver:#7c8e9a;
+    --bronze:#b8712c;
+    --ink:#111111;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
     margin:0; padding:0; min-height:100%; width:100%;
     font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    background:linear-gradient(180deg,#0d3a5c 0%, var(--bg-deep) 60%, #021625 100%);
+    background:linear-gradient(180deg,#4fc3f7 0%, #29b6f6 55%, #1288c9 100%);
     color:var(--text);
   }
   #app{max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column;}
@@ -31,12 +32,12 @@
 
   #header{
     display:flex; align-items:center; gap:10px;
-    padding:14px 14px; background:rgba(2,20,34,.85); backdrop-filter:blur(4px);
-    border-bottom:1px solid rgba(255,255,255,.08); position:sticky; top:0; z-index:10;
+    padding:14px 14px; background:#29b6f6;
+    border-bottom:4px solid var(--ink); position:sticky; top:0; z-index:10;
   }
-  #header h1{font-size:17px; margin:0; flex:1; display:flex; align-items:center; gap:8px;}
+  #header h1{font-size:17px; margin:0; flex:1; display:flex; align-items:center; gap:8px; color:var(--text); font-weight:900;}
   .closeBtn{
-    border:none; background:rgba(255,255,255,.08); color:var(--text);
+    border:2px solid var(--ink); background:#fff; color:var(--text);
     font-size:16px; width:34px; height:34px; border-radius:50%; cursor:pointer;
   }
 
@@ -45,33 +46,35 @@
 
   .rankRow{
     display:flex; align-items:center; gap:10px;
-    background:var(--panel); border:1px solid rgba(255,255,255,.06);
+    background:var(--panel); border:3px solid var(--ink);
     border-radius:14px; padding:10px 12px; margin-bottom:8px;
   }
-  .rankRow.me{ border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset; }
-  .rankRow.top1{ background:linear-gradient(135deg, rgba(255,211,92,.18), var(--panel)); }
-  .rankRow.top2{ background:linear-gradient(135deg, rgba(207,216,227,.15), var(--panel)); }
-  .rankRow.top3{ background:linear-gradient(135deg, rgba(217,154,91,.18), var(--panel)); }
+  .rankRow.me{ border-color:var(--gold-dark); background:var(--panel-light); }
+  .rankRow.top1{ background:linear-gradient(135deg, #fff3cf, var(--panel)); }
+  .rankRow.top2{ background:linear-gradient(135deg, #eef2f5, var(--panel)); }
+  .rankRow.top3{ background:linear-gradient(135deg, #fbe6d3, var(--panel)); }
 
   .rankNum{
     width:30px; flex-shrink:0; text-align:center; font-weight:800; font-size:15px; color:var(--text-dim);
   }
   .rankNum.medal{font-size:20px;}
   .avatarIc{
-    width:38px; height:38px; border-radius:50%; background:var(--gold-dark); color:#2a1c00;
+    width:38px; height:38px; border-radius:50%; background:var(--gold-dark); color:#fff; border:2px solid var(--ink);
     display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;
     overflow:hidden;
   }
   .avatarIc img{ width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
   .rInfo{flex:1; min-width:0;}
-  .rName{font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rName{font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text);}
   .rSub{font-size:11px; color:var(--text-dim);}
-  .rCoin{display:flex; align-items:center; gap:4px; font-weight:800; color:var(--gold); font-size:14.5px; flex-shrink:0;}
+  .rCoin{display:flex; align-items:center; gap:4px; font-weight:800; color:var(--gold-dark); font-size:14.5px; flex-shrink:0;}
 
   #refreshBtn{
-    display:block; margin:16px auto 6px; border:none; background:var(--panel-light); color:var(--text);
-    padding:9px 18px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;
+    display:block; margin:16px auto 6px; border:3px solid var(--ink); background:var(--gold); color:#3a2400;
+    padding:9px 18px; border-radius:20px; font-weight:800; font-size:13px; cursor:pointer;
+    box-shadow:0 3px 0 var(--gold-dark);
   }
+  #refreshBtn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--gold-dark);}
   #updatedAt{text-align:center; color:var(--text-dim); font-size:11px; margin-top:4px;}
 </style>
 </head>
