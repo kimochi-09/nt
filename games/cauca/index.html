@@ -315,7 +315,7 @@
   /* CHAT */
   #chatMessages{flex:1; overflow-y:auto; padding:10px 12px; display:flex; flex-direction:column; gap:10px; background:#29b6f6;}
   .msg{display:flex; gap:8px; align-items:flex-start; max-width:85%;}
-  .msg .av{font-size:20px; flex-shrink:0; width:38px; height:38px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#fff; border:3px solid #111;}
+  .msg .av{font-size:20px; flex-shrink:0; width:38px; height:38px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#fff; border:3px solid #111; cursor:pointer;}
   .msg .av img{width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;}
   .msg .bubble2{background:#fff; color:#111; border:3px solid #111; border-radius:16px 16px 16px 4px; padding:9px 13px; font-size:13.5px; font-weight:600; word-break:break-word; overflow-wrap:anywhere;}
   .roomInviteCard{
@@ -1216,24 +1216,27 @@ function renderChatMsg(key, m){
       bubbleHtml = `<div class="bubble2">${escapeHtml(m.t)}</div>`;
     }
     row.innerHTML = `
-      <div class="av">${avatarHtml}</div>
+      <div class="av" data-uid="${escapeHtml(m.s)}">${avatarHtml}</div>
       <div>
-        <div class="name">${escapeHtml(displayName)}</div>
+        <div class="name" data-uid="${escapeHtml(m.s)}">${escapeHtml(displayName)}</div>
         ${bubbleHtml}
         <div class="msgTime">${time}</div>
       </div>
     `;
     chatMessagesEl.appendChild(row);
+    const avElNode = row.querySelector('.av');
+    const nameElNode = row.querySelector('.name');
+    if(avElNode) avElNode.addEventListener('click', ()=> openOtherProfileModal(m.s));
+    if(nameElNode) nameElNode.style.cursor = 'pointer';
+    if(nameElNode) nameElNode.addEventListener('click', ()=> openOtherProfileModal(m.s));
     if(!cached){
       fetchChatProfile(m.s).then(p=>{
         if(!p) return;
-        if(p.avatar){
-          const avEl = row.querySelector('.av');
-          if(avEl) avEl.innerHTML = `<img src="${escapeHtml(p.avatar)}" alt="">`;
+        if(p.avatar && avElNode){
+          avElNode.innerHTML = `<img src="${escapeHtml(p.avatar)}" alt="">`;
         }
-        if(p.displayName){
-          const nameEl = row.querySelector('.name');
-          if(nameEl) nameEl.textContent = p.displayName;
+        if(p.displayName && nameElNode){
+          nameElNode.textContent = p.displayName;
         }
       });
     }
@@ -1779,14 +1782,13 @@ const rankLbRefreshBtn = document.getElementById('rankLbRefreshBtn');
 /* Nút tên người chơi ở header: mở modal Profile */
 const playerNameBtnEl = document.getElementById('playerNameBtn');
 const profileOverlayEl = document.getElementById('profileOverlay');
-/* Tính thứ hạng (top) của người chơi hiện tại trong toàn server, theo số xu và theo điểm rank */
-function computeMyTopRanks(){
-  if(!currentUser){
+/* Tính thứ hạng (top) của một người chơi bất kỳ trong toàn server, theo số xu và theo điểm rank */
+function computeTopRanksForUid(targetUid, fallbackCoins, fallbackRankPoints){
+  if(!targetUid){
     return Promise.resolve({coinPos:0, coinTotal:0, rankPos:0, rankTotal:0});
   }
   return db.ref('users').once('value').then(snap=>{
     const val = snap.val() || {};
-    const myUid = currentUser.uid;
     const nowKey = currentMonthKey();
     const entries = Object.keys(val).map(uid=>{
       const gs = (val[uid] && val[uid].gameState) || {};
@@ -1797,19 +1799,25 @@ function computeMyTopRanks(){
         rankPoints: stillCurrentSeason ? (gs.rankPoints || 0) : 0
       };
     });
-    // Đảm bảo có mặt chính người chơi hiện tại (phòng khi dữ liệu chưa kịp lưu lên server)
-    if(!entries.some(e=>e.uid===myUid)){
-      entries.push({ uid:myUid, coins: state.coins||0, rankPoints: state.rankPoints||0 });
+    // Đảm bảo có mặt người chơi đang xem (phòng khi dữ liệu chưa kịp lưu lên server)
+    if(!entries.some(e=>e.uid===targetUid)){
+      entries.push({ uid:targetUid, coins: fallbackCoins||0, rankPoints: fallbackRankPoints||0 });
     }
-    const coinRows = entries.filter(e=>e.coins>0 || e.uid===myUid).sort((a,b)=>b.coins-a.coins);
-    const rankRows = entries.filter(e=>e.rankPoints>0 || e.uid===myUid).sort((a,b)=>b.rankPoints-a.rankPoints);
+    const coinRows = entries.filter(e=>e.coins>0 || e.uid===targetUid).sort((a,b)=>b.coins-a.coins);
+    const rankRows = entries.filter(e=>e.rankPoints>0 || e.uid===targetUid).sort((a,b)=>b.rankPoints-a.rankPoints);
     return {
-      coinPos: coinRows.findIndex(r=>r.uid===myUid)+1,
+      coinPos: coinRows.findIndex(r=>r.uid===targetUid)+1,
       coinTotal: coinRows.length,
-      rankPos: rankRows.findIndex(r=>r.uid===myUid)+1,
+      rankPos: rankRows.findIndex(r=>r.uid===targetUid)+1,
       rankTotal: rankRows.length
     };
   }).catch(()=>({coinPos:0, coinTotal:0, rankPos:0, rankTotal:0}));
+}
+function computeMyTopRanks(){
+  if(!currentUser){
+    return Promise.resolve({coinPos:0, coinTotal:0, rankPos:0, rankTotal:0});
+  }
+  return computeTopRanksForUid(currentUser.uid, state.coins, state.rankPoints);
 }
 
 function openProfileModal(){
@@ -1855,6 +1863,82 @@ function openProfileModal(){
 }
 if(playerNameBtnEl){
   playerNameBtnEl.addEventListener('click', openProfileModal);
+}
+
+/* Mở hồ sơ của người chơi khác khi bấm vào avatar/tên trong chat thế giới.
+   senderKey chính là giá trị m.s được lưu trong tin nhắn (uid nếu đã đăng nhập, hoặc "Khách#..." nếu là khách). */
+function openOtherProfileModal(senderKey){
+  if(!senderKey) return;
+
+  // Nếu bấm vào chính mình -> dùng thẳng dữ liệu local cho nhanh & chính xác
+  if(senderKey === myChatName()){
+    openProfileModal();
+    return;
+  }
+
+  SoundEngine.unlock();
+  SoundEngine.sfx.open();
+
+  const avatarEl = document.getElementById('profileAvatar');
+  const nicknameEl = document.getElementById('profileNickname');
+  const rankEl = document.getElementById('profileRank');
+  const coinsEl = document.getElementById('profileCoins');
+  const streakEl = document.getElementById('profileStreak');
+  const topCoinEl = document.getElementById('profileTopCoin');
+  const topRankEl = document.getElementById('profileTopRank');
+
+  avatarEl.textContent = '👤';
+  nicknameEl.textContent = 'Đang tải...';
+  rankEl.textContent = '...';
+  coinsEl.textContent = '...';
+  streakEl.textContent = '...';
+  topCoinEl.textContent = '...';
+  topRankEl.textContent = '...';
+  profileOverlayEl.style.display = 'flex';
+
+  const isGuest = senderKey.indexOf('Khách#') === 0;
+
+  fetchChatProfile(senderKey).then(p=>{
+    p = p || {};
+    if(p.avatar){
+      avatarEl.innerHTML = `<img src="${escapeHtml(p.avatar)}" alt="">`;
+    } else if(p.avatarEmoji){
+      avatarEl.textContent = p.avatarEmoji;
+    } else {
+      avatarEl.textContent = '👤';
+    }
+    nicknameEl.textContent = p.displayName || senderKey;
+  });
+
+  if(isGuest){
+    // Khách vãng lai không đồng bộ dữ liệu lên server -> không có thống kê để hiện
+    rankEl.textContent = '—';
+    coinsEl.textContent = '—';
+    streakEl.textContent = '—';
+    topCoinEl.textContent = '—';
+    topRankEl.textContent = '—';
+    return;
+  }
+
+  db.ref('users/' + senderKey + '/gameState').once('value').then(snap=>{
+    const gs = snap.val() || {};
+    const nowKey = currentMonthKey();
+    const rankPts = (gs.rankMonth === nowKey) ? (gs.rankPoints||0) : 0;
+    rankEl.textContent = rankPts.toLocaleString('vi-VN');
+    coinsEl.textContent = (gs.coins||0).toLocaleString('vi-VN');
+    streakEl.textContent = (gs.catchStreak||0);
+
+    computeTopRanksForUid(senderKey, gs.coins, rankPts).then(r=>{
+      topCoinEl.textContent = r.coinPos>0 ? ('#' + r.coinPos + '/' + r.coinTotal) : '—';
+      topRankEl.textContent = r.rankPos>0 ? ('#' + r.rankPos + '/' + r.rankTotal) : '—';
+    });
+  }).catch(()=>{
+    rankEl.textContent = '—';
+    coinsEl.textContent = '—';
+    streakEl.textContent = '—';
+    topCoinEl.textContent = '—';
+    topRankEl.textContent = '—';
+  });
 }
 const profileCloseBtnEl = document.getElementById('profileCloseBtn');
 if(profileCloseBtnEl){
