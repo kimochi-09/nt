@@ -1797,13 +1797,34 @@ const playerNameBtnEl = document.getElementById('playerNameBtn');
 const profileOverlayEl = document.getElementById('profileOverlay');
 const profileKbBtnEl = document.getElementById('profileKbBtn');
 let currentProfileTargetUid = null; // uid của người đang xem hồ sơ (null nếu là hồ sơ của chính mình)
+let kbCheckToken = 0; // để huỷ kết quả check cũ nếu người dùng mở hồ sơ khác trước khi check xong
 
-/* Hiện/ẩn nút "Kết bạn" trong hồ sơ tuỳ theo đang xem hồ sơ của ai */
+/* Kiểm tra trạng thái bạn bè / lời mời với người đang xem hồ sơ, rồi ẩn/hiện nút "Kết bạn":
+   - Đã là bạn bè -> ẩn nút.
+   - Đã gửi lời mời và đang chờ -> ẩn nút (chỉ hiện lại nếu người kia từ chối, tức lời mời bị xoá).
+   - Chưa có gì / bị từ chối -> hiện nút để gửi (lại) lời mời. */
 function updateKbBtnVisibility(){
   if(!profileKbBtnEl) return;
   profileKbBtnEl.classList.remove('sent');
   profileKbBtnEl.textContent = '🤝 Kết bạn';
-  profileKbBtnEl.style.display = currentProfileTargetUid ? 'flex' : 'none';
+  profileKbBtnEl.disabled = false;
+  profileKbBtnEl.style.display = 'none';
+
+  const targetId = currentProfileTargetUid;
+  const myId = currentUser ? myChatName() : null;
+  if(!targetId || !myId || targetId === myId) return;
+
+  const myToken = ++kbCheckToken;
+  db.ref('friends/' + myId + '/' + targetId).once('value').then(snap=>{
+    if(myToken !== kbCheckToken) return; // đã chuyển sang hồ sơ khác, bỏ kết quả này
+    if(snap.exists()) return; // đã là bạn bè -> giữ nút ẩn
+    db.ref('friend_requests/' + targetId + '/' + myId).once('value').then(snap2=>{
+      if(myToken !== kbCheckToken) return;
+      if(snap2.exists()) return; // đã gửi lời mời và đang chờ -> giữ nút ẩn
+      // Chưa có quan hệ gì (hoặc đã bị từ chối trước đó) -> cho phép gửi lời mời
+      profileKbBtnEl.style.display = 'flex';
+    });
+  }).catch(()=>{});
 }
 
 /* Gửi lời mời kết bạn (kb) tới người đang xem trong hồ sơ, dùng chung dữ liệu Firebase
@@ -1816,17 +1837,13 @@ function sendKbRequest(){
   db.ref('friends/' + myId + '/' + targetId).once('value').then(snap=>{
     if(snap.exists()){
       toast('Hai bạn đã là bạn bè rồi! 🤝');
-      profileKbBtnEl.classList.add('sent');
-      profileKbBtnEl.textContent = '✅ Đã là bạn bè';
-      profileKbBtnEl.disabled = false;
+      profileKbBtnEl.style.display = 'none';
       return;
     }
     db.ref('friend_requests/' + targetId + '/' + myId).once('value').then(snap2=>{
       if(snap2.exists()){
         toast('Đã gửi lời mời kết bạn trước đó rồi!');
-        profileKbBtnEl.classList.add('sent');
-        profileKbBtnEl.textContent = '⏳ Đã gửi lời mời';
-        profileKbBtnEl.disabled = false;
+        profileKbBtnEl.style.display = 'none';
         return;
       }
       db.ref('friend_requests/' + myId + '/' + targetId).once('value').then(snap3=>{
@@ -1837,17 +1854,14 @@ function sendKbRequest(){
           db.ref('friend_requests/' + myId + '/' + targetId).remove();
           db.ref('friend_requests/' + targetId + '/' + myId).remove();
           toast('Đã kết bạn thành công! 🤝');
-          profileKbBtnEl.classList.add('sent');
-          profileKbBtnEl.textContent = '✅ Đã là bạn bè';
+          profileKbBtnEl.style.display = 'none';
         } else {
           db.ref('friend_requests/' + targetId + '/' + myId).set({ from: myId, ts: Date.now() }).then(()=>{
             toast('Đã gửi lời mời kết bạn! 🤝');
-            profileKbBtnEl.classList.add('sent');
-            profileKbBtnEl.textContent = '⏳ Đã gửi lời mời';
+            profileKbBtnEl.style.display = 'none';
           });
         }
-        profileKbBtnEl.disabled = false;
-      });
+      }).finally(()=>{ profileKbBtnEl.disabled = false; });
     });
   }).catch(()=>{
     toast('Không thể gửi lời mời, thử lại sau.');
