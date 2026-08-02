@@ -1017,14 +1017,18 @@ function renderRankLeaderboard(){
       el.className = 'lbRow' + (isMe?' me':'') + (pos===1?' top1':pos===2?' top2':pos===3?' top3':'');
       el.innerHTML = `
         <div class="lbRank">${pos<=3 ? (pos===1?'🥇':pos===2?'🥈':'🥉') : ('#'+pos)}</div>
-        <div class="lbAvatar" id="lbAv_${i}">${rd.rank.icon}</div>
+        <div class="lbAvatar" id="lbAv_${i}" data-uid="${escapeHtml(row.uid)}" style="cursor:pointer;">${rd.rank.icon}</div>
         <div class="lbInfo">
-          <div class="lbName">${escapeHtml(row.nickname)}${isMe?' (Bạn)':''}</div>
+          <div class="lbName" data-uid="${escapeHtml(row.uid)}" style="cursor:pointer;">${escapeHtml(row.nickname)}${isMe?' (Bạn)':''}</div>
           <div class="lbRankName r-${rd.rank.color}">${rd.rank.icon} ${rd.rank.name}${rd.nextRank?'':(rd.tier>0?' • Cấp '+(rd.tier+1):'')}</div>
         </div>
         <div class="lbPts">${row.rankPoints.toLocaleString('vi-VN')}đ</div>
       `;
       container.appendChild(el);
+      const lbAvEl = el.querySelector('.lbAvatar');
+      const lbNameEl = el.querySelector('.lbName');
+      if(lbAvEl) lbAvEl.addEventListener('click', ()=> openOtherProfileModal(row.uid));
+      if(lbNameEl) lbNameEl.addEventListener('click', ()=> openOtherProfileModal(row.uid));
       // Lấy avatar/tên hiển thị thật (đồng bộ với hệ chat) rồi cập nhật lại, không chặn hiển thị ban đầu
       fetchChatProfile(row.uid).then(p=>{
         if(!p) return;
