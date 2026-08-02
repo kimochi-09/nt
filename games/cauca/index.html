@@ -165,7 +165,7 @@
 
   #fishHealthLabel{ display:none; }
   #comboBar{
-    position:absolute; top:55%; left:50%; transform:translate(-50%,-50%);
+    position:absolute; top:62%; left:50%; transform:translate(-50%,-50%);
     width:84%; max-width:320px; height:16px; background:rgba(0,0,0,.35);
     border-radius:10px; overflow:hidden; display:none; border:2px solid var(--ink); z-index:16;
   }
@@ -173,7 +173,7 @@
 
   /* RHYTHM TIMING BAR */
   #rhythmWrap{
-    position:absolute; bottom:130px; left:50%; transform:translateX(-50%);
+    position:absolute; top:52%; left:50%; transform:translate(-50%,-50%);
     width:84%; max-width:320px; display:none; z-index:16;
   }
   #rhythmTrack{
@@ -189,9 +189,7 @@
     border-radius:3px; box-shadow:0 0 8px rgba(255,255,255,.8);
     left:0%;
   }
-  #rhythmHint{
-    text-align:center; font-size:11.5px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.5); margin-top:5px; font-weight:800;
-  }
+  #rhythmHint{ display:none; }
   .missFlash{animation:missFlash .3s;}
   @keyframes missFlash{ 0%,100%{filter:none;} 50%{filter:brightness(2) hue-rotate(-40deg);} }
 
@@ -1839,6 +1837,18 @@ function openProfileModal(){
     topCoinEl.textContent = (currentUser && r.coinPos>0) ? ('#' + r.coinPos + '/' + r.coinTotal) : '—';
     topRankEl.textContent = (currentUser && r.rankPos>0) ? ('#' + r.rankPos + '/' + r.rankTotal) : '—';
   });
+
+  if(currentUser){
+    fetchChatProfile(currentUser.uid).then(p=>{
+      if(!p) return;
+      if(p.avatar){
+        avatarEl.innerHTML = `<img src="${escapeHtml(p.avatar)}" alt="">`;
+      }
+      if(p.displayName){
+        document.getElementById('profileNickname').textContent = p.displayName;
+      }
+    });
+  }
 }
 if(playerNameBtnEl){
   playerNameBtnEl.addEventListener('click', openProfileModal);
