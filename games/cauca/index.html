@@ -163,15 +163,11 @@
   @keyframes pulse{ 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.08);} }
   #castBtn:disabled{opacity:.5; cursor:default;}
 
-  #fishHealthLabel{
-    position:absolute; bottom:118px; left:50%; transform:translateX(-50%);
-    font-size:11.5px; font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6);
-    display:none; z-index:16;
-  }
+  #fishHealthLabel{ display:none; }
   #comboBar{
-    position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
-    width:84%; max-width:320px; height:14px; background:rgba(0,0,0,.35);
-    border-radius:10px; overflow:hidden; display:none; border:2px solid var(--ink);
+    position:absolute; top:55%; left:50%; transform:translate(-50%,-50%);
+    width:84%; max-width:320px; height:16px; background:rgba(0,0,0,.35);
+    border-radius:10px; overflow:hidden; display:none; border:2px solid var(--ink); z-index:16;
   }
   #comboFill{height:100%; width:100%; background:linear-gradient(90deg,#ff3b3b,#c40000); transition:width .2s ease;}
 
@@ -449,6 +445,40 @@
     animation:rankUpGlow 1s infinite alternate;
   }
   @keyframes rankUpGlow{ from{filter:brightness(1);} to{filter:brightness(1.2);} }
+
+  /* ===== HỒ SƠ NGƯỜI CHƠI (profile card) ===== */
+  #profileCard{
+    background:var(--panel); border:3px solid var(--ink); border-radius:18px;
+    padding:16px; width:min(320px,86vw); position:relative;
+  }
+  .profileTopRow{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .profileAvatarCircle{
+    width:60px; height:60px; border-radius:50%; background:var(--gold); color:#3a2400;
+    border:3px solid var(--ink); flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:28px; overflow:hidden;
+  }
+  .profileAvatarCircle img{width:100%; height:100%; object-fit:cover; display:block;}
+  .profileNameBox{
+    flex:1; min-width:0; background:var(--panel); border:3px solid var(--ink); border-radius:14px;
+    padding:12px 10px; font-weight:800; font-size:14.5px; color:var(--text); text-align:center;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .profileGrid{display:flex; gap:10px; align-items:stretch;}
+  .profileLeftCol{flex:1; display:flex; flex-direction:column; gap:8px; min-width:0;}
+  .profileStatBox{
+    background:#f2f7fb; border:2.5px solid var(--ink); border-radius:12px;
+    padding:10px; display:flex; align-items:center; justify-content:center; gap:6px; flex:1;
+  }
+  .profileStatBox .psIcon{font-size:14px;}
+  .profileStatBox .psValue{font-size:15px; font-weight:800; color:var(--text); white-space:nowrap;}
+  .profileTopBox{
+    flex:1; background:linear-gradient(180deg,#fff3cf,#ffe9a8); border:2.5px solid var(--ink); border-radius:14px;
+    padding:12px 10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-width:0;
+  }
+  .ptbTitle{font-size:12.5px; font-weight:800; color:#7a5600; text-align:center;}
+  .ptbRow{width:100%; display:flex; flex-direction:column; align-items:center; gap:1px;}
+  .ptbRow .ptbLabel{font-size:11px; color:#7a5600; font-weight:700;}
+  .ptbRow .ptbValue{font-size:15px; font-weight:900; color:var(--gold-dark);}
 </style>
 </head>
 <body>
@@ -486,7 +516,6 @@
       <div id="statusText">Nhấn "Thả câu" để bắt đầu!</div>
     </div>
 
-    <div id="fishHealthLabel">❤️ Máu cá</div>
     <div id="comboBar"><div id="comboFill"></div></div>
     <div id="rhythmWrap">
       <div id="rhythmTrack">
@@ -585,6 +614,37 @@
     <div id="chatInputBar">
       <input type="text" id="worldChatInput" placeholder="Nhắn gì đó cho mọi người..." maxlength="300">
       <button id="worldChatSendBtn">➤</button>
+    </div>
+  </div>
+
+  <!-- HỒ SƠ NGƯỜI CHƠI (profile modal) -->
+  <div id="profileOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; align-items:center; justify-content:center;">
+    <div id="profileCard">
+      <button id="profileCloseBtn" style="position:absolute; top:8px; right:10px; border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+
+      <div class="profileTopRow">
+        <div class="profileAvatarCircle" id="profileAvatar">👤</div>
+        <div class="profileNameBox" id="profileNickname"></div>
+      </div>
+
+      <div class="profileGrid">
+        <div class="profileLeftCol">
+          <div class="profileStatBox"><span class="psIcon">🪙</span><span class="psValue" id="profileCoins"></span></div>
+          <div class="profileStatBox"><span class="psIcon">🥇</span><span class="psValue" id="profileRank"></span></div>
+          <div class="profileStatBox"><span class="psIcon">🔥</span><span class="psValue" id="profileStreak"></span></div>
+        </div>
+        <div class="profileTopBox" id="profileTopBox">
+          <div class="ptbTitle">🏆 Xếp hạng<br>server</div>
+          <div class="ptbRow">
+            <span class="ptbLabel">Top xu</span>
+            <span class="ptbValue" id="profileTopCoin">...</span>
+          </div>
+          <div class="ptbRow">
+            <span class="ptbLabel">Top rank</span>
+            <span class="ptbValue" id="profileTopRank">...</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1255,9 +1315,9 @@ function resetVisual(){
   line.style.height='10px';
   comboBar.style.display='none';
   comboFill.style.width='100%';
-  fishHealthLabel.style.display='none';
   rhythmWrap.style.display='none';
   castBtn.classList.remove('pulled');
+  statusText.style.display='block';
   stopRhythmLoop();
 }
 
@@ -1315,15 +1375,14 @@ function biteFish(){
   castBtn.classList.add('pulled');
   comboBar.style.display='block';
   comboFill.style.width='100%';
-  fishHealthLabel.style.display='block';
+  statusText.style.display='none';
+  statusText.textContent='';
 
   // Higher rarity fish require more successful hits & move faster
   const hitsByRarity = {common:2, uncommon:3, rare:4, epic:5, mythic:6};
   requiredHits = hitsByRarity[pendingFish.rarity] || 3;
   currentHits = 0;
   missCount = 0;
-
-  statusText.innerHTML = `🎣 ${fishIconHtml(pendingFish.icon, 22)} ${escapeHtml(pendingFish.name)} đã cắn câu! (0/${requiredHits})`;
 
   startRhythmLoop();
 
@@ -1392,7 +1451,6 @@ function tryReelHit(){
     currentHits++;
     const healthPct = Math.max(0, Math.round(((requiredHits-currentHits)/requiredHits)*100));
     comboFill.style.width = healthPct+'%';
-    statusText.textContent = `🩸 Cá tụt máu! (${currentHits}/${requiredHits})`;
     if(currentHits >= requiredHits){
       landFish();
       return;
@@ -1406,7 +1464,6 @@ function tryReelHit(){
     currentHits = Math.max(0, currentHits - 1);
     const healthPct = Math.max(0, Math.round(((requiredHits-currentHits)/requiredHits)*100));
     comboFill.style.width = healthPct+'%';
-    statusText.textContent = `💢 Cá hồi máu! Cẩn thận, cá sắp sổng (${currentHits}/${requiredHits})`;
     missCount++;
     if(missCount >= maxMisses){
       fishEscape();
@@ -1724,18 +1781,64 @@ const rankLbRefreshBtn = document.getElementById('rankLbRefreshBtn');
 /* Nút tên người chơi ở header: mở modal Profile */
 const playerNameBtnEl = document.getElementById('playerNameBtn');
 const profileOverlayEl = document.getElementById('profileOverlay');
+/* Tính thứ hạng (top) của người chơi hiện tại trong toàn server, theo số xu và theo điểm rank */
+function computeMyTopRanks(){
+  if(!currentUser){
+    return Promise.resolve({coinPos:0, coinTotal:0, rankPos:0, rankTotal:0});
+  }
+  return db.ref('users').once('value').then(snap=>{
+    const val = snap.val() || {};
+    const myUid = currentUser.uid;
+    const nowKey = currentMonthKey();
+    const entries = Object.keys(val).map(uid=>{
+      const gs = (val[uid] && val[uid].gameState) || {};
+      const stillCurrentSeason = gs.rankMonth === nowKey;
+      return {
+        uid,
+        coins: gs.coins || 0,
+        rankPoints: stillCurrentSeason ? (gs.rankPoints || 0) : 0
+      };
+    });
+    // Đảm bảo có mặt chính người chơi hiện tại (phòng khi dữ liệu chưa kịp lưu lên server)
+    if(!entries.some(e=>e.uid===myUid)){
+      entries.push({ uid:myUid, coins: state.coins||0, rankPoints: state.rankPoints||0 });
+    }
+    const coinRows = entries.filter(e=>e.coins>0 || e.uid===myUid).sort((a,b)=>b.coins-a.coins);
+    const rankRows = entries.filter(e=>e.rankPoints>0 || e.uid===myUid).sort((a,b)=>b.rankPoints-a.rankPoints);
+    return {
+      coinPos: coinRows.findIndex(r=>r.uid===myUid)+1,
+      coinTotal: coinRows.length,
+      rankPos: rankRows.findIndex(r=>r.uid===myUid)+1,
+      rankTotal: rankRows.length
+    };
+  }).catch(()=>({coinPos:0, coinTotal:0, rankPos:0, rankTotal:0}));
+}
+
 function openProfileModal(){
   SoundEngine.unlock();
   SoundEngine.sfx.open();
   const rd = getRankData(state.rankPoints||0);
-  document.getElementById('profileAvatar').textContent = state.avatar || '👤';
-  document.getElementById('profileNickname').textContent = currentUser ? currentUser.uid : ('🎣 Khách #' + state.playerId);
-  document.getElementById('profileRank').textContent = (rd.rank.icon||'') + ' ' + (rd.rank.name||'');
+  const avatarEl = document.getElementById('profileAvatar');
+  if(state.avatar && /^https?:\/\//.test(state.avatar)){
+    avatarEl.innerHTML = `<img src="${escapeHtml(state.avatar)}" alt="">`;
+  } else {
+    avatarEl.textContent = state.avatar || '👤';
+  }
+  document.getElementById('profileNickname').textContent = currentUser ? (state.nickname || currentUser.uid) : ('🎣 Khách #' + state.playerId);
+  document.getElementById('profileRank').textContent = (state.rankPoints||0).toLocaleString('vi-VN');
   document.getElementById('profileCoins').textContent = (state.coins||0).toLocaleString('vi-VN');
-  document.getElementById('profileStreak').textContent = (state.catchStreak||0) + '🔥';
-  const caughtCount = Object.keys(state.caughtIds||{}).length;
-  document.getElementById('profileFishCount').textContent = caughtCount + '/' + FISH_LIST.length;
+  document.getElementById('profileStreak').textContent = (state.catchStreak||0);
+
+  const topCoinEl = document.getElementById('profileTopCoin');
+  const topRankEl = document.getElementById('profileTopRank');
+  topCoinEl.textContent = '...';
+  topRankEl.textContent = '...';
   profileOverlayEl.style.display = 'flex';
+
+  computeMyTopRanks().then(r=>{
+    topCoinEl.textContent = (currentUser && r.coinPos>0) ? ('#' + r.coinPos + '/' + r.coinTotal) : '—';
+    topRankEl.textContent = (currentUser && r.rankPos>0) ? ('#' + r.rankPos + '/' + r.rankTotal) : '—';
+  });
 }
 if(playerNameBtnEl){
   playerNameBtnEl.addEventListener('click', openProfileModal);
@@ -1787,18 +1890,5 @@ function goBack(){
   window.location.href = '/chat';
 }
 </script>
-  <div id="profileOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border:2px solid var(--ink); border-radius:16px; padding:20px; width:min(320px,86vw); text-align:center; position:relative;">
-      <button id="profileCloseBtn" style="position:absolute; top:8px; right:10px; border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
-      <div id="profileAvatar" style="font-size:48px; line-height:1;">👤</div>
-      <div id="profileNickname" style="font-weight:800; font-size:18px; margin-top:6px;"></div>
-      <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px; text-align:left;">
-        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🥇 Rank</span><span id="profileRank" style="font-weight:800;"></span></div>
-        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🪙 Xu</span><span id="profileCoins" style="font-weight:800;"></span></div>
-        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🔥 Chuỗi câu</span><span id="profileStreak" style="font-weight:800;"></span></div>
-        <div style="display:flex; justify-content:space-between; background:#f2f7fb; border-radius:10px; padding:8px 12px;"><span>🐟 Loài cá đã câu</span><span id="profileFishCount" style="font-weight:800;"></span></div>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
