@@ -477,6 +477,13 @@
   .ptbRow{width:100%; display:flex; flex-direction:column; align-items:center; gap:1px;}
   .ptbRow .ptbLabel{font-size:11px; color:#7a5600; font-weight:700;}
   .ptbRow .ptbValue{font-size:15px; font-weight:900; color:var(--gold-dark);}
+  #profileKbBtn{
+    display:none; width:100%; margin-top:12px; padding:11px 10px; border-radius:12px;
+    border:3px solid var(--ink); background:linear-gradient(180deg,#7fe0a0,#3fbf6d); color:#083a1c;
+    font-weight:900; font-size:14px; cursor:pointer; align-items:center; justify-content:center; gap:6px;
+  }
+  #profileKbBtn:active{ transform:translateY(1px); }
+  #profileKbBtn.sent{ background:linear-gradient(180deg,#dfe6ee,#c3cbd6); color:#3a4552; cursor:default; }
 </style>
 </head>
 <body>
@@ -643,6 +650,8 @@
           </div>
         </div>
       </div>
+
+      <button id="profileKbBtn" onclick="window.__sendKbRequest && window.__sendKbRequest()">🤝 Kết bạn</button>
     </div>
   </div>
 
@@ -1786,6 +1795,66 @@ const rankLbRefreshBtn = document.getElementById('rankLbRefreshBtn');
 /* Nút tên người chơi ở header: mở modal Profile */
 const playerNameBtnEl = document.getElementById('playerNameBtn');
 const profileOverlayEl = document.getElementById('profileOverlay');
+const profileKbBtnEl = document.getElementById('profileKbBtn');
+let currentProfileTargetUid = null; // uid của người đang xem hồ sơ (null nếu là hồ sơ của chính mình)
+
+/* Hiện/ẩn nút "Kết bạn" trong hồ sơ tuỳ theo đang xem hồ sơ của ai */
+function updateKbBtnVisibility(){
+  if(!profileKbBtnEl) return;
+  profileKbBtnEl.classList.remove('sent');
+  profileKbBtnEl.textContent = '🤝 Kết bạn';
+  profileKbBtnEl.style.display = currentProfileTargetUid ? 'flex' : 'none';
+}
+
+/* Gửi lời mời kết bạn (kb) tới người đang xem trong hồ sơ, dùng chung dữ liệu Firebase
+   (friends/ và friend_requests/) với hệ thống Nhắn Tin, để 2 người có thể trò chuyện với nhau. */
+function sendKbRequest(){
+  const myId = myChatName();
+  const targetId = currentProfileTargetUid;
+  if(!currentUser || !targetId || targetId === myId) return;
+  profileKbBtnEl.disabled = true;
+  db.ref('friends/' + myId + '/' + targetId).once('value').then(snap=>{
+    if(snap.exists()){
+      toast('Hai bạn đã là bạn bè rồi! 🤝');
+      profileKbBtnEl.classList.add('sent');
+      profileKbBtnEl.textContent = '✅ Đã là bạn bè';
+      profileKbBtnEl.disabled = false;
+      return;
+    }
+    db.ref('friend_requests/' + targetId + '/' + myId).once('value').then(snap2=>{
+      if(snap2.exists()){
+        toast('Đã gửi lời mời kết bạn trước đó rồi!');
+        profileKbBtnEl.classList.add('sent');
+        profileKbBtnEl.textContent = '⏳ Đã gửi lời mời';
+        profileKbBtnEl.disabled = false;
+        return;
+      }
+      db.ref('friend_requests/' + myId + '/' + targetId).once('value').then(snap3=>{
+        if(snap3.exists()){
+          // Người kia đã gửi lời mời trước -> tự động đồng ý kết bạn
+          db.ref('friends/' + myId + '/' + targetId).set(true);
+          db.ref('friends/' + targetId + '/' + myId).set(true);
+          db.ref('friend_requests/' + myId + '/' + targetId).remove();
+          db.ref('friend_requests/' + targetId + '/' + myId).remove();
+          toast('Đã kết bạn thành công! 🤝');
+          profileKbBtnEl.classList.add('sent');
+          profileKbBtnEl.textContent = '✅ Đã là bạn bè';
+        } else {
+          db.ref('friend_requests/' + targetId + '/' + myId).set({ from: myId, ts: Date.now() }).then(()=>{
+            toast('Đã gửi lời mời kết bạn! 🤝');
+            profileKbBtnEl.classList.add('sent');
+            profileKbBtnEl.textContent = '⏳ Đã gửi lời mời';
+          });
+        }
+        profileKbBtnEl.disabled = false;
+      });
+    });
+  }).catch(()=>{
+    toast('Không thể gửi lời mời, thử lại sau.');
+    profileKbBtnEl.disabled = false;
+  });
+}
+window.__sendKbRequest = sendKbRequest;
 /* Tính thứ hạng (top) của một người chơi bất kỳ trong toàn server, theo số xu và theo điểm rank */
 function computeTopRanksForUid(targetUid, fallbackCoins, fallbackRankPoints){
   if(!targetUid){
@@ -1845,6 +1914,8 @@ function openProfileModal(){
   topCoinEl.textContent = '...';
   topRankEl.textContent = '...';
   profileOverlayEl.style.display = 'flex';
+  currentProfileTargetUid = null;
+  updateKbBtnVisibility();
 
   computeMyTopRanks().then(r=>{
     topCoinEl.textContent = (currentUser && r.coinPos>0) ? ('#' + r.coinPos + '/' + r.coinTotal) : '—';
@@ -1901,6 +1972,8 @@ function openOtherProfileModal(senderKey){
   profileOverlayEl.style.display = 'flex';
 
   const isGuest = senderKey.indexOf('Khách#') === 0;
+  currentProfileTargetUid = (currentUser && !isGuest) ? senderKey : null;
+  updateKbBtnVisibility();
 
   fetchChatProfile(senderKey).then(p=>{
     p = p || {};
