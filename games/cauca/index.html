@@ -1076,13 +1076,13 @@ const ACHIEVE_CAT_LABEL = {
 const ACHIEVE_PROGRESS_LABEL = {
   cast:   "Chuỗi hiện tại",
   legend: "Cá Huyền Thoại",
-  coin:   "Xu tích luỹ"
+  coin:   "Xu hiện có"
 };
 
 function achieveProgress(ach){
   if(ach.category==='cast') return state.bestCatchStreak||0;
   if(ach.category==='legend') return state.legendaryDefaultRodCatches||0;
-  if(ach.category==='coin') return state.totalCoinsEarned||0;
+  if(ach.category==='coin') return state.coins||0;
   return 0;
 }
 
