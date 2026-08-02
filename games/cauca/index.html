@@ -383,6 +383,32 @@
   #rankBtn{border:none; cursor:pointer; color:var(--text); font-family:inherit;}
   #rankBtn .ic{font-size:16px;}
 
+  /* ACHIEVEMENTS (gọn: mỗi nhóm 1 hàng, thanh viên nang chia 5 đoạn theo 5 mốc) */
+  #achieveCard{
+    background:var(--panel); border:3px solid var(--ink); border-radius:18px;
+    padding:16px; width:min(340px,86vw); max-height:80vh; overflow-y:auto; position:relative;
+  }
+  .achieveRow{
+    background:var(--panel); border-radius:16px; padding:14px 14px 12px; margin-bottom:12px;
+    border:3px solid var(--ink);
+  }
+  .achieveRowHead{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .achieveRowIcon{font-size:20px;}
+  .achieveRowName{font-weight:800; font-size:14px; color:var(--text);}
+  .achieveSegBar{display:flex; gap:6px; border:3px solid var(--ink); border-radius:20px; background:#fff; padding:5px;}
+  .achieveSeg{flex:1; height:20px; border-radius:20px; background:#e9eef1; transition:background .25s ease;}
+  .achieveSeg.filled{background:linear-gradient(180deg,#ffe08a,var(--gold-dark));}
+  .achieveSeg.claimedSeg{background:linear-gradient(180deg,#8ee8ab,var(--uncommon));}
+  .achieveRowBottom{display:flex; align-items:center; justify-content:space-between; margin-top:9px; gap:10px;}
+  .achieveStreakLabel{font-size:14px; font-weight:800; color:var(--text); white-space:nowrap;}
+  .achieveRewardPill{
+    border:3px solid var(--ink); border-radius:20px; padding:8px 14px; font-weight:900; font-size:13px;
+    white-space:nowrap; flex-shrink:0; background:#e3e9ec; color:#8a99a3;
+  }
+  .achieveRewardPill.ready{background:linear-gradient(180deg,#8ee8ab,var(--uncommon)); color:#04351f; cursor:pointer;}
+  .achieveRewardPill.ready:active{transform:translateY(1px);}
+  .achieveRewardPill.maxed{background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400;}
+
   .rankHead{
     text-align:center; background:var(--panel); border-radius:16px; padding:20px 14px 16px;
     margin-bottom:16px; border:3px solid var(--ink);
@@ -477,6 +503,12 @@
   .ptbRow{width:100%; display:flex; flex-direction:column; align-items:center; gap:1px;}
   .ptbRow .ptbLabel{font-size:11px; color:#7a5600; font-weight:700;}
   .ptbRow .ptbValue{font-size:15px; font-weight:900; color:var(--gold-dark);}
+  #profileAchieveBtn{
+    display:flex; width:100%; margin-top:12px; padding:11px 10px; border-radius:12px;
+    border:3px solid var(--ink); background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400;
+    font-weight:900; font-size:14px; cursor:pointer; align-items:center; justify-content:center; gap:6px;
+  }
+  #profileAchieveBtn:active{ transform:translateY(1px); }
   #profileKbBtn{
     display:none; width:100%; margin-top:12px; padding:11px 10px; border-radius:12px;
     border:3px solid var(--ink); background:linear-gradient(180deg,#7fe0a0,#3fbf6d); color:#083a1c;
@@ -605,6 +637,16 @@
     </div>
   </div>
 
+  <!-- ACHIEVEMENTS PANEL -->
+  <!-- ACHIEVEMENTS MODAL (nhỏ gọn giữa màn hình, giống hồ sơ, không chiếm toàn màn hình) -->
+  <div id="achieveOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; align-items:center; justify-content:center;">
+    <div id="achieveCard">
+      <button id="achieveCloseBtn" style="position:absolute; top:8px; right:10px; border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+      <div class="phTitle" style="font-size:17px; font-weight:900; margin-bottom:10px;">🏆 Thành Tựu</div>
+      <div id="achieveList"></div>
+    </div>
+  </div>
+
   <!-- WORLD CHAT PANEL (chat chung với người khác) -->
   <div class="panel" id="panel-worldchat">
     <div class="panelHeader">
@@ -651,6 +693,7 @@
         </div>
       </div>
 
+      <button id="profileAchieveBtn">🏆 Thành tựu</button>
       <button id="profileKbBtn" onclick="window.__sendKbRequest && window.__sendKbRequest()">🤝 Kết bạn</button>
     </div>
   </div>
@@ -850,7 +893,11 @@ function getDefaultState(){
     rankMonth: "",         // "YYYY-MM" của lần cập nhật rank gần nhất, dùng để tự reset rank đầu mỗi tháng
     nickname: "",
     avatar: "👤",
-    playerId: Math.floor(1000+Math.random()*8999)
+    playerId: Math.floor(1000+Math.random()*8999),
+    totalCasts: 0,                  // tổng số lần thả câu (dùng cho thành tựu chuỗi câu cá)
+    legendaryDefaultRodCatches: 0,  // số cá Huyền Thoại câu được bằng Cần Tre Tân Thủ (mặc định)
+    totalCoinsEarned: 0,            // tổng xu tích luỹ kiếm được (không giảm khi tiêu xu)
+    achievementsClaimed: {}         // achievementId -> true khi đã nhận thưởng
   };
 }
 let state = getDefaultState();
@@ -864,6 +911,15 @@ function loadLocalState(){
     }
   }catch(e){}
   ensureRodDurability();
+  ensureAchievementFields();
+}
+/* Vá dữ liệu cũ: đảm bảo các trường thống kê dùng cho thành tựu luôn tồn tại
+   (người chơi đã lưu game từ trước khi có tính năng thành tựu) */
+function ensureAchievementFields(){
+  if(typeof state.totalCasts !== 'number') state.totalCasts = 0;
+  if(typeof state.legendaryDefaultRodCatches !== 'number') state.legendaryDefaultRodCatches = 0;
+  if(typeof state.totalCoinsEarned !== 'number') state.totalCoinsEarned = (state.coins||0);
+  if(!state.achievementsClaimed) state.achievementsClaimed = {};
 }
 /* Vá dữ liệu cũ: đảm bảo mỗi cần đang sở hữu đều có độ bền hợp lệ
    (người chơi đã lưu game từ trước khi có tính năng độ bền) */
@@ -985,6 +1041,151 @@ function renderRank(){
     `;
     list.appendChild(row);
   });
+}
+
+/* ============== HỆ THỐNG THÀNH TỰU ============== */
+// 3 nhóm thành tựu, mỗi nhóm 5 mốc, mỗi mốc đạt được sẽ được nhận thưởng xu 1 lần.
+const ACHIEVEMENTS = [
+  // Chuỗi câu cá: đếm theo tổng số lần thả câu
+  {id:"cast_10",  category:"cast", icon:"🔥", name:"Cần Thủ Chăm Chỉ",  desc:"Câu liên tiếp 10 con cá không sổng con nào",  target:10,  reward:50000},
+  {id:"cast_50",  category:"cast", icon:"🔥", name:"Cần Thủ Kiên Trì",  desc:"Câu liên tiếp 50 con cá không sổng con nào",  target:50,  reward:100000},
+  {id:"cast_100", category:"cast", icon:"🔥", name:"Cần Thủ Bền Bỉ",    desc:"Câu liên tiếp 100 con cá không sổng con nào", target:100, reward:500000},
+  {id:"cast_200", category:"cast", icon:"🔥", name:"Cần Thủ Lão Luyện", desc:"Câu liên tiếp 200 con cá không sổng con nào", target:200, reward:1500000},
+  {id:"cast_300", category:"cast", icon:"🔥", name:"Cần Thủ Huyền Thoại", desc:"Câu liên tiếp 300 con cá không sổng con nào", target:300, reward:3000000},
+
+  // Câu cá Huyền Thoại (epic) bằng đúng Cần Tre Tân Thủ (cần mặc định)
+  {id:"legend_1",  category:"legend", icon:"🎣", name:"Vận May Bất Ngờ",  desc:"Câu 1 con cá Huyền Thoại bằng Cần Tre Tân Thủ",  target:1,  reward:100000},
+  {id:"legend_5",  category:"legend", icon:"🎣", name:"Tay Câu Có Nghề",  desc:"Câu 5 con cá Huyền Thoại bằng Cần Tre Tân Thủ",  target:5,  reward:500000},
+  {id:"legend_10", category:"legend", icon:"🎣", name:"Bậc Thầy Câu Cá",  desc:"Câu 10 con cá Huyền Thoại bằng Cần Tre Tân Thủ", target:10, reward:1000000},
+  {id:"legend_15", category:"legend", icon:"🎣", name:"Huyền Thoại Sống", desc:"Câu 15 con cá Huyền Thoại bằng Cần Tre Tân Thủ", target:15, reward:1500000},
+  {id:"legend_20", category:"legend", icon:"🎣", name:"Vua Cần Tre",     desc:"Câu 20 con cá Huyền Thoại bằng Cần Tre Tân Thủ", target:20, reward:2000000},
+
+  // Tích luỹ xu (tổng xu kiếm được, không giảm khi tiêu xu)
+  {id:"coin_500k", category:"coin", icon:"💰", name:"Bắt Đầu Khấm Khá", desc:"Tích luỹ 500.000 xu",     target:500000,    reward:50000},
+  {id:"coin_1m",   category:"coin", icon:"💰", name:"Triệu Phú Câu Cá", desc:"Tích luỹ 1.000.000 xu",   target:1000000,   reward:100000},
+  {id:"coin_10m",  category:"coin", icon:"💰", name:"Đại Gia Ao Cá",    desc:"Tích luỹ 10.000.000 xu",  target:10000000,  reward:2000000},
+  {id:"coin_50m",  category:"coin", icon:"💰", name:"Tỷ Phú Nhí",      desc:"Tích luỹ 50.000.000 xu",  target:50000000,  reward:5000000},
+  {id:"coin_100m", category:"coin", icon:"💰", name:"Vua Xu",           desc:"Tích luỹ 100.000.000 xu", target:100000000, reward:7000000}
+];
+const ACHIEVE_CAT_LABEL = {
+  cast:   "🔥 Không Trượt Phát Nào ",
+  legend: "🎣 Huyền Thoại Cần Tre",
+  coin:   "💰 Phú Nhị Đại"
+};
+// Nhãn hiển thị trước số tiến trình, ví dụ "Chuỗi hiện tại: 7/100"
+const ACHIEVE_PROGRESS_LABEL = {
+  cast:   "Chuỗi hiện tại",
+  legend: "Cá Huyền Thoại",
+  coin:   "Xu tích luỹ"
+};
+
+function achieveProgress(ach){
+  if(ach.category==='cast') return state.bestCatchStreak||0;
+  if(ach.category==='legend') return state.legendaryDefaultRodCatches||0;
+  if(ach.category==='coin') return state.totalCoinsEarned||0;
+  return 0;
+}
+
+// Đếm số thành tựu đã đủ điều kiện nhưng chưa nhận thưởng, hiện lên chấm đỏ trên nút 🏆
+function countClaimableAchievements(){
+  if(!state.achievementsClaimed) state.achievementsClaimed = {};
+  return ACHIEVEMENTS.filter(a => achieveProgress(a) >= a.target && !state.achievementsClaimed[a.id]).length;
+}
+function updateAchieveBadge(){
+  const badge = document.getElementById('achieveBadge');
+  if(!badge) return;
+  const n = countClaimableAchievements();
+  if(n > 0){
+    badge.textContent = n>9 ? '9+' : String(n);
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+// Nhóm danh sách thành tựu theo category, giữ đúng thứ tự 5 mốc trong mỗi nhóm
+function achieveGroupsByCategory(){
+  const order = [];
+  const map = {};
+  ACHIEVEMENTS.forEach(a=>{
+    if(!map[a.category]){ map[a.category] = []; order.push(a.category); }
+    map[a.category].push(a);
+  });
+  return order.map(cat => ({ category: cat, items: map[cat] }));
+}
+
+function renderAchievements(){
+  const wrap = document.getElementById('achieveList');
+  wrap.innerHTML = '';
+  if(!state.achievementsClaimed) state.achievementsClaimed = {};
+
+  achieveGroupsByCategory().forEach(group=>{
+    const items = group.items;
+    const progress = achieveProgress(items[0]);
+
+    // mốc tiếp theo chưa đạt (để hiện "x/y"); nếu đã đạt hết thì lấy mốc cuối làm mẫu số
+    const nextUnreached = items.find(a => progress < a.target);
+    const targetForLabel = nextUnreached ? nextUnreached.target : items[items.length-1].target;
+
+    // thành tựu đầu tiên đã đủ điều kiện nhưng chưa nhận thưởng -> hiện nút nhận
+    const claimable = items.find(a => progress >= a.target && !state.achievementsClaimed[a.id]);
+    const allClaimed = items.every(a => state.achievementsClaimed[a.id]);
+
+    const segsHtml = items.map(a=>{
+      const claimed = !!state.achievementsClaimed[a.id];
+      const filled = progress >= a.target;
+      const cls = claimed ? 'achieveSeg claimedSeg' : (filled ? 'achieveSeg filled' : 'achieveSeg');
+      return `<div class="${cls}" title="${escapeHtml(a.name)}"></div>`;
+    }).join('');
+
+    let pillHtml;
+    if(allClaimed){
+      pillHtml = `<div class="achieveRewardPill maxed">✅ Đã đủ</div>`;
+    } else if(claimable){
+      pillHtml = `<button class="achieveRewardPill ready" data-claim="${claimable.id}">+${claimable.reward.toLocaleString('vi-VN')} 🪙</button>`;
+    } else {
+      const next = nextUnreached || items[items.length-1];
+      pillHtml = `<div class="achieveRewardPill">+${next.reward.toLocaleString('vi-VN')} 🪙</div>`;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'achieveRow';
+    row.innerHTML = `
+      <div class="achieveRowHead">
+        <span class="achieveRowIcon">${items[0].icon}</span>
+        <span class="achieveRowName">${ACHIEVE_CAT_LABEL[group.category] || group.category}</span>
+      </div>
+      <div class="achieveSegBar">${segsHtml}</div>
+      <div class="achieveRowBottom">
+        <div class="achieveStreakLabel">${ACHIEVE_PROGRESS_LABEL[group.category]||''}: ${Math.min(progress,targetForLabel).toLocaleString('vi-VN')} / ${targetForLabel.toLocaleString('vi-VN')}</div>
+        ${pillHtml}
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+
+  wrap.querySelectorAll('[data-claim]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.getAttribute('data-claim');
+      claimAchievement(id);
+    });
+  });
+}
+
+function claimAchievement(id){
+  const ach = ACHIEVEMENTS.find(a=>a.id===id);
+  if(!ach) return;
+  if(!state.achievementsClaimed) state.achievementsClaimed = {};
+  if(state.achievementsClaimed[id]) return;
+  if(achieveProgress(ach) < ach.target) return;
+  state.achievementsClaimed[id] = true;
+  addCoins(ach.reward);
+  saveState();
+  updateHeader();
+  renderAchievements();
+  updateAchieveBadge();
+  SoundEngine.sfx.click();
+  toast(`🏆 Đã nhận thành tựu "${ach.name}"! +${ach.reward.toLocaleString('vi-VN')} xu`);
 }
 
 /* ============== BẢNG XẾP HẠNG RANK (toàn server, đọc trực tiếp từ Firebase) ============== */
@@ -1560,6 +1761,11 @@ function landFish(){
   state.catchStreak = (state.catchStreak||0) + 1;
   if(!state.bestCatchStreak || state.catchStreak > state.bestCatchStreak) state.bestCatchStreak = state.catchStreak;
 
+  // Thành tựu: câu được cá Huyền Thoại (epic) bằng đúng Cần Tre Tân Thủ (cần mặc định)
+  if(fish.rarity==='epic' && state.equippedRod==='tre'){
+    state.legendaryDefaultRodCatches = (state.legendaryDefaultRodCatches||0) + 1;
+  }
+
   // Cộng điểm rank theo độ hiếm và kiểm tra thăng hạng
   const oldRankIdx = getRankIndex(state.rankPoints||0);
   const rankPts = RARITY_RANK_POINTS[fish.rarity] || 2;
@@ -1570,8 +1776,17 @@ function landFish(){
   saveState();
   updateHeader();
   useRodDurability();
+  updateAchieveBadge();
   SoundEngine.sfx.catchFish(fish.rarity);
   showCatchPopup(fish, weight, rankPts, rankedUp ? RANKS[newRankIdx] : null);
+}
+
+/* Cộng xu cho người chơi, đồng thời cộng dồn vào tổng xu tích luỹ (dùng để tính thành tựu).
+   Tổng tích luỹ này KHÔNG giảm khi tiêu xu, chỉ tăng lên mỗi khi có xu mới. */
+function addCoins(amount){
+  if(!amount) return;
+  state.coins += amount;
+  state.totalCoinsEarned = (state.totalCoinsEarned||0) + amount;
 }
 
 function generateWeight(rarity){
@@ -1741,11 +1956,12 @@ function renderInventory(){
       const b = rodBonus();
       let value = fish.price*qty;
       if(b.sellBonus) value = Math.round(value*(1+b.sellBonus));
-      state.coins += value;
+      addCoins(value);
       delete state.inventory[id];
       saveState();
       updateHeader();
       renderInventory();
+      updateAchieveBadge();
       toast(`Đã bán ${fish.name}, nhận ${value.toLocaleString('vi-VN')} xu!`);
     });
   });
@@ -1757,11 +1973,12 @@ function renderInventory(){
     const b = rodBonus();
     let value = totalValue;
     if(b.sellBonus) value = Math.round(value*(1+b.sellBonus));
-    state.coins += value;
+    addCoins(value);
     state.inventory = {};
     saveState();
     updateHeader();
     renderInventory();
+    updateAchieveBadge();
     toast(`Đã bán cá, nhận ${value.toLocaleString('vi-VN')} xu!`);
   });
   wrap.appendChild(sellBtn);
@@ -1930,6 +2147,8 @@ function openProfileModal(){
   profileOverlayEl.style.display = 'flex';
   currentProfileTargetUid = null;
   updateKbBtnVisibility();
+  const profileAchieveBtnEl0 = document.getElementById('profileAchieveBtn');
+  if(profileAchieveBtnEl0) profileAchieveBtnEl0.style.display = 'flex';
 
   computeMyTopRanks().then(r=>{
     topCoinEl.textContent = (currentUser && r.coinPos>0) ? ('#' + r.coinPos + '/' + r.coinTotal) : '—';
@@ -1967,6 +2186,9 @@ function openOtherProfileModal(senderKey){
 
   SoundEngine.unlock();
   SoundEngine.sfx.open();
+
+  const profileAchieveBtnEl1 = document.getElementById('profileAchieveBtn');
+  if(profileAchieveBtnEl1) profileAchieveBtnEl1.style.display = 'none';
 
   const avatarEl = document.getElementById('profileAvatar');
   const nicknameEl = document.getElementById('profileNickname');
@@ -2035,6 +2257,23 @@ const profileCloseBtnEl = document.getElementById('profileCloseBtn');
 if(profileCloseBtnEl){
   profileCloseBtnEl.addEventListener('click', ()=>{ SoundEngine.sfx.click(); profileOverlayEl.style.display='none'; });
 }
+const profileAchieveBtnEl = document.getElementById('profileAchieveBtn');
+const achieveOverlayEl = document.getElementById('achieveOverlay');
+if(profileAchieveBtnEl){
+  profileAchieveBtnEl.addEventListener('click', ()=>{
+    SoundEngine.sfx.click();
+    profileOverlayEl.style.display = 'none';
+    renderAchievements();
+    if(achieveOverlayEl) achieveOverlayEl.style.display = 'flex';
+  });
+}
+const achieveCloseBtnEl = document.getElementById('achieveCloseBtn');
+if(achieveCloseBtnEl){
+  achieveCloseBtnEl.addEventListener('click', ()=>{ SoundEngine.sfx.click(); achieveOverlayEl.style.display='none'; });
+}
+if(achieveOverlayEl){
+  achieveOverlayEl.addEventListener('click', (e)=>{ if(e.target===achieveOverlayEl) achieveOverlayEl.style.display='none'; });
+}
 if(profileOverlayEl){
   profileOverlayEl.addEventListener('click', (e)=>{ if(e.target===profileOverlayEl) profileOverlayEl.style.display='none'; });
 }
@@ -2071,6 +2310,7 @@ document.querySelectorAll('.closeBtn[data-close]').forEach(btn=>{
 /* ============== INIT ============== */
 updateHeader();
 resetVisual();
+updateAchieveBadge();
 
 })();
 
