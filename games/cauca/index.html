@@ -1587,6 +1587,176 @@ function handleNoituAnswer(raw){
   return true;
 }
 
+/* ============== BOT VUA TIẾNG VIỆT (xáo trộn từ, chơi ngay trong chat chung) ==============
+   Gõ lệnh /botvtv trong chat chung để bot lấy 1 từ trong kho từ (dùng chung
+   NOITU_WORDS ở trên) rồi xáo trộn thứ tự các tiếng và thứ tự chữ cái trong
+   từng tiếng. Ai gõ lại đúng từ gốc (không dấu cách/khoảng trắng thừa,
+   không phân biệt hoa thường) nhanh nhất sẽ được cộng ngay 6.000 xu vào
+   game. Đồng bộ qua Firebase (node "vtvGame") để mọi người trong chat
+   chung cùng chơi 1 câu như nhau, dùng transaction để đảm bảo chỉ 1 người
+   thắng dù nhiều người cùng gõ đáp án cùng lúc. */
+const VTV_ROUND_MS = 30000; // 30 giây mỗi câu
+const VTV_REWARD = 6000;
+const VTV_MIN_PLAYERS = 3;
+
+function vtvNormalize(str){
+  return String(str||"").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function vtvShuffleArray(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* Xáo trộn 1 từ: tách thành các tiếng, xáo trộn thứ tự chữ cái bên trong
+   từng tiếng, rồi xáo trộn luôn thứ tự các tiếng (nếu từ có từ 2 tiếng trở
+   lên), để tăng độ khó thay vì chỉ đảo thứ tự tiếng. Đảm bảo kết quả xáo
+   trộn khác với từ gốc (thử lại tối đa vài lần cho các từ ngắn/đơn giản). */
+function vtvScrambleWord(word){
+  const syllables = word.trim().split(" ");
+  const scrambleSyllable = (s)=>{
+    const chars = vtvShuffleArray(s.split(""));
+    return chars.join("");
+  };
+  let attempt = 0;
+  let result;
+  do{
+    const scrambledSyllables = syllables.map(scrambleSyllable);
+    const ordered = syllables.length > 1 ? vtvShuffleArray(scrambledSyllables) : scrambledSyllables;
+    result = ordered.join(" ");
+    attempt++;
+  } while(result.toLowerCase() === word.toLowerCase() && attempt < 8);
+  return result;
+}
+
+function pickVtvWord(){
+  return NOITU_WORDS[Math.floor(Math.random()*NOITU_WORDS.length)];
+}
+
+const vtvGameRef = db.ref("vtvGame");
+let vtvState = null;
+let vtvScheduledRoundId = null;
+let vtvEnabled = true; // do admin bật/tắt qua trang quản trị (node "vtvConfig/enabled")
+db.ref("vtvConfig/enabled").on("value", (snap)=>{
+  const v = snap.val();
+  vtvEnabled = (v !== false);
+}, ()=>{});
+
+function vtvDisplayName(uidKey){
+  return fetchChatProfile(uidKey).then(p => (p && p.displayName) ? p.displayName : uidKey);
+}
+
+function postVtvSysMsg(text, extra){
+  db.ref("chats/" + WORLD_CHAT_ROOM).push(Object.assign({ sys:true, t:text, ts:Date.now() }, extra||{})).catch(()=>{});
+}
+
+function scheduleVtvExpiry(roundId, deadline){
+  const wait = Math.max(0, (deadline||0) - Date.now() + 400); // +400ms đệm cho lệch giờ giữa các máy
+  setTimeout(()=>{ tryExpireVtvRound(roundId); }, wait);
+}
+
+/* Hết 30s mà chưa ai đoán đúng -> bất kỳ máy nào cũng có thể "đóng" câu lại,
+   nhưng transaction đảm bảo chỉ máy đầu tiên chạy tới mới thực sự đổi được
+   trạng thái (và cũng chỉ máy đó mới đăng tin "hết giờ" để tránh lặp tin). */
+function tryExpireVtvRound(roundId){
+  vtvGameRef.transaction(cur=>{
+    if(!cur || !cur.active || cur.roundId !== roundId) return; // đã được xử lý rồi, bỏ qua
+    return Object.assign({}, cur, { active:false });
+  }, (err, committed, snap)=>{
+    if(err || !committed) return;
+    const val = snap.val();
+    if(val) postVtvSysMsg(`⏰ Hết giờ rồi! Chưa ai đoán đúng từ "${val.word}" (đã xáo: "${val.scrambled}"). Gõ /botvtv để chơi câu mới nhé!`, {vtv:true});
+  });
+}
+
+vtvGameRef.on("value", (snap)=>{
+  const val = snap.val();
+  vtvState = val;
+  updateVtvChatLock();
+  if(val && val.active && val.deadline && vtvScheduledRoundId !== val.roundId){
+    vtvScheduledRoundId = val.roundId;
+    scheduleVtvExpiry(val.roundId, val.deadline);
+  }
+}, ()=>{});
+
+function updateVtvChatLock(){
+  // Bot Vua Tiếng Việt không khoá ô chat khi đang chờ câu đố (khác bot nối
+  // từ), người chơi vẫn có thể trò chuyện bình thường trong lúc đoán từ.
+}
+
+/* Gõ "/botvtv" -> mở câu mới nếu hiện không có câu nào đang chờ người đoán.
+   Nếu admin đã tắt bot trong trang quản trị thì báo "bot hết tiền" trong chat. */
+function handleVtvCommand(raw){
+  if(vtvNormalize(raw) !== "/botvtv") return false;
+  if(!vtvEnabled){
+    postVtvSysMsg("🤖 Bot Vua Tiếng Việt hiện đã hết tiền, không thể mở câu mới. Hẹn mọi người dịp khác nhé!", {vtv:true});
+    return true;
+  }
+  startVtvRound();
+  return true;
+}
+
+function startVtvRound(){
+  vtvGameRef.transaction(cur=>{
+    if(cur && cur.active) return; // đang có câu chưa xong -> huỷ, không ghi đè
+    const word = pickVtvWord();
+    const scrambled = vtvScrambleWord(word);
+    const now = Date.now();
+    return {
+      active:true,
+      solved:false,
+      word: word,
+      scrambled: scrambled,
+      startedAt: now,
+      deadline: now + VTV_ROUND_MS,
+      roundId: (cur && cur.roundId ? cur.roundId : 0) + 1,
+      startedBy: myChatName()
+    };
+  }, (err, committed, snap)=>{
+    if(err){ toast("Có lỗi xảy ra, thử lại nhé!"); return; }
+    if(!committed){ toast("⏳ Đang có 1 câu chưa ai đoán được, đợi câu này xong đã nhé!"); return; }
+    const val = snap.val();
+    if(!val) return;
+    postVtvSysMsg(`🤖 BOT VUA TIẾNG VIỆT: Sắp xếp lại từ sau cho đúng — "${val.scrambled}". Ai gõ đúng nhanh nhất trong 30 giây sẽ nhận ngay ${VTV_REWARD.toLocaleString('vi-VN')} 🪙!`, {vtv:true});
+    scheduleVtvExpiry(val.roundId, val.deadline);
+  });
+}
+
+/* Kiểm tra 1 tin nhắn có phải là đáp án đúng của câu đố xáo trộn từ đang
+   diễn ra không (so khớp với từ gốc, không phân biệt hoa thường / khoảng
+   trắng thừa). Nếu đúng thì tranh chấp thắng thua bằng transaction, không
+   gửi tin nhắn này như chat thường. */
+function handleVtvAnswer(raw){
+  const cur = vtvState;
+  if(!vtvEnabled) return false;
+  if(!cur || !cur.active) return false;
+  const answer = vtvNormalize(raw);
+  if(answer !== vtvNormalize(cur.word)) return false;
+
+  const roundId = cur.roundId;
+  const me = myChatName();
+  vtvGameRef.transaction(c=>{
+    if(!c || !c.active || c.solved || c.roundId !== roundId) return; // câu đã kết thúc / đổi câu khác -> huỷ
+    return Object.assign({}, c, { active:false, solved:true, winner:me });
+  }, (err, committed, snap)=>{
+    if(err) return;
+    if(committed && snap.val() && snap.val().winner === me){
+      addCoins(VTV_REWARD);
+      saveState();
+      updateHeader();
+      toast(`🎉 Bạn đoán đúng và nhận ${VTV_REWARD.toLocaleString('vi-VN')} 🪙!`);
+      vtvDisplayName(me).then(name=>{
+        postVtvSysMsg(`🏆 ${name} đã đoán đúng "${cur.word}" và nhận ${VTV_REWARD.toLocaleString('vi-VN')} 🪙! Gõ /botvtv để chơi câu tiếp theo nhé!`, {vtvWin:true});
+      });
+    }
+  });
+  return true;
+}
+
 /* ============== WORLD CHAT (bong bóng chat chung với người khác) ============== */
 const WORLD_CHAT_ROOM = 'world_fishing'; // phòng chat chung, dùng chung Firebase với hệ thống Chat
 const chatUnreadBadge = document.getElementById('chatUnreadBadge');
@@ -1718,6 +1888,8 @@ function sendWorldChat(){
   worldChatInput.value = '';
   if(handleNoituCommand(val)) return;
   if(handleNoituAnswer(val)) return;
+  if(handleVtvCommand(val)) return;
+  if(handleVtvAnswer(val)) return;
   db.ref('chats/' + WORLD_CHAT_ROOM).push({ s: myChatName(), t: val, ts: Date.now() }).catch(()=>{
     toast('Không gửi được tin nhắn, kiểm tra mạng!');
   });
