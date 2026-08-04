@@ -1452,17 +1452,26 @@ function handleNoituCommand(raw){
     postNoituSysMsg("🤖 Bot Nối từ hiện đã hết tiền, không thể mở ván mới. Hẹn mọi người dịp khác nhé!", {noitu:true});
     return true;
   }
+  startNoituRound();
+  return true;
+}
+
+const NOITU_MIN_PLAYERS = 3;
+
+function startNoituRound(){
   noituGameRef.transaction(cur=>{
-    if(cur && (cur.active || cur.pending)) return; // đang có ván chưa xong hoặc đang đếm ngược -> huỷ, không ghi đè
+    if(cur && (cur.active || cur.pending || cur.waiting)) return; // đang có ván chưa xong / đang chờ đủ người / đang đếm ngược -> huỷ, không ghi đè
     const word = pickNoituWord();
     const now = Date.now();
     return {
       active:false,
-      pending:true,
+      pending:false,
+      waiting:true,
       solved:false,
       word: word,
       lastSyllable: noituLastSyllable(word),
-      revealAt: now + NOITU_REVEAL_DELAY_MS,
+      chatters: {},
+      calledAt: now,
       roundId: (cur && cur.roundId ? cur.roundId : 0) + 1,
       startedBy: myChatName()
     };
@@ -1471,10 +1480,54 @@ function handleNoituCommand(raw){
     if(!committed){ toast("⏳ Đang có 1 từ chưa ai nối được, đợi ván này xong đã nhé!"); return; }
     const val = snap.val();
     if(!val) return;
-    postNoituSysMsg("🤖 Bot Nối từ đang nghĩ từ... hiện ra sau 5 giây nữa nhé! ⏳", {noitu:true});
-    scheduleNoituReveal(val.roundId, val.revealAt);
+    postNoituSysMsg(`🤖 Bot Nối từ đã sẵn sàng! Cần thêm ít nhất ${NOITU_MIN_PLAYERS} người chat trong chat chung thì bot mới đưa từ ra nhé.`, {noitu:true});
   });
-  return true;
+}
+
+/* Mỗi khi có ai gửi 1 tin nhắn chat thường trong lúc ván đang ở trạng thái
+   "waiting" (chờ đủ người), ghi nhận người đó vào danh sách đã chat của
+   ván này. Khi đủ số người khác nhau yêu cầu thì tự chuyển sang đếm ngược
+   5 giây rồi hiện từ. Dùng transaction để tránh nhiều máy cùng lúc kích
+   hoạt trùng ván. */
+function noteNoituChatter(sender){
+  const cur = noituState;
+  if(!cur || !cur.waiting || cur.pending || cur.active) return;
+  if(cur.chatters && cur.chatters[sender]) return; // đã tính người này rồi, khỏi ghi lại
+  const roundId = cur.roundId;
+  noituGameRef.transaction(c=>{
+    if(!c || !c.waiting || c.pending || c.active || c.roundId !== roundId) return; // ván đã đổi trạng thái -> bỏ qua
+    const chatters = Object.assign({}, c.chatters || {});
+    chatters[sender] = true;
+    const enough = Object.keys(chatters).length >= NOITU_MIN_PLAYERS;
+    if(enough){
+      const now = Date.now();
+      return Object.assign({}, c, { chatters:chatters, waiting:false, pending:true, revealAt: now + NOITU_REVEAL_DELAY_MS });
+    }
+    return Object.assign({}, c, { chatters:chatters });
+  }, (err, committed, snap)=>{
+    if(err || !committed) return;
+    const val = snap.val();
+    if(val && val.pending && noituScheduledRevealId !== val.roundId){
+      postNoituSysMsg("🤖 Đã đủ người rồi! Bot đang nghĩ từ... hiện ra sau 5 giây nữa nhé! ⏳", {noitu:true});
+      noituScheduledRevealId = val.roundId;
+      scheduleNoituReveal(val.roundId, val.revealAt);
+    }
+  });
+}
+
+/* Đếm số tài khoản khác nhau đã gửi tin nhắn (không tính tin của bot) trong
+   chat chung gần đây, để yêu cầu đủ ít nhất 3 người từng chat mới cho mở
+   ván nối từ, thay vì phải đếm người đang online. */
+function countNoituRecentChatters(){
+  return db.ref('chats/' + WORLD_CHAT_ROOM).limitToLast(60).once('value').then(snap=>{
+    const val = snap.val() || {};
+    const senders = new Set();
+    Object.keys(val).forEach(key=>{
+      const m = val[key];
+      if(m && !m.sys && m.s) senders.add(m.s);
+    });
+    return senders.size;
+  }).catch(()=> NOITU_MIN_PLAYERS); // nếu lỗi đọc chat thì không chặn người chơi, cho mở ván bình thường
 }
 
 /* Sau 5 giây đếm ngược, "mở khoá" ván để bắt đầu tính 30 giây cho người
@@ -1668,6 +1721,7 @@ function sendWorldChat(){
   db.ref('chats/' + WORLD_CHAT_ROOM).push({ s: myChatName(), t: val, ts: Date.now() }).catch(()=>{
     toast('Không gửi được tin nhắn, kiểm tra mạng!');
   });
+  noteNoituChatter(myChatName());
 }
 worldChatSendBtn.addEventListener('click', sendWorldChat);
 
