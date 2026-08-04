@@ -344,6 +344,8 @@
     padding:10px 16px; color:#111; font-size:14px; font-weight:600; outline:none;
   }
   #chatInputBar input::placeholder{color:#888;}
+  #chatInputBar input:disabled{background:#eee; color:#999; cursor:not-allowed;}
+  #chatInputBar button:disabled{opacity:.5; cursor:not-allowed;}
   #chatInputBar button{
     background:#ffcd3c; color:#1a1200; border:3px solid #111; border-radius:50%; width:44px; height:44px;
     font-size:18px; flex-shrink:0; box-shadow:0 3px 0 #a5720a; cursor:pointer;
@@ -1420,6 +1422,7 @@ function tryExpireNoituRound(roundId){
 noituGameRef.on("value", (snap)=>{
   const val = snap.val();
   noituState = val;
+  updateNoituChatLock();
   if(val && val.pending && val.revealAt && noituScheduledRevealId !== val.roundId){
     noituScheduledRevealId = val.roundId;
     scheduleNoituReveal(val.roundId, val.revealAt);
@@ -1429,6 +1432,17 @@ noituGameRef.on("value", (snap)=>{
     scheduleNoituExpiry(val.roundId, val.deadline);
   }
 }, ()=>{});
+
+function updateNoituChatLock(){
+  const locked = !!(noituState && noituState.pending);
+  const input = document.getElementById('worldChatInput');
+  const btn = document.getElementById('worldChatSendBtn');
+  if(input){
+    input.disabled = locked;
+    input.placeholder = locked ? 'Bot đang nghĩ từ... chờ chút nhé!' : 'Nhắn gì đó cho mọi người...';
+  }
+  if(btn) btn.disabled = locked;
+}
 
 /* Gõ "/botnoitu" -> mở ván mới nếu hiện không có ván nào đang chờ người nối.
    Nếu admin đã tắt bot trong trang quản trị thì báo "bot hết tiền" trong chat. */
@@ -1644,6 +1658,10 @@ chatMessagesEl.addEventListener('click', (e)=>{
 function sendWorldChat(){
   const val = worldChatInput.value.trim();
   if(!val) return;
+  if(noituState && noituState.pending){
+    toast('⏳ Bot đang nghĩ từ, chờ 5 giây nữa nhé!');
+    return;
+  }
   worldChatInput.value = '';
   if(handleNoituCommand(val)) return;
   if(handleNoituAnswer(val)) return;
