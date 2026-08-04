@@ -1484,12 +1484,13 @@ function startNoituRound(){
   });
 }
 
-/* Mỗi khi có ai gửi 1 tin nhắn chat thường trong lúc ván đang ở trạng thái
-   "waiting" (chờ đủ người), ghi nhận người đó vào danh sách đã chat của
+/* Mỗi khi có ai gửi đúng tin nhắn "ss" trong lúc ván đang ở trạng thái
+   "waiting" (chờ đủ người), ghi nhận người đó vào danh sách đã gõ "ss" của
    ván này. Khi đủ số người khác nhau yêu cầu thì tự chuyển sang đếm ngược
    5 giây rồi hiện từ. Dùng transaction để tránh nhiều máy cùng lúc kích
    hoạt trùng ván. */
-function noteNoituChatter(sender){
+function noteNoituChatter(sender, raw){
+  if(noituNormalize(raw) !== "ss") return;
   const cur = noituState;
   if(!cur || !cur.waiting || cur.pending || cur.active) return;
   if(cur.chatters && cur.chatters[sender]) return; // đã tính người này rồi, khỏi ghi lại
@@ -1721,7 +1722,7 @@ function sendWorldChat(){
   db.ref('chats/' + WORLD_CHAT_ROOM).push({ s: myChatName(), t: val, ts: Date.now() }).catch(()=>{
     toast('Không gửi được tin nhắn, kiểm tra mạng!');
   });
-  noteNoituChatter(myChatName());
+  noteNoituChatter(myChatName(), val);
 }
 worldChatSendBtn.addEventListener('click', sendWorldChat);
 
