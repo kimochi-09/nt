@@ -133,6 +133,22 @@
   <!-- CHAT -->
   <div class="panelBox" id="tab-chat">
     <h2>Quản lý chat</h2>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700; font-size:14px;">Bật/tắt bot Nối từ (lệnh /botnoitu)</div>
+        <div class="smallDim" id="noituStatusText" style="margin-top:3px;">Đang tải...</div>
+      </div>
+      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="smallDim" id="noituToggleLabel">—</span>
+        <span style="position:relative; width:46px; height:26px; display:inline-block;">
+          <input type="checkbox" id="noituToggle" style="opacity:0; width:0; height:0;">
+          <span id="noituToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
+          <span id="noituToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
+        </span>
+      </label>
+    </div>
+
     <div class="toolbar">
       <span class="smallDim">Tin nhắn được lưu lại cho đến khi bạn xoá thủ công.</span>
       <button class="btn btnDanger rowBtn" id="clearAllChatBtn" style="margin-left:auto;">🗑 Xoá toàn bộ chat</button>
@@ -894,6 +910,40 @@ document.getElementById('rodsBody').addEventListener('click', async (e)=>{
     await db.ref('rodConfig/durability/'+rodId).set(val);
     toast('Đã lưu độ bền — đồng bộ cho tất cả người chơi.');
   }catch(err){ toast('Lưu thất bại.'); }
+});
+
+function renderNoituToggle(){
+  const enabled = noituConfigCache.enabled !== false;
+  const toggle = document.getElementById('noituToggle');
+  const track = document.getElementById('noituToggleTrack');
+  const dot = document.getElementById('noituToggleDot');
+  const label = document.getElementById('noituToggleLabel');
+  const statusText = document.getElementById('noituStatusText');
+  toggle.checked = enabled;
+  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
+  dot.style.left = enabled ? '23px' : '3px';
+  label.textContent = enabled ? 'Đang BẬT' : 'Đang TẮT';
+  statusText.textContent = enabled
+    ? 'Người chơi gõ /botnoitu trong chat chung để chơi nối từ bình thường.'
+    : 'Đã TẮT — gõ /botnoitu sẽ không mở ván mới, bot báo hết tiền trong chat.';
+}
+
+let noituConfigCache = { enabled:true };
+db.ref('noituConfig').on('value', (snap)=>{
+  const val = snap.val() || {};
+  noituConfigCache = { enabled: val.enabled !== false };
+  renderNoituToggle();
+}, (err)=>showError('Không tải được cấu hình bot Nối từ (noituConfig)', err));
+
+document.getElementById('noituToggle').addEventListener('change', async (e)=>{
+  const enabled = e.target.checked;
+  try{
+    await db.ref('noituConfig/enabled').set(enabled);
+    toast(enabled ? 'Đã BẬT bot Nối từ.' : 'Đã TẮT bot Nối từ — bot sẽ báo hết tiền khi ai gõ /botnoitu.');
+  }catch(err){
+    toast('Thao tác thất bại.');
+    renderNoituToggle();
+  }
 });
 
 function escapeHtml(str){
