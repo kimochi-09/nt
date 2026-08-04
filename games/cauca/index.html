@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🎣 Câu </title>
+<title>🎣 Câu Cá</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1382,6 +1382,11 @@ function pickNoituWord(){
 const noituGameRef = db.ref("wordChainGame");
 let noituState = null;
 let noituScheduledRoundId = null;
+let noituEnabled = true; // do admin bật/tắt qua trang quản trị (node "noituConfig/enabled")
+db.ref("noituConfig/enabled").on("value", (snap)=>{
+  const v = snap.val();
+  noituEnabled = (v !== false);
+}, ()=>{});
 
 function noituDisplayName(uidKey){
   return fetchChatProfile(uidKey).then(p => (p && p.displayName) ? p.displayName : uidKey);
@@ -1419,9 +1424,14 @@ noituGameRef.on("value", (snap)=>{
   }
 }, ()=>{});
 
-/* Gõ "/botnoitu" -> mở ván mới nếu hiện không có ván nào đang chờ người nối. */
+/* Gõ "/botnoitu" -> mở ván mới nếu hiện không có ván nào đang chờ người nối.
+   Nếu admin đã tắt bot trong trang quản trị thì báo "bot hết tiền" trong chat. */
 function handleNoituCommand(raw){
   if(noituNormalize(raw) !== "/botnoitu") return false;
+  if(!noituEnabled){
+    postNoituSysMsg("🤖 Bot Nối từ hiện đã hết tiền, không thể mở ván mới. Hẹn mọi người dịp khác nhé!", {noitu:true});
+    return true;
+  }
   noituGameRef.transaction(cur=>{
     if(cur && cur.active) return; // đang có ván chưa xong -> huỷ, không ghi đè
     const word = pickNoituWord();
@@ -1453,6 +1463,7 @@ function handleNoituCommand(raw){
    transaction, không gửi tin nhắn này như chat thường. */
 function handleNoituAnswer(raw){
   const cur = noituState;
+  if(!noituEnabled) return false;
   if(!cur || !cur.active) return false;
   const parts = raw.trim().split(/\s+/);
   if(parts.length !== 2) return false;
