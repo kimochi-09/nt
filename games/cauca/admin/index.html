@@ -134,7 +134,8 @@
   <div class="panelBox" id="tab-chat">
     <h2>Quản lý chat</h2>
 
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:16px; flex-wrap:wrap;">
+    <!-- Toggle Bot Nối từ -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:12px; flex-wrap:wrap;">
       <div>
         <div style="font-weight:700; font-size:14px;">Bật/tắt bot Nối từ (lệnh /botnoitu)</div>
         <div class="smallDim" id="noituStatusText" style="margin-top:3px;">Đang tải...</div>
@@ -145,6 +146,22 @@
           <input type="checkbox" id="noituToggle" style="opacity:0; width:0; height:0;">
           <span id="noituToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
           <span id="noituToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
+        </span>
+      </label>
+    </div>
+
+    <!-- Toggle Bot Vua Tiếng Việt -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700; font-size:14px;">Bật/tắt bot Vua Tiếng Việt (lệnh /botvtv)</div>
+        <div class="smallDim" id="vtvStatusText" style="margin-top:3px;">Đang tải...</div>
+      </div>
+      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="smallDim" id="vtvToggleLabel">—</span>
+        <span style="position:relative; width:46px; height:26px; display:inline-block;">
+          <input type="checkbox" id="vtvToggle" style="opacity:0; width:0; height:0;">
+          <span id="vtvToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
+          <span id="vtvToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
         </span>
       </label>
     </div>
@@ -335,10 +352,6 @@ function showError(context, err){
   console.error(context, err);
 }
 
-/* Đăng nhập ẩn danh: không cần nhập gì, chỉ để có quyền đọc/ghi nếu quy tắc
-   bảo mật Firebase yêu cầu "đã đăng nhập". Nếu vẫn không tải được dữ liệu
-   sau bước này, nguyên nhân là do Firebase Rules chặn theo cách khác (ví dụ
-   chỉ cho phép đúng UID sở hữu dữ liệu đọc/ghi), cần chỉnh trong Firebase Console. */
 auth.signInAnonymously().catch((err)=>{
   showError('Không đăng nhập được với Firebase', err);
 });
@@ -581,7 +594,6 @@ function renderFish(){
 document.getElementById('fishSearch').addEventListener('input', renderFish);
 document.getElementById('fishRarityFilter').addEventListener('change', renderFish);
 
-/* Nén/resize ảnh về kích thước nhỏ (tối đa 96x96) trước khi lưu base64 lên Firebase để tránh dữ liệu quá nặng */
 function fileToCompressedDataUrl(file){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -605,7 +617,7 @@ function fileToCompressedDataUrl(file){
   });
 }
 
-let pendingRowImg = {}; // id -> dataUrl đã chọn nhưng chưa lưu
+let pendingRowImg = {}; 
 
 document.getElementById('fishBody').addEventListener('click', async (e)=>{
   const btn = e.target.closest('button');
@@ -646,7 +658,6 @@ document.getElementById('fishBody').addEventListener('change', async (e)=>{
   try{
     const dataUrl = await fileToCompressedDataUrl(input.files[0]);
     const f = fishCache[id] || {};
-    // Lưu thẳng lên Firebase ngay khi chọn ảnh, đồng bộ tức thì cho tất cả người chơi
     await db.ref('fishData/'+id).update({ icon: dataUrl, name: f.name||'', rarity: f.rarity||'common', price: Number(f.price)||0 });
     delete pendingRowImg[id];
     toast('Đã cập nhật ảnh cá — đồng bộ cho tất cả người chơi.');
@@ -724,7 +735,7 @@ function renderMonster(){
 
 document.getElementById('monsterSearch').addEventListener('input', renderMonster);
 
-let pendingMonsterImg = {}; // id -> dataUrl đã chọn nhưng chưa lưu
+let pendingMonsterImg = {}; 
 
 document.getElementById('monsterBody').addEventListener('click', async (e)=>{
   const btn = e.target.closest('button');
@@ -833,7 +844,6 @@ document.getElementById('forceRespawnBtn').addEventListener('click', async ()=>{
 });
 
 /* ---- CẦN CÂU (RODS) — độ bền & bật/tắt hao mòn ---- */
-// Danh sách cần câu phải khớp với mảng RODS trong file game (index.html)
 const ROD_META = [
   {id:"tre", name:"Cần Tre Tân Thủ", icon:"🎋", price:0, defaultDurability:20},
   {id:"thuytinh", name:"Cần Sợi Thủy Tinh", icon:"🪶", price:1000, defaultDurability:25},
@@ -895,7 +905,7 @@ document.getElementById('durabilityToggle').addEventListener('change', async (e)
     toast(enabled ? 'Đã BẬT hao mòn độ bền — đồng bộ cho tất cả người chơi.' : 'Đã TẮT hao mòn độ bền — cần câu dùng vĩnh viễn cho tất cả người chơi.');
   }catch(err){
     toast('Thao tác thất bại.');
-    renderDurabilityToggle(); // revert UI nếu ghi lỗi
+    renderDurabilityToggle(); 
   }
 });
 
@@ -912,6 +922,7 @@ document.getElementById('rodsBody').addEventListener('click', async (e)=>{
   }catch(err){ toast('Lưu thất bại.'); }
 });
 
+/* ---- BOT NỐI TỪ ---- */
 function renderNoituToggle(){
   const enabled = noituConfigCache.enabled !== false;
   const toggle = document.getElementById('noituToggle');
@@ -943,6 +954,41 @@ document.getElementById('noituToggle').addEventListener('change', async (e)=>{
   }catch(err){
     toast('Thao tác thất bại.');
     renderNoituToggle();
+  }
+});
+
+/* ---- BOT VUA TIẾNG VIỆT (/botvtv) ---- */
+function renderVtvToggle(){
+  const enabled = vtvConfigCache.enabled !== false;
+  const toggle = document.getElementById('vtvToggle');
+  const track = document.getElementById('vtvToggleTrack');
+  const dot = document.getElementById('vtvToggleDot');
+  const label = document.getElementById('vtvToggleLabel');
+  const statusText = document.getElementById('vtvStatusText');
+  toggle.checked = enabled;
+  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
+  dot.style.left = enabled ? '23px' : '3px';
+  label.textContent = enabled ? 'Đang BẬT' : 'Đang TẮT';
+  statusText.textContent = enabled
+    ? 'Người chơi gõ /botvtv trong chat chung để chơi Vua Tiếng Việt bình thường.'
+    : 'Đã TẮT — gõ /botvtv sẽ không mở ván mới, bot báo bảo trì/tắt trong chat.';
+}
+
+let vtvConfigCache = { enabled:true };
+db.ref('vtvConfig').on('value', (snap)=>{
+  const val = snap.val() || {};
+  vtvConfigCache = { enabled: val.enabled !== false };
+  renderVtvToggle();
+}, (err)=>showError('Không tải được cấu hình bot Vua Tiếng Việt (vtvConfig)', err));
+
+document.getElementById('vtvToggle').addEventListener('change', async (e)=>{
+  const enabled = e.target.checked;
+  try{
+    await db.ref('vtvConfig/enabled').set(enabled);
+    toast(enabled ? 'Đã BẬT bot Vua Tiếng Việt.' : 'Đã TẮT bot Vua Tiếng Việt — bot sẽ báo tạm dừng khi gõ /botvtv.');
+  }catch(err){
+    toast('Thao tác thất bại.');
+    renderVtvToggle();
   }
 });
 
