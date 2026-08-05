@@ -315,9 +315,9 @@
   @keyframes avfSpin{ from{filter:hue-rotate(0deg);} to{filter:hue-rotate(360deg);} }
   @keyframes avfBounce{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
   @keyframes avfBlackPulse{ from{box-shadow:0 0 0 3px #ffcd3c, 0 0 0 6px #111, 0 0 16px #ffcd3c;} to{box-shadow:0 0 0 4px #ffe08a, 0 0 0 7px #000, 0 0 28px #ffcd3c, 0 0 36px rgba(255,205,60,.8);} }
-  /* Trang trí con vật tinh xảo cho khung cao cấp (pseudo bằng box-shadow + animation) */
-  .av.avf-f7,.av.avf-f8,.av.avf-f9,.av.avf-f10{position:relative;}
-  .av.avf-f7::after,.av.avf-f8::after,.av.avf-f9::after,.av.avf-f10::after{
+  .av.avf-f7,.av.avf-f8,.av.avf-f9,.profileAvatarCircle.avf-f7,.profileAvatarCircle.avf-f8,.profileAvatarCircle.avf-f9{position:relative;}
+  .av.avf-f7::after,.av.avf-f8::after,.av.avf-f9::after,
+  .profileAvatarCircle.avf-f7::after,.profileAvatarCircle.avf-f8::after,.profileAvatarCircle.avf-f9::after{
     content:attr(data-deco); position:absolute; top:-10px; right:-8px; font-size:14px;
     animation:decoFloat 2.2s ease-in-out infinite alternate; pointer-events:none; z-index:2;
   }
@@ -375,6 +375,36 @@
   @keyframes stickerPop{ 0%{transform:scale(1);} 50%{transform:scale(1.25) rotate(-6deg);} 100%{transform:scale(1.15);} }
   @keyframes stickerBounceIn{ 0%{transform:scale(.3) rotate(-12deg); opacity:0;} 100%{transform:scale(1) rotate(0); opacity:1;} }
   @keyframes stickerFloat{ 0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-6px) rotate(2deg);} }
+
+  /* TRADE UI */
+  #tradeOverlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:1000; align-items:center; justify-content:center;}
+  #tradeOverlay.show{display:flex;}
+  #tradeCard{background:var(--panel); border:4px solid var(--ink); border-radius:18px; width:min(360px,92vw); max-height:88vh; overflow-y:auto; padding:14px; position:relative;}
+  .tradeHead{font-size:17px; font-weight:900; margin-bottom:10px; text-align:center;}
+  .tradeCols{display:flex; gap:8px;}
+  .tradeCol{flex:1; background:#f2f7fb; border:3px solid var(--ink); border-radius:12px; padding:8px; min-height:120px;}
+  .tradeColTitle{font-size:12px; font-weight:800; margin-bottom:6px; text-align:center;}
+  .tradeItemChip{display:flex; align-items:center; gap:4px; background:#fff; border:2px solid var(--ink); border-radius:8px; padding:4px 6px; font-size:11.5px; font-weight:700; margin-bottom:4px;}
+  .tradeItemChip .rm{margin-left:auto; background:#ff4757; color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:11px; cursor:pointer;}
+  .tradeActions{display:flex; gap:8px; margin-top:12px;}
+  .tradeActions button{flex:1; border:3px solid var(--ink); border-radius:12px; padding:10px; font-weight:900; font-size:13px; cursor:pointer;}
+  .tradeAccept{background:linear-gradient(180deg,#8ee8ab,var(--uncommon)); color:#04351f;}
+  .tradeCancel{background:#e3e9ec; color:#3a4552;}
+  .tradeCountdown{text-align:center; font-size:22px; font-weight:900; color:var(--gold-dark); margin:10px 0; display:none;}
+  .tradePickBar{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .tradePickBar button{border:2px solid var(--ink); border-radius:10px; padding:6px 8px; font-size:11.5px; font-weight:800; background:#fff; cursor:pointer;}
+  .tradeStatus{text-align:center; font-size:12.5px; font-weight:700; color:var(--text-dim); margin-top:6px;}
+  #profileTradeBtn{
+    display:none; width:100%; margin-top:8px; padding:11px 10px; border-radius:12px;
+    border:3px solid var(--ink); background:linear-gradient(180deg,#a8d8ff,#4fc3f7); color:#0b3a55;
+    font-weight:900; font-size:14px; cursor:pointer; align-items:center; justify-content:center; gap:6px;
+  }
+  #profileTradeBtn:active{transform:translateY(1px);}
+  #profileGiftBtn{
+    display:none; width:100%; margin-top:8px; padding:11px 10px; border-radius:12px;
+    border:3px solid var(--ink); background:linear-gradient(180deg,#ffe08a,var(--gold-dark)); color:#3a2400;
+    font-weight:900; font-size:14px; cursor:pointer; align-items:center; justify-content:center; gap:6px;
+  }
 
   /* SHOP */
   .rodCard{
@@ -905,6 +935,33 @@
 
       <button id="profileAchieveBtn">🏆 Thành tựu</button>
       <button id="profileKbBtn" onclick="window.__sendKbRequest && window.__sendKbRequest()">🤝 Kết bạn</button>
+      <button id="profileTradeBtn" onclick="window.__openTradeWithProfile && window.__openTradeWithProfile()">🔄 Giao dịch</button>
+      <button id="profileGiftBtn" onclick="window.__openGiftMenu && window.__openGiftMenu()">🎁 Tặng quà</button>
+    </div>
+  </div>
+
+  <!-- TRADE OVERLAY -->
+  <div id="tradeOverlay">
+    <div id="tradeCard">
+      <button id="tradeCloseX" style="position:absolute;top:8px;right:10px;border:none;background:none;font-size:20px;cursor:pointer;">✕</button>
+      <div class="tradeHead">🔄 Giao dịch</div>
+      <div class="tradeStatus" id="tradeStatusText">Chọn vật phẩm rồi bấm Chấp nhận</div>
+      <div class="tradeCountdown" id="tradeCountdown">10</div>
+      <div class="tradeCols">
+        <div class="tradeCol">
+          <div class="tradeColTitle" id="tradeMyTitle">Bạn đưa</div>
+          <div id="tradeMyItems"></div>
+        </div>
+        <div class="tradeCol">
+          <div class="tradeColTitle" id="tradeTheirTitle">Đối phương</div>
+          <div id="tradeTheirItems"></div>
+        </div>
+      </div>
+      <div class="tradePickBar" id="tradePickBar"></div>
+      <div class="tradeActions">
+        <button class="tradeAccept" id="tradeAcceptBtn">✓ Chấp nhận</button>
+        <button class="tradeCancel" id="tradeCancelBtn">✕ Hủy</button>
+      </div>
     </div>
   </div>
 
@@ -2057,16 +2114,15 @@ function handleVtvAnswer(raw){
 }
 
 // DATA STICKERS KHUNG AVATAR KHUNG CHAT
-// Bộ stickers động (nhãn dán chuyển động) — giá tăng dần
+// Bộ stickers động kiểu nhãn dán: Mèo Ami bụng bự, Chó Chihuahua, Thỏ bảy màu — biểu cảm khóc/giận/ngủ/cười...
 const STICKER_PACKS = [
-    {id:'sp1', name:'Mèo Ú Pusheen', price:50000, icon:'🐱', stickers:['😽','😿','😾','😸','😹','🐾','💕','💤'], animated:true},
-    {id:'sp2', name:'Mèo Chikawa', price:50000, icon:'🐈', stickers:['🐈','😺','😹','😻','😼','🐾','✨','💖'], animated:true},
-    {id:'sp3', name:'Mèo Ami Bụng Bự', price:100000, icon:'🐱‍👤', stickers:['🐱‍👤','🤣','😂','😆','😁','🤩','😍','🥳'], animated:true},
-    {id:'sp4', name:'Thỏ Bảy Màu', price:150000, icon:'🐰', stickers:['🐰','😢','😭','😊','😄','😡','😤','😴'], animated:true},
-    {id:'sp5', name:'Thỏ Bảy Màu Cao Cấp', price:250000, icon:'🌈', stickers:['🌈','🐰','😿','😽','😾','😸','💕','💤'], animated:true}
+    {id:'sp1', name:'Mèo Ami Bụng Bự', price:50000, icon:'🐱', stickers:['😹','😭','😡','😴','😍','🤣','🥺','😻'], animated:true},
+    {id:'sp2', name:'Chó Chihuahua', price:80000, icon:'🐕', stickers:['🐶','😢','😠','😪','😄','😤','🥰','😅'], animated:true},
+    {id:'sp3', name:'Thỏ Bảy Màu', price:150000, icon:'🐰', stickers:['🐰','😭','😡','😴','😊','😤','😆','😩'], animated:true},
+    {id:'sp4', name:'Mèo Ami Cao Cấp', price:200000, icon:'🐱‍👤', stickers:['🙀','😿','😾','😸','😹','💕','💤','✨'], animated:true},
+    {id:'sp5', name:'Thỏ Bảy Màu VIP', price:250000, icon:'🌈', stickers:['🌈','🐰','😢','😂','😡','😴','🤩','💖'], animated:true}
 ];
-// Khung avatar: 9.000 → 10.000.000 xu (từ bình thường đến rất tinh xảo)
-// Từ ~1.000.000 xu trở lên: ảnh động + con vật trang trí; khung 10M đen, viền đậm, tặng được
+// Khung avatar: 9.000 → 10.000.000 (từ 1.2M có ảnh động + thú trang trí; 10M đen viền đậm, tặng được)
 const AVATAR_FRAMES = [
     {id:'none', cls:'avf-none', name:'Không khung', price:0, icon:'⬜'},
     {id:'f1', cls:'avf-f1', name:'Khung Bạc Nhẹ', price:9000, icon:'⬜'},
@@ -2079,7 +2135,7 @@ const AVATAR_FRAMES = [
     {id:'f8', cls:'avf-f8', name:'Khung Hồng Hồ Ly', price:4367000, icon:'🦊', animated:true, deco:'🦊'},
     {id:'f9', cls:'avf-f9', name:'Khung Đen Rồng Biển', price:10000000, icon:'🐉', animated:true, deco:'🐉', gift:true}
 ];
-// Khung chat: 10.000 → 15.000.000 xu (từ bình thường đến siêu đẹp)
+// Khung chat: 10.000 → 15.000.000
 const CHAT_FRAMES = [
     {id:'none', cls:'cf-none', name:'Không khung', price:0, icon:'⬜'},
     {id:'c1', cls:'cf-c1', name:'Khung Xám Nhẹ', price:10000, icon:'⬜'},
@@ -2111,7 +2167,7 @@ function renderCosmeticShop(){
       const card = document.createElement('div');
       card.className = 'cosCard' + (owned?' owned':'');
       const btnHtml = owned
-        ? `<button class="cosBtn equippedBtn">Đã sở hữu</button>`
+        ? `<button class="cosBtn equippedBtn">Đã sở hữu</button> <button class="cosBtn" data-gift-item="sp:${pack.id}" style="background:#fff;">🎁 Tặng</button>`
         : `<button class="cosBtn ${state.coins>=pack.price?'':'disabled'}" data-buy-sticker="${pack.id}">${pack.price.toLocaleString('vi-VN')} 🪙</button>`;
       card.innerHTML = `
         <div class="cosTitleRow">
@@ -2156,12 +2212,12 @@ function renderCosmeticShop(){
       } else {
         btnHtml = `<button class="cosBtn ${state.coins>=frame.price?'':'disabled'}" data-buy-frame="${frame.id}">${frame.price.toLocaleString('vi-VN')} 🪙</button>`;
       }
-      if(isAvatar && frame.gift && owned){
-        btnHtml += ` <button class="cosBtn" data-gift-frame="${frame.id}" style="background:#fff;margin-top:4px;">🎁 Tặng</button>`;
+      if(owned){
+        btnHtml += ` <button class="cosBtn" data-gift-item="${isAvatar?'af':'cf'}:${frame.id}" style="background:#fff;margin-top:4px;">🎁 Tặng</button>`;
       }
       const extraDesc = isAvatar
-        ? (frame.gift ? ' · Có thể tặng người khác' : '') + (frame.animated ? ' · Ảnh động + thú trang trí' : '')
-        : (frame.animated || frame.price >= 1500000 ? ' · Hiệu ứng động đẹp' : '');
+        ? ((frame.animated?' · Ảnh động + thú trang trí':'') + (frame.gift?' · Có thể tặng':''))
+        : (frame.price>=1500000?' · Hiệu ứng động đẹp':'');
       const decoAttr = (isAvatar && frame.deco) ? ` data-deco="${frame.deco}"` : '';
       card.innerHTML = `
         <div class="cosTitleRow">
@@ -2198,54 +2254,67 @@ function renderCosmeticShop(){
         toast('Đã trang bị!');
       });
     });
-    list.querySelectorAll('[data-gift-frame]').forEach(btn=>{
+    list.querySelectorAll('[data-gift-item]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        const id = btn.getAttribute('data-gift-frame');
-        openGiftFrameDialog(id);
+        const key = btn.getAttribute('data-gift-item');
+        openGiftItemDialog(key);
       });
     });
   }
 }
 
-/* Tặng khung avatar cao cấp (10.000.000 xu) cho người chơi khác */
-function openGiftFrameDialog(frameId){
-  const frame = AVATAR_FRAMES.find(f=>f.id===frameId);
-  if(!frame || !frame.gift){ toast('Khung này không thể tặng!'); return; }
-  if(!(state.ownedAvatarFrames||[]).includes(frameId)){ toast('Bạn chưa sở hữu khung này!'); return; }
-  const target = prompt('Nhập UID (hoặc tên đăng nhập Firebase) của người muốn tặng khung "' + frame.name + '":');
+/* Tặng sticker pack / khung avatar / khung chat cho người khác */
+function openGiftItemDialog(key){
+  const [kind, id] = key.split(':');
+  let itemName = id;
+  if(kind==='sp'){
+    const p = STICKER_PACKS.find(x=>x.id===id);
+    if(!p || !(state.ownedStickerPacks||[]).includes(id)){ toast('Bạn chưa sở hữu bộ này!'); return; }
+    itemName = p.name;
+  } else if(kind==='af'){
+    const f = AVATAR_FRAMES.find(x=>x.id===id);
+    if(!f || !(state.ownedAvatarFrames||[]).includes(id)){ toast('Bạn chưa sở hữu khung này!'); return; }
+    itemName = f.name;
+  } else if(kind==='cf'){
+    const f = CHAT_FRAMES.find(x=>x.id===id);
+    if(!f || !(state.ownedChatFrames||[]).includes(id)){ toast('Bạn chưa sở hữu khung này!'); return; }
+    itemName = f.name;
+  } else return;
+  const target = prompt('Nhập UID người nhận để tặng "' + itemName + '":');
   if(!target || !target.trim()) return;
   const uid = target.trim();
-  if(currentUser && uid === currentUser.uid){ toast('Không thể tự tặng cho chính mình!'); return; }
+  if(currentUser && uid === currentUser.uid){ toast('Không thể tự tặng cho mình!'); return; }
   db.ref('users/' + uid + '/gameState').once('value').then(snap=>{
-    if(!snap.exists()){
-      toast('Không tìm thấy người chơi này trên server 😢');
-      return;
-    }
+    if(!snap.exists()){ toast('Không tìm thấy người chơi này 😢'); return; }
     const gs = snap.val() || {};
-    const owned = Array.isArray(gs.ownedAvatarFrames) ? gs.ownedAvatarFrames.slice() : ['none'];
-    if(owned.includes(frameId)){
-      toast('Người này đã sở hữu khung này rồi!');
-      return;
+    const updates = {};
+    if(kind==='sp'){
+      const arr = Array.isArray(gs.ownedStickerPacks) ? gs.ownedStickerPacks.slice() : [];
+      if(arr.includes(id)){ toast('Người này đã có bộ sticker này!'); return; }
+      arr.push(id); updates['ownedStickerPacks'] = arr;
+      state.ownedStickerPacks = (state.ownedStickerPacks||[]).filter(x=>x!==id);
+    } else if(kind==='af'){
+      const arr = Array.isArray(gs.ownedAvatarFrames) ? gs.ownedAvatarFrames.slice() : ['none'];
+      if(arr.includes(id)){ toast('Người này đã có khung này!'); return; }
+      arr.push(id); updates['ownedAvatarFrames'] = arr;
+      state.ownedAvatarFrames = (state.ownedAvatarFrames||[]).filter(x=>x!==id);
+      if(state.equippedAvatarFrame===id) state.equippedAvatarFrame='none';
+    } else if(kind==='cf'){
+      const arr = Array.isArray(gs.ownedChatFrames) ? gs.ownedChatFrames.slice() : ['none'];
+      if(arr.includes(id)){ toast('Người này đã có khung này!'); return; }
+      arr.push(id); updates['ownedChatFrames'] = arr;
+      state.ownedChatFrames = (state.ownedChatFrames||[]).filter(x=>x!==id);
+      if(state.equippedChatFrame===id) state.equippedChatFrame='none';
     }
-    owned.push(frameId);
-    // Trừ khỏi kho người tặng
-    state.ownedAvatarFrames = state.ownedAvatarFrames.filter(x=>x!==frameId);
-    if(state.equippedAvatarFrame === frameId) state.equippedAvatarFrame = 'none';
-    saveState();
-    syncEquippedFramesToProfile();
-    // Ghi nhận cho người nhận
-    return db.ref('users/' + uid + '/gameState/ownedAvatarFrames').set(owned).then(()=>{
-      db.ref('chats/' + WORLD_CHAT_ROOM).push({
-        sys:true,
-        t: `🎁 ${(state.nickname|| (currentUser&&currentUser.uid) || 'Ai đó')} đã tặng khung "${frame.name}" cho người chơi ${uid}!`,
-        ts: Date.now()
-      }).catch(()=>{});
-      toast('Đã tặng khung thành công! 🎁');
-      renderCosmeticShop();
-      updateHeader();
+    saveState(); syncEquippedFramesToProfile();
+    return db.ref('users/' + uid + '/gameState').update(updates).then(()=>{
+      db.ref('chats/' + WORLD_CHAT_ROOM).push({sys:true, t:`🎁 ${(state.nickname||(currentUser&&currentUser.uid)||'Ai đó')} đã tặng "${itemName}" cho ${uid}!`, ts:Date.now()}).catch(()=>{});
+      toast('Đã tặng thành công! 🎁');
+      renderCosmeticShop(); updateHeader();
     });
   }).catch(()=> toast('Lỗi mạng, thử lại sau.'));
 }
+
 document.querySelectorAll('.cosTab').forEach(t=>{
   t.addEventListener('click', ()=>{ cosmeticTab = t.getAttribute('data-costab'); renderCosmeticShop(); });
 });
@@ -2330,7 +2399,7 @@ function renderChatMsg(key, m){
     const avatarHtml = (cached && cached.avatar) ? `<img src="${escapeHtml(cached.avatar)}" alt="">` : '👤';
     const avFrameId = (cached && cached.avatarFrame) || 'none';
     const avFrameCls = 'avf-' + avFrameId;
-    const avDeco = (getAvatarFrame(avFrameId).deco) || '';
+    const avDeco = (typeof getAvatarFrame==='function' && getAvatarFrame(avFrameId).deco) || '';
     const cfFrameCls = 'cf-' + ((cached && cached.chatFrame) || 'none');
     const quoteHtml = m.replyTo
       ? `<div class="quoteBox">↩ ${escapeHtml(m.replyTo.n||m.replyTo.s||'')}: ${escapeHtml(m.replyTo.t||'')}</div>`
@@ -3334,12 +3403,26 @@ function openProfileModal(){
   SoundEngine.sfx.open();
   const rd = getRankData(state.rankPoints||0);
   const avatarEl = document.getElementById('profileAvatar');
+  // reset frame classes
+  avatarEl.className = 'profileAvatarCircle';
+  const myFrame = state.equippedAvatarFrame || 'none';
+  if(myFrame && myFrame!=='none'){
+    avatarEl.classList.add('avf-'+myFrame);
+    const fr = getAvatarFrame(myFrame);
+    if(fr && fr.deco) avatarEl.setAttribute('data-deco', fr.deco); else avatarEl.removeAttribute('data-deco');
+  } else {
+    avatarEl.removeAttribute('data-deco');
+  }
   const isImgAvatar = state.avatar && /^(https?:|data:)/.test(state.avatar);
   if(isImgAvatar){
     avatarEl.innerHTML = `<img src="${escapeHtml(state.avatar)}" alt="">`;
   } else {
     avatarEl.textContent = state.avatar || '👤';
   }
+  const tradeBtn = document.getElementById('profileTradeBtn');
+  const giftBtn = document.getElementById('profileGiftBtn');
+  if(tradeBtn) tradeBtn.style.display = 'none';
+  if(giftBtn) giftBtn.style.display = 'none';
   document.getElementById('profileNickname').textContent = currentUser ? (state.nickname || currentUser.uid) : ('🎣 Khách #' + state.playerId);
   document.getElementById('profileRank').textContent = (state.rankPoints||0).toLocaleString('vi-VN');
   document.getElementById('profileCoins').textContent = (state.coins||0).toLocaleString('vi-VN');
@@ -3403,6 +3486,8 @@ function openOtherProfileModal(senderKey){
   const topCoinEl = document.getElementById('profileTopCoin');
   const topRankEl = document.getElementById('profileTopRank');
 
+  avatarEl.className = 'profileAvatarCircle';
+  avatarEl.removeAttribute('data-deco');
   avatarEl.textContent = '👤';
   nicknameEl.textContent = 'Đang tải...';
   rankEl.textContent = '...';
@@ -3415,6 +3500,10 @@ function openOtherProfileModal(senderKey){
   const isGuest = senderKey.indexOf('Khách#') === 0;
   currentProfileTargetUid = (currentUser && !isGuest) ? senderKey : null;
   updateKbBtnVisibility();
+  const tradeBtn2 = document.getElementById('profileTradeBtn');
+  const giftBtn2 = document.getElementById('profileGiftBtn');
+  if(tradeBtn2) tradeBtn2.style.display = (currentUser && !isGuest && senderKey !== myChatName()) ? 'flex' : 'none';
+  if(giftBtn2) giftBtn2.style.display = (currentUser && !isGuest && senderKey !== myChatName()) ? 'flex' : 'none';
 
   fetchChatProfile(senderKey).then(p=>{
     p = p || {};
@@ -3426,6 +3515,11 @@ function openOtherProfileModal(senderKey){
       avatarEl.textContent = '👤';
     }
     nicknameEl.textContent = p.displayName || senderKey;
+    if(p.avatarFrame && p.avatarFrame!=='none'){
+      avatarEl.classList.add('avf-'+p.avatarFrame);
+      const fr = getAvatarFrame(p.avatarFrame);
+      if(fr && fr.deco) avatarEl.setAttribute('data-deco', fr.deco);
+    }
   });
 
   if(isGuest){
@@ -3511,6 +3605,371 @@ navBtns.forEach(btn=>{
 document.querySelectorAll('.closeBtn[data-close]').forEach(btn=>{
   btn.addEventListener('click', ()=>{ SoundEngine.sfx.close(); goToGameTab(); });
 });
+
+
+/* ============== TRADE / GIAO DỊCH (xu, sách phù phép, nguyên liệu) ============== */
+const TRADE_CONFIRM_MS = 10000;
+let activeTradeId = null;
+let activeTradePartner = null;
+let tradeListener = null;
+let tradeCountdownTimer = null;
+let tradeLocalOffer = { coins:0, books:[], materials:{} }; // local draft before sync
+
+function tradeRef(id){ return db.ref('trades/' + id); }
+
+function openTradeWith(partnerUid){
+  if(!currentUser){ toast('Cần đăng nhập để giao dịch!'); return; }
+  if(!partnerUid || partnerUid === currentUser.uid){ toast('Không thể giao dịch với chính mình!'); return; }
+  // create or join trade room (sorted pair id)
+  const a = currentUser.uid, b = partnerUid;
+  const tid = [a,b].sort().join('_');
+  activeTradeId = tid;
+  activeTradePartner = partnerUid;
+  tradeLocalOffer = { coins:0, books:[], materials:{} };
+  const overlay = document.getElementById('tradeOverlay');
+  if(overlay) overlay.classList.add('show');
+  document.getElementById('profileOverlay').style.display = 'none';
+  // init trade node
+  tradeRef(tid).transaction(cur=>{
+    if(cur && cur.status === 'confirming') return; // busy
+    if(cur && (cur.status==='open' || cur.status==='ready')) return cur;
+    return {
+      status: 'open',
+      players: { [a]: true, [b]: true },
+      offers: {
+        [a]: { coins:0, books:{}, materials:{}, accepted:false },
+        [b]: { coins:0, books:{}, materials:{}, accepted:false }
+      },
+      confirmUntil: 0,
+      createdAt: Date.now()
+    };
+  }, (err, committed)=>{
+    if(err){ toast('Không tạo được giao dịch'); return; }
+    attachTradeListener(tid);
+    renderTradePickBar();
+    pushMyTradeOffer();
+  });
+}
+window.__openTradeWithProfile = function(){
+  if(currentProfileTargetUid) openTradeWith(currentProfileTargetUid);
+};
+
+function attachTradeListener(tid){
+  if(tradeListener){ tradeRef(activeTradeId||tid).off('value', tradeListener); }
+  tradeListener = tradeRef(tid).on('value', snap=>{
+    const t = snap.val();
+    if(!t){ closeTradeUI('Giao dịch đã kết thúc'); return; }
+    renderTradeUI(t);
+    if(t.status === 'confirming' && t.confirmUntil){
+      startTradeCountdown(t.confirmUntil);
+      // auto complete when time ends
+      if(Date.now() >= t.confirmUntil){
+        tryCompleteTrade(tid);
+      }
+    } else {
+      stopTradeCountdown();
+    }
+    if(t.status === 'done'){ closeTradeUI('Giao dịch thành công! ✅'); }
+    if(t.status === 'cancelled'){ closeTradeUI('Giao dịch đã bị hủy'); }
+  });
+}
+
+function renderTradeUI(t){
+  const me = currentUser.uid;
+  const partner = Object.keys(t.players||{}).find(u=>u!==me) || activeTradePartner;
+  const myOffer = (t.offers && t.offers[me]) || {coins:0,books:{},materials:{},accepted:false};
+  const theirOffer = (t.offers && t.offers[partner]) || {coins:0,books:{},materials:{},accepted:false};
+  document.getElementById('tradeMyTitle').textContent = 'Bạn đưa' + (myOffer.accepted?' ✓':'');
+  document.getElementById('tradeTheirTitle').textContent = 'Đối phương' + (theirOffer.accepted?' ✓':'');
+  document.getElementById('tradeMyItems').innerHTML = formatOfferHtml(myOffer, true);
+  document.getElementById('tradeTheirItems').innerHTML = formatOfferHtml(theirOffer, false);
+  const st = document.getElementById('tradeStatusText');
+  if(t.status==='confirming'){
+    st.textContent = 'Cả hai đã chấp nhận — còn 10s để hủy nếu đổi ý!';
+  } else if(myOffer.accepted && theirOffer.accepted){
+    st.textContent = 'Đang khóa giao dịch...';
+  } else if(myOffer.accepted){
+    st.textContent = 'Bạn đã chấp nhận — chờ đối phương...';
+  } else if(theirOffer.accepted){
+    st.textContent = 'Đối phương đã chấp nhận — hãy kiểm tra và chấp nhận!';
+  } else {
+    st.textContent = 'Chọn vật phẩm rồi bấm Chấp nhận';
+  }
+  // wire remove buttons
+  document.querySelectorAll('#tradeMyItems .rm').forEach(btn=>{
+    btn.onclick = ()=>{
+      const kind = btn.getAttribute('data-rm-kind');
+      const id = btn.getAttribute('data-rm-id');
+      if(kind==='coins') tradeLocalOffer.coins = 0;
+      else if(kind==='book') tradeLocalOffer.books = (tradeLocalOffer.books||[]).filter(x=>x!==id);
+      else if(kind==='mat'){ if(tradeLocalOffer.materials) delete tradeLocalOffer.materials[id]; }
+      pushMyTradeOffer();
+    };
+  });
+}
+
+function formatOfferHtml(offer, isMine){
+  const parts = [];
+  if(offer.coins > 0){
+    parts.push(`<div class="tradeItemChip">🪙 ${Number(offer.coins).toLocaleString('vi-VN')} xu${isMine?` <button class="rm" data-rm-kind="coins">×</button>`:''}</div>`);
+  }
+  const books = offer.books || {};
+  Object.keys(books).forEach(bid=>{
+    if(!books[bid]) return;
+    const b = BOOKS.find(x=>x.id===bid);
+    parts.push(`<div class="tradeItemChip">${b?b.icon:'📖'} ${b?b.name:bid}${isMine?` <button class="rm" data-rm-kind="book" data-rm-id="${bid}">×</button>`:''}</div>`);
+  });
+  const mats = offer.materials || {};
+  Object.keys(mats).forEach(k=>{
+    if(!mats[k]) return;
+    const el = ELEMENTS[k];
+    parts.push(`<div class="tradeItemChip">${el?el.icon:'◆'} ${el?el.name:k} x${mats[k]}${isMine?` <button class="rm" data-rm-kind="mat" data-rm-id="${k}">×</button>`:''}</div>`);
+  });
+  if(!parts.length) return '<div style="font-size:12px;color:#8a99a3;text-align:center;padding:12px 0;">Trống</div>';
+  return parts.join('');
+}
+
+function renderTradePickBar(){
+  const bar = document.getElementById('tradePickBar');
+  if(!bar) return;
+  let html = '';
+  html += `<button data-add-coins>🪙 Thêm xu</button>`;
+  BOOKS.forEach(b=>{
+    if(state.ownedBooks && state.ownedBooks[b.id]){
+      html += `<button data-add-book="${b.id}">${b.icon} ${b.name}</button>`;
+    }
+  });
+  ELEMENT_KEYS.forEach(k=>{
+    const amt = (state.materials&&state.materials[k])||0;
+    if(amt>0) html += `<button data-add-mat="${k}">${ELEMENTS[k].icon} ${ELEMENTS[k].name} (${amt})</button>`;
+  });
+  bar.innerHTML = html;
+  bar.querySelector('[data-add-coins]')?.addEventListener('click', ()=>{
+    const v = prompt('Số xu muốn đưa (tối đa ' + state.coins.toLocaleString('vi-VN') + '):');
+    const n = Math.floor(Number(v)||0);
+    if(n<=0) return;
+    if(n > state.coins){ toast('Không đủ xu!'); return; }
+    tradeLocalOffer.coins = n;
+    // un-accept when changing offer
+    pushMyTradeOffer(false);
+  });
+  bar.querySelectorAll('[data-add-book]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.getAttribute('data-add-book');
+      if(!(tradeLocalOffer.books||[]).includes(id)){
+        tradeLocalOffer.books = tradeLocalOffer.books || [];
+        tradeLocalOffer.books.push(id);
+      }
+      pushMyTradeOffer(false);
+    });
+  });
+  bar.querySelectorAll('[data-add-mat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const k = btn.getAttribute('data-add-mat');
+      const max = (state.materials&&state.materials[k])||0;
+      const v = prompt('Số lượng ' + ELEMENTS[k].name + ' (tối đa ' + max + '):');
+      const n = Math.floor(Number(v)||0);
+      if(n<=0||n>max){ toast('Số lượng không hợp lệ'); return; }
+      tradeLocalOffer.materials = tradeLocalOffer.materials || {};
+      tradeLocalOffer.materials[k] = n;
+      pushMyTradeOffer(false);
+    });
+  });
+}
+
+function pushMyTradeOffer(accepted){
+  if(!activeTradeId || !currentUser) return;
+  const me = currentUser.uid;
+  const booksObj = {};
+  (tradeLocalOffer.books||[]).forEach(id=> booksObj[id]=true);
+  const payload = {
+    coins: tradeLocalOffer.coins||0,
+    books: booksObj,
+    materials: tradeLocalOffer.materials||{},
+    accepted: !!accepted
+  };
+  tradeRef(activeTradeId).child('offers/' + me).set(payload).then(()=>{
+    // if both accepted, move to confirming
+    tradeRef(activeTradeId).once('value').then(snap=>{
+      const t = snap.val();
+      if(!t || t.status==='confirming' || t.status==='done') return;
+      const offs = t.offers || {};
+      const ids = Object.keys(t.players||{});
+      if(ids.length>=2 && ids.every(u=> offs[u] && offs[u].accepted)){
+        tradeRef(activeTradeId).update({ status:'confirming', confirmUntil: Date.now()+TRADE_CONFIRM_MS });
+      }
+    });
+  });
+}
+
+function startTradeCountdown(until){
+  const el = document.getElementById('tradeCountdown');
+  if(!el) return;
+  el.style.display = 'block';
+  if(tradeCountdownTimer) clearInterval(tradeCountdownTimer);
+  function tick(){
+    const left = Math.max(0, Math.ceil((until - Date.now())/1000));
+    el.textContent = left;
+    if(left<=0){
+      clearInterval(tradeCountdownTimer);
+      tradeCountdownTimer = null;
+      if(activeTradeId) tryCompleteTrade(activeTradeId);
+    }
+  }
+  tick();
+  tradeCountdownTimer = setInterval(tick, 200);
+}
+function stopTradeCountdown(){
+  if(tradeCountdownTimer){ clearInterval(tradeCountdownTimer); tradeCountdownTimer=null; }
+  const el = document.getElementById('tradeCountdown');
+  if(el) el.style.display='none';
+}
+
+function tryCompleteTrade(tid){
+  tradeRef(tid).transaction(cur=>{
+    if(!cur || cur.status !== 'confirming') return;
+    if(cur.confirmUntil && Date.now() < cur.confirmUntil - 50) return; // still waiting
+    // mark done — actual item transfer happens client-side after commit for the local player
+    return Object.assign({}, cur, { status:'done', completedAt: Date.now() });
+  }, (err, committed, snap)=>{
+    if(err || !committed) return;
+    const t = snap.val();
+    if(!t || !currentUser) return;
+    applyTradeResult(t);
+  });
+}
+
+function applyTradeResult(t){
+  const me = currentUser.uid;
+  const partner = Object.keys(t.players||{}).find(u=>u!==me);
+  if(!partner) return;
+  const myOffer = (t.offers&&t.offers[me]) || {};
+  const theirOffer = (t.offers&&t.offers[partner]) || {};
+  // Give away my offer
+  if(myOffer.coins){ state.coins = Math.max(0, state.coins - (myOffer.coins||0)); }
+  Object.keys(myOffer.books||{}).forEach(bid=>{
+    if(myOffer.books[bid]){
+      if(state.ownedBooks) delete state.ownedBooks[bid];
+      state.equippedBooks = (state.equippedBooks||[]).filter(x=>x!==bid);
+    }
+  });
+  Object.keys(myOffer.materials||{}).forEach(k=>{
+    const n = myOffer.materials[k]||0;
+    if(n && state.materials) state.materials[k] = Math.max(0, (state.materials[k]||0) - n);
+  });
+  // Receive their offer
+  if(theirOffer.coins){ addCoins(theirOffer.coins||0); }
+  Object.keys(theirOffer.books||{}).forEach(bid=>{
+    if(theirOffer.books[bid]){
+      if(!state.ownedBooks) state.ownedBooks = {};
+      state.ownedBooks[bid] = true;
+    }
+  });
+  Object.keys(theirOffer.materials||{}).forEach(k=>{
+    const n = theirOffer.materials[k]||0;
+    if(n){
+      if(!state.materials) state.materials = {sam:0,lua:0,nuoc:0,gio:0,cay:0};
+      state.materials[k] = (state.materials[k]||0) + n;
+    }
+  });
+  saveState(); updateHeader();
+  toast('Giao dịch hoàn tất! ✅');
+}
+
+function cancelTrade(){
+  if(!activeTradeId) return;
+  tradeRef(activeTradeId).update({ status:'cancelled', cancelledAt: Date.now() }).catch(()=>{});
+  closeTradeUI('Đã hủy giao dịch');
+}
+
+function closeTradeUI(msg){
+  stopTradeCountdown();
+  if(tradeListener && activeTradeId){
+    tradeRef(activeTradeId).off('value', tradeListener);
+    tradeListener = null;
+  }
+  activeTradeId = null;
+  activeTradePartner = null;
+  const overlay = document.getElementById('tradeOverlay');
+  if(overlay) overlay.classList.remove('show');
+  if(msg) toast(msg);
+}
+
+// Wire trade buttons
+(function wireTradeUi(){
+  const acc = document.getElementById('tradeAcceptBtn');
+  const can = document.getElementById('tradeCancelBtn');
+  const closeX = document.getElementById('tradeCloseX');
+  if(acc) acc.addEventListener('click', ()=>{
+    // validate local offer still affordable
+    if((tradeLocalOffer.coins||0) > state.coins){ toast('Không đủ xu!'); return; }
+    pushMyTradeOffer(true);
+  });
+  if(can) can.addEventListener('click', cancelTrade);
+  if(closeX) closeX.addEventListener('click', cancelTrade);
+})();
+
+window.__openGiftMenu = function(){
+  if(!currentProfileTargetUid){ toast('Chỉ tặng được cho người chơi đã đăng nhập'); return; }
+  const uid = currentProfileTargetUid;
+  const choices = [];
+  (state.ownedStickerPacks||[]).forEach(id=>{
+    const p = STICKER_PACKS.find(x=>x.id===id);
+    if(p) choices.push({key:'sp:'+id, label:'😊 '+p.name});
+  });
+  (state.ownedAvatarFrames||[]).filter(id=>id!=='none').forEach(id=>{
+    const f = AVATAR_FRAMES.find(x=>x.id===id);
+    if(f) choices.push({key:'af:'+id, label:'🖼️ '+f.name});
+  });
+  (state.ownedChatFrames||[]).filter(id=>id!=='none').forEach(id=>{
+    const f = CHAT_FRAMES.find(x=>x.id===id);
+    if(f) choices.push({key:'cf:'+id, label:'💬 '+f.name});
+  });
+  if(!choices.length){ toast('Bạn chưa có vật phẩm nào để tặng!'); return; }
+  const list = choices.map((c,i)=>(i+1)+'. '+c.label).join('\n');
+  const pick = prompt('Chọn số thứ tự vật phẩm để tặng cho người này:\n'+list);
+  const idx = Math.floor(Number(pick)||0) - 1;
+  if(idx<0 || idx>=choices.length) return;
+  // temporarily set target via prompt override inside openGiftItemDialog
+  const key = choices[idx].key;
+  // reuse gift with prefilled uid
+  const [kind, id] = key.split(':');
+  let itemName = id;
+  if(kind==='sp'){ const p=STICKER_PACKS.find(x=>x.id===id); itemName=p?p.name:id; }
+  if(kind==='af'){ const f=AVATAR_FRAMES.find(x=>x.id===id); itemName=f?f.name:id; }
+  if(kind==='cf'){ const f=CHAT_FRAMES.find(x=>x.id===id); itemName=f?f.name:id; }
+  if(!confirm('Tặng "'+itemName+'" cho người này?')) return;
+  db.ref('users/' + uid + '/gameState').once('value').then(snap=>{
+    if(!snap.exists()){ toast('Không tìm thấy người chơi'); return; }
+    const gs = snap.val() || {};
+    const updates = {};
+    if(kind==='sp'){
+      const arr = Array.isArray(gs.ownedStickerPacks)?gs.ownedStickerPacks.slice():[];
+      if(arr.includes(id)){ toast('Họ đã có rồi!'); return; }
+      arr.push(id); updates.ownedStickerPacks=arr;
+      state.ownedStickerPacks=(state.ownedStickerPacks||[]).filter(x=>x!==id);
+    } else if(kind==='af'){
+      const arr = Array.isArray(gs.ownedAvatarFrames)?gs.ownedAvatarFrames.slice():['none'];
+      if(arr.includes(id)){ toast('Họ đã có rồi!'); return; }
+      arr.push(id); updates.ownedAvatarFrames=arr;
+      state.ownedAvatarFrames=(state.ownedAvatarFrames||[]).filter(x=>x!==id);
+      if(state.equippedAvatarFrame===id) state.equippedAvatarFrame='none';
+    } else if(kind==='cf'){
+      const arr = Array.isArray(gs.ownedChatFrames)?gs.ownedChatFrames.slice():['none'];
+      if(arr.includes(id)){ toast('Họ đã có rồi!'); return; }
+      arr.push(id); updates.ownedChatFrames=arr;
+      state.ownedChatFrames=(state.ownedChatFrames||[]).filter(x=>x!==id);
+      if(state.equippedChatFrame===id) state.equippedChatFrame='none';
+    }
+    saveState(); syncEquippedFramesToProfile();
+    return db.ref('users/'+uid+'/gameState').update(updates).then(()=>{
+      db.ref('chats/'+WORLD_CHAT_ROOM).push({sys:true,t:`🎁 ${(state.nickname||currentUser.uid)} đã tặng "${itemName}"!`,ts:Date.now()}).catch(()=>{});
+      toast('Đã tặng thành công! 🎁');
+      document.getElementById('profileOverlay').style.display='none';
+    });
+  }).catch(()=>toast('Lỗi mạng'));
+};
+
 
 /* ============== INIT ============== */
 updateHeader();
