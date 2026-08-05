@@ -307,12 +307,21 @@
   .avf-f4{border-color:#29b6f6 !important; box-shadow:0 0 0 3px #29b6f6;}
   .avf-f5{border-color:#8b3fd1 !important; box-shadow:0 0 0 3px #8b3fd1;}
   .avf-f6{border-color:#e0611f !important; box-shadow:0 0 0 3px #e0611f, 0 0 8px #e0611f;}
-  .avf-f7{border-color:#ffcd3c !important; box-shadow:0 0 0 3px #ffcd3c, 0 0 10px #ffcd3c;}
-  .avf-f8{border-color:#ff4081 !important; box-shadow:0 0 0 3px #ff4081, 0 0 12px #ff4081; animation:avfGlow 1.6s infinite alternate;}
-  .avf-f9{border-image:linear-gradient(45deg,#ff4081,#ffcd3c,#29b6f6,#8b3fd1) 1; box-shadow:0 0 14px #ffcd3c; animation:avfGlow 1.2s infinite alternate;}
+  .avf-f7{border-color:#ffcd3c !important; box-shadow:0 0 0 4px #ffcd3c, 0 0 12px #ffcd3c; animation:avfGlow 1.8s infinite alternate;}
+  .avf-f8{border-color:#ff4081 !important; box-shadow:0 0 0 4px #ff4081, 0 0 14px #ff4081; animation:avfGlow 1.5s infinite alternate, avfBounce 2.4s ease-in-out infinite;}
+  .avf-f9{border:5px solid #111 !important; border-color:#111 !important; background:#0a0a0a !important; box-shadow:0 0 0 3px #ffcd3c, 0 0 0 6px #111, 0 0 20px #ffcd3c, 0 0 28px rgba(255,205,60,.6); animation:avfBlackPulse 2s ease-in-out infinite alternate, avfGlow 1.4s infinite alternate;}
   .avf-f10{border-image:linear-gradient(45deg,#ff0040,#ff9100,#ffea00,#00e676,#00b0ff,#8b3fd1) 1; box-shadow:0 0 18px #fff, 0 0 26px #ffcd3c; animation:avfSpin 3s linear infinite, avfGlow 1s infinite alternate;}
-  @keyframes avfGlow{ from{filter:brightness(1);} to{filter:brightness(1.4);} }
+  @keyframes avfGlow{ from{filter:brightness(1);} to{filter:brightness(1.45);} }
   @keyframes avfSpin{ from{filter:hue-rotate(0deg);} to{filter:hue-rotate(360deg);} }
+  @keyframes avfBounce{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+  @keyframes avfBlackPulse{ from{box-shadow:0 0 0 3px #ffcd3c, 0 0 0 6px #111, 0 0 16px #ffcd3c;} to{box-shadow:0 0 0 4px #ffe08a, 0 0 0 7px #000, 0 0 28px #ffcd3c, 0 0 36px rgba(255,205,60,.8);} }
+  /* Trang trí con vật tinh xảo cho khung cao cấp (pseudo bằng box-shadow + animation) */
+  .av.avf-f7,.av.avf-f8,.av.avf-f9,.av.avf-f10{position:relative;}
+  .av.avf-f7::after,.av.avf-f8::after,.av.avf-f9::after,.av.avf-f10::after{
+    content:attr(data-deco); position:absolute; top:-10px; right:-8px; font-size:14px;
+    animation:decoFloat 2.2s ease-in-out infinite alternate; pointer-events:none; z-index:2;
+  }
+  @keyframes decoFloat{ from{transform:translateY(0) rotate(-8deg);} to{transform:translateY(-4px) rotate(8deg);} }
 
   /* CHAT FRAMES (áp dụng cho .bubble2) */
   .cf-none{}
@@ -321,11 +330,13 @@
   .cf-c3{background:#e3f2fd !important; border-color:#1e88e5 !important;}
   .cf-c4{background:#fff3e0 !important; border-color:#fb8c00 !important;}
   .cf-c5{background:#f3e5f5 !important; border-color:#8b3fd1 !important;}
-  .cf-c6{background:linear-gradient(135deg,#fff,#ffe08a) !important; border-color:var(--gold-dark) !important;}
-  .cf-c7{background:linear-gradient(135deg,#e0f7fa,#b2ebf2) !important; border-color:#00acc1 !important; box-shadow:0 0 8px #00acc1;}
-  .cf-c8{background:linear-gradient(135deg,#fce4ec,#f8bbd0) !important; border-color:#ff4081 !important; box-shadow:0 0 10px #ff4081;}
-  .cf-c9{background:linear-gradient(135deg,#111,#333) !important; color:#ffcd3c !important; border-color:#ffcd3c !important; box-shadow:0 0 12px #ffcd3c;}
-  .cf-c10{background:linear-gradient(135deg,#ff0040,#ff9100,#ffea00,#00e676,#00b0ff,#8b3fd1) !important; color:#fff !important; border-color:#fff !important; box-shadow:0 0 16px #fff;}
+  .cf-c6{background:linear-gradient(135deg,#fff,#ffe08a) !important; border-color:var(--gold-dark) !important; box-shadow:0 0 6px rgba(224,169,0,.35);}
+  .cf-c7{background:linear-gradient(135deg,#e0f7fa,#b2ebf2) !important; border-color:#00acc1 !important; box-shadow:0 0 10px #00acc1;}
+  .cf-c8{background:linear-gradient(135deg,#fce4ec,#f8bbd0) !important; border-color:#ff4081 !important; box-shadow:0 0 12px #ff4081; animation:cfPulse 2s infinite alternate;}
+  .cf-c9{background:linear-gradient(135deg,#0a0a0a,#1a1a1a) !important; color:#ffcd3c !important; border:3px solid #ffcd3c !important; box-shadow:0 0 14px #ffcd3c, inset 0 0 12px rgba(255,205,60,.15); animation:cfPulse 1.8s infinite alternate;}
+  .cf-c10{background:linear-gradient(135deg,#ff0040,#ff9100,#ffea00,#00e676,#00b0ff,#8b3fd1) !important; background-size:300% 300% !important; color:#fff !important; border:3px solid #fff !important; box-shadow:0 0 18px #fff, 0 0 28px #ffcd3c; animation:cfRainbow 4s linear infinite, cfPulse 1.5s infinite alternate;}
+  @keyframes cfPulse{ from{filter:brightness(1);} to{filter:brightness(1.15);} }
+  @keyframes cfRainbow{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
 
   /* STICKER PICKER + REPLY BAR */
   #stickerBtn{
@@ -340,7 +351,10 @@
   #stickerPicker.show{display:block;}
   #stickerPicker .spPackTitle{font-size:11.5px; font-weight:800; color:var(--text-dim); margin:6px 0 4px;}
   #stickerPicker .spGrid{display:flex; flex-wrap:wrap; gap:6px;}
-  #stickerPicker .spItem{font-size:28px; background:#f4f7f9; border:2px solid var(--ink); border-radius:10px; padding:4px 8px; cursor:pointer;}
+  #stickerPicker .spItem{font-size:28px; background:#f4f7f9; border:2px solid var(--ink); border-radius:10px; padding:4px 8px; cursor:pointer; animation:stickerWiggle 1.8s ease-in-out infinite; display:inline-block;}
+  #stickerPicker .spItem:nth-child(2n){animation-delay:.15s;}
+  #stickerPicker .spItem:nth-child(3n){animation-delay:.3s;}
+  #stickerPicker .spItem:hover{animation:stickerPop .35s ease; transform:scale(1.15);}
   #stickerPicker .spEmpty{font-size:12px; color:var(--text-dim); text-align:center; padding:8px;}
   #replyBar{
     display:none; align-items:center; gap:8px; background:#fff3cf; border-top:3px solid var(--ink);
@@ -356,7 +370,11 @@
     background:rgba(0,0,0,.06); border-left:3px solid var(--gold-dark); border-radius:6px; padding:4px 8px;
     font-size:11px; color:#555; margin-bottom:4px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
-  .msg .stickerBubble{font-size:52px; line-height:1; background:none !important; border:none !important; padding:0 !important;}
+  .msg .stickerBubble{font-size:52px; line-height:1; background:none !important; border:none !important; padding:0 !important; display:inline-block; animation:stickerBounceIn .45s cubic-bezier(.34,1.56,.64,1), stickerFloat 2.4s ease-in-out .45s infinite;}
+  @keyframes stickerWiggle{ 0%,100%{transform:rotate(-4deg) scale(1);} 50%{transform:rotate(4deg) scale(1.05);} }
+  @keyframes stickerPop{ 0%{transform:scale(1);} 50%{transform:scale(1.25) rotate(-6deg);} 100%{transform:scale(1.15);} }
+  @keyframes stickerBounceIn{ 0%{transform:scale(.3) rotate(-12deg); opacity:0;} 100%{transform:scale(1) rotate(0); opacity:1;} }
+  @keyframes stickerFloat{ 0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-6px) rotate(2deg);} }
 
   /* SHOP */
   .rodCard{
@@ -2039,40 +2057,41 @@ function handleVtvAnswer(raw){
 }
 
 // DATA STICKERS KHUNG AVATAR KHUNG CHAT
-// Bộ stickers giá tăng dần từ bộ xịn đến bộ xịn
-const STICKERPACKS = [
+// Bộ stickers động (nhãn dán chuyển động) — giá tăng dần
+const STICKER_PACKS = [
     {id:'sp1', name:'Mèo Ú Pusheen', price:50000, icon:'🐱', stickers:['😽','😿','😾','😸','😹','🐾','💕','💤'], animated:true},
     {id:'sp2', name:'Mèo Chikawa', price:50000, icon:'🐈', stickers:['🐈','😺','😹','😻','😼','🐾','✨','💖'], animated:true},
     {id:'sp3', name:'Mèo Ami Bụng Bự', price:100000, icon:'🐱‍👤', stickers:['🐱‍👤','🤣','😂','😆','😁','🤩','😍','🥳'], animated:true},
     {id:'sp4', name:'Thỏ Bảy Màu', price:150000, icon:'🐰', stickers:['🐰','😢','😭','😊','😄','😡','😤','😴'], animated:true},
     {id:'sp5', name:'Thỏ Bảy Màu Cao Cấp', price:250000, icon:'🌈', stickers:['🌈','🐰','😿','😽','😾','😸','💕','💤'], animated:true}
 ];
-// Khung avatar giá tăng dần từ bình thường - tinh xảo
-const AVATARFRAMES = [
+// Khung avatar: 9.000 → 10.000.000 xu (từ bình thường đến rất tinh xảo)
+// Từ ~1.000.000 xu trở lên: ảnh động + con vật trang trí; khung 10M đen, viền đậm, tặng được
+const AVATAR_FRAMES = [
     {id:'none', cls:'avf-none', name:'Không khung', price:0, icon:'⬜'},
-    {id:'f1', cls:'avf-f1', name:'Khung Bạc Nhất', price:9000, icon:'⬜'},
-    {id:'f2', cls:'avf-f2', name:'Khung Đồng', price:55000, icon:'⬛'},
+    {id:'f1', cls:'avf-f1', name:'Khung Bạc Nhẹ', price:9000, icon:'⬜'},
+    {id:'f2', cls:'avf-f2', name:'Khung Đồng Ấm', price:55000, icon:'⬛'},
     {id:'f3', cls:'avf-f3', name:'Khung Ngọc Lục', price:150000, icon:'💎'},
-    {id:'f4', cls:'avf-f4', name:'Khung Lam Ngọc', price:320000, icon:'💎'},
+    {id:'f4', cls:'avf-f4', name:'Khung Lam Ngọc', price:320000, icon:'💠'},
     {id:'f5', cls:'avf-f5', name:'Khung Tím Huyền Bí', price:400000, icon:'🔷'},
-    {id:'f6', cls:'avf-f6', name:'Khung Hồng Hồn', price:800000, icon:'🔷', animated:true},
-    {id:'f7', cls:'avf-f7', name:'Khung Hồng Kim', price:1200000, icon:'🔷', animated:true},
-    {id:'f8', cls:'avf-f8', name:'Khung Hồng Rực Rỡ', price:4367000, icon:'🔷', animated:true},
-    {id:'f9', cls:'avf-f9', name:'Khung Cầu Vồng', price:10000000, icon:'🔷', animated:true, gift:true}
+    {id:'f6', cls:'avf-f6', name:'Khung Cam Lửa', price:800000, icon:'🔶'},
+    {id:'f7', cls:'avf-f7', name:'Khung Vàng Cá Koi', price:1200000, icon:'🐟', animated:true, deco:'🐟'},
+    {id:'f8', cls:'avf-f8', name:'Khung Hồng Hồ Ly', price:4367000, icon:'🦊', animated:true, deco:'🦊'},
+    {id:'f9', cls:'avf-f9', name:'Khung Đen Rồng Biển', price:10000000, icon:'🐉', animated:true, deco:'🐉', gift:true}
 ];
-// Khung chat khung bong bóng tin nhắn giá tăng dần
-const CHATFRAMES = [
+// Khung chat: 10.000 → 15.000.000 xu (từ bình thường đến siêu đẹp)
+const CHAT_FRAMES = [
     {id:'none', cls:'cf-none', name:'Không khung', price:0, icon:'⬜'},
-    {id:'c1', cls:'cf-c1', name:'Khung Xám Nhất', price:10000, icon:'⬜'},
+    {id:'c1', cls:'cf-c1', name:'Khung Xám Nhẹ', price:10000, icon:'⬜'},
     {id:'c2', cls:'cf-c2', name:'Khung Lá Cây', price:50000, icon:'💚'},
     {id:'c3', cls:'cf-c3', name:'Khung Xanh Biển', price:200000, icon:'💙'},
     {id:'c4', cls:'cf-c4', name:'Khung Cam Ấm Áp', price:350000, icon:'🧡'},
     {id:'c5', cls:'cf-c5', name:'Khung Tím Mộng Mơ', price:500000, icon:'💜'},
-    {id:'c6', cls:'cf-c6', name:'Khung Vàng Sáng Tráng', price:750000, icon:'💛'},
+    {id:'c6', cls:'cf-c6', name:'Khung Vàng Sáng', price:750000, icon:'💛'},
     {id:'c7', cls:'cf-c7', name:'Khung Bạc Gió', price:900000, icon:'🩶'},
     {id:'c8', cls:'cf-c8', name:'Khung Hồng Lãng Mạn', price:1500000, icon:'💗'},
     {id:'c9', cls:'cf-c9', name:'Khung Đen Huyền Bí', price:5000000, icon:'🖤'},
-    {id:'c10', cls:'cf-c10', name:'Khung Cầu Vồng Tiệm Thần', price:15000000, icon:'🌈'}
+    {id:'c10', cls:'cf-c10', name:'Khung Cầu Vồng Thần', price:15000000, icon:'🌈'}
 ];
 function getAvatarFrame(id){ return AVATAR_FRAMES.find(f=>f.id===id) || AVATAR_FRAMES[0]; }
 function getChatFrame(id){ return CHAT_FRAMES.find(f=>f.id===id) || CHAT_FRAMES[0]; }
@@ -2103,7 +2122,7 @@ function renderCosmeticShop(){
           </div>
           ${btnHtml}
         </div>
-        <div class="cosStickerPreview">${pack.stickers.map(s=>`<span>${s}</span>`).join('')}</div>
+        <div class="cosStickerPreview">${pack.stickers.map(s=>`<span class="spItem" style="font-size:22px;padding:2px 6px;">${s}</span>`).join('')}</div>
       `;
       list.appendChild(card);
     });
@@ -2137,14 +2156,21 @@ function renderCosmeticShop(){
       } else {
         btnHtml = `<button class="cosBtn ${state.coins>=frame.price?'':'disabled'}" data-buy-frame="${frame.id}">${frame.price.toLocaleString('vi-VN')} 🪙</button>`;
       }
+      if(isAvatar && frame.gift && owned){
+        btnHtml += ` <button class="cosBtn" data-gift-frame="${frame.id}" style="background:#fff;margin-top:4px;">🎁 Tặng</button>`;
+      }
+      const extraDesc = isAvatar
+        ? (frame.gift ? ' · Có thể tặng người khác' : '') + (frame.animated ? ' · Ảnh động + thú trang trí' : '')
+        : (frame.animated || frame.price >= 1500000 ? ' · Hiệu ứng động đẹp' : '');
+      const decoAttr = (isAvatar && frame.deco) ? ` data-deco="${frame.deco}"` : '';
       card.innerHTML = `
         <div class="cosTitleRow">
-          <div class="cosIcon ${isAvatar?'av avf-'+frame.id:''}" style="${isAvatar?'width:38px;height:38px;border-radius:50%;border:3px solid #111;display:flex;align-items:center;justify-content:center;background:#fff;':''}">${frame.icon}</div>
+          <div class="cosIcon ${isAvatar?'av avf-'+frame.id:''}"${decoAttr} style="${isAvatar?'width:38px;height:38px;border-radius:50%;border:3px solid #111;display:flex;align-items:center;justify-content:center;background:#fff;':''}">${frame.icon}</div>
           <div class="cosInfo">
             <div class="cname">${frame.name}</div>
-            <div class="cdesc">${isAvatar?'Khung avatar':'Khung tin nhắn'} hiển thị trong chat chung</div>
+            <div class="cdesc">${isAvatar?'Khung avatar':'Khung tin nhắn'} hiển thị trong chat chung${extraDesc}</div>
           </div>
-          ${btnHtml}
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">${btnHtml}</div>
         </div>
       `;
       list.appendChild(card);
@@ -2172,7 +2198,53 @@ function renderCosmeticShop(){
         toast('Đã trang bị!');
       });
     });
+    list.querySelectorAll('[data-gift-frame]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-gift-frame');
+        openGiftFrameDialog(id);
+      });
+    });
   }
+}
+
+/* Tặng khung avatar cao cấp (10.000.000 xu) cho người chơi khác */
+function openGiftFrameDialog(frameId){
+  const frame = AVATAR_FRAMES.find(f=>f.id===frameId);
+  if(!frame || !frame.gift){ toast('Khung này không thể tặng!'); return; }
+  if(!(state.ownedAvatarFrames||[]).includes(frameId)){ toast('Bạn chưa sở hữu khung này!'); return; }
+  const target = prompt('Nhập UID (hoặc tên đăng nhập Firebase) của người muốn tặng khung "' + frame.name + '":');
+  if(!target || !target.trim()) return;
+  const uid = target.trim();
+  if(currentUser && uid === currentUser.uid){ toast('Không thể tự tặng cho chính mình!'); return; }
+  db.ref('users/' + uid + '/gameState').once('value').then(snap=>{
+    if(!snap.exists()){
+      toast('Không tìm thấy người chơi này trên server 😢');
+      return;
+    }
+    const gs = snap.val() || {};
+    const owned = Array.isArray(gs.ownedAvatarFrames) ? gs.ownedAvatarFrames.slice() : ['none'];
+    if(owned.includes(frameId)){
+      toast('Người này đã sở hữu khung này rồi!');
+      return;
+    }
+    owned.push(frameId);
+    // Trừ khỏi kho người tặng
+    state.ownedAvatarFrames = state.ownedAvatarFrames.filter(x=>x!==frameId);
+    if(state.equippedAvatarFrame === frameId) state.equippedAvatarFrame = 'none';
+    saveState();
+    syncEquippedFramesToProfile();
+    // Ghi nhận cho người nhận
+    return db.ref('users/' + uid + '/gameState/ownedAvatarFrames').set(owned).then(()=>{
+      db.ref('chats/' + WORLD_CHAT_ROOM).push({
+        sys:true,
+        t: `🎁 ${(state.nickname|| (currentUser&&currentUser.uid) || 'Ai đó')} đã tặng khung "${frame.name}" cho người chơi ${uid}!`,
+        ts: Date.now()
+      }).catch(()=>{});
+      toast('Đã tặng khung thành công! 🎁');
+      renderCosmeticShop();
+      updateHeader();
+    });
+  }).catch(()=> toast('Lỗi mạng, thử lại sau.'));
 }
 document.querySelectorAll('.cosTab').forEach(t=>{
   t.addEventListener('click', ()=>{ cosmeticTab = t.getAttribute('data-costab'); renderCosmeticShop(); });
@@ -2256,7 +2328,9 @@ function renderChatMsg(key, m){
     const cached = chatProfileCache[m.s];
     const displayName = (cached && cached.displayName) ? cached.displayName : m.s;
     const avatarHtml = (cached && cached.avatar) ? `<img src="${escapeHtml(cached.avatar)}" alt="">` : '👤';
-    const avFrameCls = 'avf-' + ((cached && cached.avatarFrame) || 'none');
+    const avFrameId = (cached && cached.avatarFrame) || 'none';
+    const avFrameCls = 'avf-' + avFrameId;
+    const avDeco = (getAvatarFrame(avFrameId).deco) || '';
     const cfFrameCls = 'cf-' + ((cached && cached.chatFrame) || 'none');
     const quoteHtml = m.replyTo
       ? `<div class="quoteBox">↩ ${escapeHtml(m.replyTo.n||m.replyTo.s||'')}: ${escapeHtml(m.replyTo.t||'')}</div>`
@@ -2276,7 +2350,7 @@ function renderChatMsg(key, m){
       bubbleHtml = `${quoteHtml}<div class="bubble2 ${cfFrameCls}">${escapeHtml(m.t)}</div>`;
     }
     row.innerHTML = `
-      <div class="av ${avFrameCls}" data-uid="${escapeHtml(m.s)}">${avatarHtml}</div>
+      <div class="av ${avFrameCls}" data-uid="${escapeHtml(m.s)}"${avDeco?` data-deco="${escapeHtml(avDeco)}"`:''}>${avatarHtml}</div>
       <div>
         <div class="name" data-uid="${escapeHtml(m.s)}">${escapeHtml(displayName)}</div>
         ${bubbleHtml}
@@ -2303,6 +2377,8 @@ function renderChatMsg(key, m){
         }
         if(p.avatarFrame && avElNode){
           avElNode.classList.add('avf-'+p.avatarFrame);
+          const fr = getAvatarFrame(p.avatarFrame);
+          if(fr && fr.deco) avElNode.setAttribute('data-deco', fr.deco);
         }
         if(p.chatFrame){
           const bub = row.querySelector('.bubble2:not(.stickerBubble)');
