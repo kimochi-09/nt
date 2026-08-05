@@ -2038,41 +2038,41 @@ function handleVtvAnswer(raw){
   return true;
 }
 
-/* ============== DATA: STICKERS / KHUNG AVATAR / KHUNG CHAT ============== */
-// Bộ stickers: giá tăng dần từ bộ "xấu" đến bộ "đẹp"
-const STICKER_PACKS = [
-  {id:"sp1", name:"Bộ Sticker Xấu Xí", price:100000, icon:"😬", stickers:["😬","🙃","👽","🤪","💩","🥴"]},
-  {id:"sp2", name:"Bộ Sticker Vui Nhộn", price:400000, icon:"😂", stickers:["😂","🤣","😹","😝","🐸","🙈"]},
-  {id:"sp3", name:"Bộ Sticker Dễ Thương", price:800000, icon:"🥰", stickers:["🥰","😍","🐱","🐰","🧸","🌸"]},
-  {id:"sp4", name:"Bộ Sticker Đẹp Sang Trọng", price:1000000, icon:"👑", stickers:["👑","💎","🌹","✨","🦄","🎇"]}
+// DATA STICKERS KHUNG AVATAR KHUNG CHAT
+// Bộ stickers giá tăng dần từ bộ xịn đến bộ xịn
+const STICKERPACKS = [
+    {id:'sp1', name:'Mèo Ú Pusheen', price:50000, icon:'🐱', stickers:['😽','😿','😾','😸','😹','🐾','💕','💤'], animated:true},
+    {id:'sp2', name:'Mèo Chikawa', price:50000, icon:'🐈', stickers:['🐈','😺','😹','😻','😼','🐾','✨','💖'], animated:true},
+    {id:'sp3', name:'Mèo Ami Bụng Bự', price:100000, icon:'🐱‍👤', stickers:['🐱‍👤','🤣','😂','😆','😁','🤩','😍','🥳'], animated:true},
+    {id:'sp4', name:'Thỏ Bảy Màu', price:150000, icon:'🐰', stickers:['🐰','😢','😭','😊','😄','😡','😤','😴'], animated:true},
+    {id:'sp5', name:'Thỏ Bảy Màu Cao Cấp', price:250000, icon:'🌈', stickers:['🌈','🐰','😿','😽','😾','😸','💕','💤'], animated:true}
 ];
-// Khung avatar: giá tăng dần từ bình thường -> tinh xảo
-const AVATAR_FRAMES = [
-  {id:"none", cls:"avf-none", name:"Không khung", price:0, icon:"⚪"},
-  {id:"f1", cls:"avf-f1", name:"Khung Bạc Nhạt", price:10000, icon:"⚪"},
-  {id:"f2", cls:"avf-f2", name:"Khung Đồng", price:50000, icon:"🟤"},
-  {id:"f3", cls:"avf-f3", name:"Khung Ngọc Lục", price:100000, icon:"🟢"},
-  {id:"f4", cls:"avf-f4", name:"Khung Lam Ngọc", price:200000, icon:"🔵"},
-  {id:"f5", cls:"avf-f5", name:"Khung Tím Huyền Bí", price:500000, icon:"🟣"},
-  {id:"f6", cls:"avf-f6", name:"Khung Hoàng Hôn", price:700000, icon:"🟠"},
-  {id:"f7", cls:"avf-f7", name:"Khung Hoàng Kim", price:1000000, icon:"🟡"},
-  {id:"f8", cls:"avf-f8", name:"Khung Hồng Rực Rỡ", price:10000000, icon:"💗"},
-  {id:"f9", cls:"avf-f9", name:"Khung Cầu Vồng", price:50000000, icon:"🌈"},
-  {id:"f10", cls:"avf-f10", name:"Khung Tinh Xảo Tối Thượng", price:100000000, icon:"👑"}
+// Khung avatar giá tăng dần từ bình thường - tinh xảo
+const AVATARFRAMES = [
+    {id:'none', cls:'avf-none', name:'Không khung', price:0, icon:'⬜'},
+    {id:'f1', cls:'avf-f1', name:'Khung Bạc Nhất', price:9000, icon:'⬜'},
+    {id:'f2', cls:'avf-f2', name:'Khung Đồng', price:55000, icon:'⬛'},
+    {id:'f3', cls:'avf-f3', name:'Khung Ngọc Lục', price:150000, icon:'💎'},
+    {id:'f4', cls:'avf-f4', name:'Khung Lam Ngọc', price:320000, icon:'💎'},
+    {id:'f5', cls:'avf-f5', name:'Khung Tím Huyền Bí', price:400000, icon:'🔷'},
+    {id:'f6', cls:'avf-f6', name:'Khung Hồng Hồn', price:800000, icon:'🔷', animated:true},
+    {id:'f7', cls:'avf-f7', name:'Khung Hồng Kim', price:1200000, icon:'🔷', animated:true},
+    {id:'f8', cls:'avf-f8', name:'Khung Hồng Rực Rỡ', price:4367000, icon:'🔷', animated:true},
+    {id:'f9', cls:'avf-f9', name:'Khung Cầu Vồng', price:10000000, icon:'🔷', animated:true, gift:true}
 ];
-// Khung chat (khung bong bóng tin nhắn): giá tăng dần
-const CHAT_FRAMES = [
-  {id:"none", cls:"cf-none", name:"Không khung", price:0, icon:"⚪"},
-  {id:"c1", cls:"cf-c1", name:"Khung Xám Nhạt", price:5000, icon:"⚪"},
-  {id:"c2", cls:"cf-c2", name:"Khung Lá Cây", price:40000, icon:"🟢"},
-  {id:"c3", cls:"cf-c3", name:"Khung Xanh Biển", price:95000, icon:"🔵"},
-  {id:"c4", cls:"cf-c4", name:"Khung Cam Ấm Áp", price:250000, icon:"🟠"},
-  {id:"c5", cls:"cf-c5", name:"Khung Tím Mộng Mơ", price:650000, icon:"🟣"},
-  {id:"c6", cls:"cf-c6", name:"Khung Vàng Sang Trọng", price:799000, icon:"🟡"},
-  {id:"c7", cls:"cf-c7", name:"Khung Băng Giá", price:2000000, icon:"❄️"},
-  {id:"c8", cls:"cf-c8", name:"Khung Hồng Lãng Mạn", price:15000000, icon:"💗"},
-  {id:"c9", cls:"cf-c9", name:"Khung Đêm Huyền Bí", price:75000000, icon:"🌑"},
-  {id:"c10", cls:"cf-c10", name:"Khung Cầu Vồng Tối Thượng", price:150000000, icon:"🌈"}
+// Khung chat khung bong bóng tin nhắn giá tăng dần
+const CHATFRAMES = [
+    {id:'none', cls:'cf-none', name:'Không khung', price:0, icon:'⬜'},
+    {id:'c1', cls:'cf-c1', name:'Khung Xám Nhất', price:10000, icon:'⬜'},
+    {id:'c2', cls:'cf-c2', name:'Khung Lá Cây', price:50000, icon:'💚'},
+    {id:'c3', cls:'cf-c3', name:'Khung Xanh Biển', price:200000, icon:'💙'},
+    {id:'c4', cls:'cf-c4', name:'Khung Cam Ấm Áp', price:350000, icon:'🧡'},
+    {id:'c5', cls:'cf-c5', name:'Khung Tím Mộng Mơ', price:500000, icon:'💜'},
+    {id:'c6', cls:'cf-c6', name:'Khung Vàng Sáng Tráng', price:750000, icon:'💛'},
+    {id:'c7', cls:'cf-c7', name:'Khung Bạc Gió', price:900000, icon:'🩶'},
+    {id:'c8', cls:'cf-c8', name:'Khung Hồng Lãng Mạn', price:1500000, icon:'💗'},
+    {id:'c9', cls:'cf-c9', name:'Khung Đen Huyền Bí', price:5000000, icon:'🖤'},
+    {id:'c10', cls:'cf-c10', name:'Khung Cầu Vồng Tiệm Thần', price:15000000, icon:'🌈'}
 ];
 function getAvatarFrame(id){ return AVATAR_FRAMES.find(f=>f.id===id) || AVATAR_FRAMES[0]; }
 function getChatFrame(id){ return CHAT_FRAMES.find(f=>f.id===id) || CHAT_FRAMES[0]; }
