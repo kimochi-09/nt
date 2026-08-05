@@ -3669,7 +3669,10 @@ function attachTradeListener(tid){
     } else {
       stopTradeCountdown();
     }
-    if(t.status === 'done'){ closeTradeUI('Giao dịch thành công! ✅'); }
+    if(t.status === 'done'){
+      applyTradeResult(t);
+      closeTradeUI('Giao dịch thành công! ✅');
+    }
     if(t.status === 'cancelled'){ closeTradeUI('Giao dịch đã bị hủy'); }
   });
 }
@@ -3832,14 +3835,19 @@ function tryCompleteTrade(tid){
     // mark done — actual item transfer happens client-side after commit for the local player
     return Object.assign({}, cur, { status:'done', completedAt: Date.now() });
   }, (err, committed, snap)=>{
-    if(err || !committed) return;
-    const t = snap.val();
-    if(!t || !currentUser) return;
-    applyTradeResult(t);
+    // Item transfer is applied via the value listener when status becomes 'done'
+    // so BOTH players receive items reliably.
   });
 }
 
+let _tradeAppliedIds = {};
 function applyTradeResult(t){
+  if(!t || !currentUser) return;
+  const tid = activeTradeId || (t.completedAt ? String(t.completedAt) : null);
+  // Tránh áp dụng 2 lần cùng 1 giao dịch
+  const guardKey = (Object.keys(t.players||{}).sort().join('_')) + '_' + (t.completedAt||'');
+  if(_tradeAppliedIds[guardKey]) return;
+  _tradeAppliedIds[guardKey] = true;
   const me = currentUser.uid;
   const partner = Object.keys(t.players||{}).find(u=>u!==me);
   if(!partner) return;
@@ -3873,7 +3881,15 @@ function applyTradeResult(t){
     }
   });
   saveState(); updateHeader();
-  toast('Giao dịch hoàn tất! ✅');
+  const got = [];
+  if(theirOffer.coins) got.push(Number(theirOffer.coins).toLocaleString('vi-VN')+' xu');
+  Object.keys(theirOffer.books||{}).forEach(bid=>{
+    if(theirOffer.books[bid]){ const b=BOOKS.find(x=>x.id===bid); got.push(b?b.name:bid); }
+  });
+  Object.keys(theirOffer.materials||{}).forEach(k=>{
+    const n=theirOffer.materials[k]||0; if(n){ const el=ELEMENTS[k]; got.push((el?el.name:k)+' x'+n); }
+  });
+  toast(got.length ? ('Nhận: ' + got.join(', ') + ' ✅') : 'Giao dịch hoàn tất! ✅');
 }
 
 function cancelTrade(){
