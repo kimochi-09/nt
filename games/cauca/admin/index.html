@@ -147,22 +147,6 @@
   <div class="panelBox show" id="tab-players">
     <h2>Danh sách & Cấu hình người chơi</h2>
 
-    <!-- Toggle Bật/Tắt Chat Toàn Server -->
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:16px; flex-wrap:wrap;">
-      <div>
-        <div style="font-weight:700; font-size:14px;">Quyền Trò Chuyện (Chat) Của Người Chơi</div>
-        <div class="smallDim" id="globalChatStatusText" style="margin-top:3px;">Đang tải...</div>
-      </div>
-      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
-        <span class="smallDim" id="globalChatToggleLabel">—</span>
-        <span style="position:relative; width:46px; height:26px; display:inline-block;">
-          <input type="checkbox" id="globalChatToggle" style="opacity:0; width:0; height:0;">
-          <span id="globalChatToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
-          <span id="globalChatToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
-        </span>
-      </label>
-    </div>
-
     <div class="toolbar">
       <input type="text" id="playerSearch" placeholder="🔎 Tìm theo tên hoặc UID...">
     </div>
@@ -456,7 +440,6 @@ let chatCache = {};
 let fishCache = {};
 let monsterCache = {};
 let bossCache = null;
-let globalChatConfigCache = { enabled: true };
 
 const RARITY_LABELS = {
   common: {label:"Thường", color:"#b9c7d3"},
@@ -502,12 +485,6 @@ function startListeners(){
     bossCache = snap.val() || null;
     renderBossStatus();
   }, (err)=>showError('Không tải được trạng thái thủy quái (worldBoss)', err));
-
-  db.ref('chatConfig').on('value', (snap)=>{
-    const val = snap.val() || {};
-    globalChatConfigCache = { enabled: val.enabled !== false };
-    renderGlobalChatToggle();
-  }, (err)=>showError('Không tải được cấu hình chat (chatConfig)', err));
 }
 
 function renderStats(){
@@ -524,33 +501,6 @@ function renderStats(){
 }
 
 /* ---- PLAYERS ---- */
-function renderGlobalChatToggle(){
-  const enabled = globalChatConfigCache.enabled !== false;
-  const toggle = document.getElementById('globalChatToggle');
-  const track = document.getElementById('globalChatToggleTrack');
-  const dot = document.getElementById('globalChatToggleDot');
-  const label = document.getElementById('globalChatToggleLabel');
-  const statusText = document.getElementById('globalChatStatusText');
-  toggle.checked = enabled;
-  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
-  dot.style.left = enabled ? '23px' : '3px';
-  label.textContent = enabled ? 'BẬT Chat' : 'TẮT Chat';
-  statusText.textContent = enabled
-    ? 'Tất cả người chơi CÓ THỂ gửi tin nhắn chat bình thường.'
-    : 'Tất cả người chơi BỊ CẤM CHAT toàn hệ thống.';
-}
-
-document.getElementById('globalChatToggle').addEventListener('change', async (e)=>{
-  const enabled = e.target.checked;
-  try{
-    await db.ref('chatConfig/enabled').set(enabled);
-    toast(enabled ? 'Đã BẬT chat cho tất cả người chơi.' : 'Đã CẤM CHAT tất cả người chơi.');
-  }catch(err){
-    toast('Thao tác thất bại.');
-    renderGlobalChatToggle();
-  }
-});
-
 function renderPlayers(){
   const body = document.getElementById('playersBody');
   const empty = document.getElementById('playersEmpty');
