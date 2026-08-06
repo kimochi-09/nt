@@ -3319,7 +3319,7 @@ function showCatchPopup(fish, weight, rankPts, rankedUpTo, doubledItems, materia
 function renderShop(){
   const list = document.getElementById('shopList');
   list.innerHTML = '';
-  RODS.forEach(rod=>{
+  RODS.filter(rod => rod.id !== "shimano").forEach(rod=>{
     const owned = state.ownedRods.includes(rod.id);
     const equipped = state.equippedRod===rod.id;
     const card = document.createElement('div');
