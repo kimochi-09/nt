@@ -153,7 +153,7 @@
     <div class="tblWrap">
       <table>
         <thead><tr>
-          <th>Cần thủ</th><th>ID</th><th>Xu</th><th>Cần câu đang dùng</th><th>Số cần sở hữu</th><th>Hành động</th>
+          <th>Cần thủ</th><th>ID</th><th>Xu</th><th>Chuỗi</th><th>Cần câu đang dùng</th><th>Số cần sở hữu</th><th>Hành động</th>
         </tr></thead>
         <tbody id="playersBody"></tbody>
       </table>
@@ -518,9 +518,11 @@ function renderPlayers(){
       <td>${escapeHtml(nick)}<div class="smallDim">#${gs.playerId||'—'}</div></td>
       <td class="smallDim">${uid}</td>
       <td><input type="number" class="miniInput" value="${Number(gs.coins||0)}" data-uid="${uid}" data-field="coins"></td>
+      <td><input type="number" class="miniInput" value="${Number(gs.streak||gs.fishStreak||0)}" data-uid="${uid}" data-field="streak" min="0"></td>
       <td>${escapeHtml(gs.equippedRod||'—')}</td>
       <td>${(gs.ownedRods||[]).length}</td>
       <td>
+        <button class="btn btnGhost rowBtn" data-action="saveStreak" data-uid="${uid}">🔥 Lưu chuỗi</button>
         <button class="btn btnGhost rowBtn" data-action="save" data-uid="${uid}">💾 Lưu xu</button>
         <button class="btn btnDanger rowBtn" data-action="delete" data-uid="${uid}">🗑 Xoá</button>
       </td>
@@ -543,6 +545,14 @@ document.getElementById('playersBody').addEventListener('click', async (e)=>{
       await db.ref('users/'+uid+'/gameState/coins').set(newCoins);
       toast('Đã cập nhật xu.');
     }catch(err){ toast('Cập nhật thất bại.'); }
+  } else if(btn.dataset.action === 'saveStreak'){
+    const input = document.querySelector(`input[data-uid="${uid}"][data-field="streak"]`);
+    const newStreak = Math.max(0, Math.floor(Number(input.value)||0));
+    try{
+      await db.ref('users/'+uid+'/gameState/streak').set(newStreak);
+      await db.ref('users/'+uid+'/gameState/fishStreak').set(newStreak);
+      toast('Đã cập nhật chuỗi câu cá.');
+    }catch(err){ toast('Cập nhật chuỗi thất bại.'); }
   } else if(btn.dataset.action === 'delete'){
     if(!confirm('Xoá toàn bộ dữ liệu người chơi này? Hành động không thể hoàn tác.')) return;
     try{
