@@ -3,25 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title> Câu Cá</title>
-<!-- Firebase CDN: bo qua khi mo bang file:// de tranh SecurityError iframe -->
+<meta name="description" content="Game Cau Ca - Fishing Game">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Câu Cá</title>
+<!-- Firebase CDN: static script tags (tuong thich GitHub/Cloudflare Pages, khong dung document.write) -->
 <script>
 (function(){
-  var isFile = false;
-  try { isFile = (location.protocol === 'file:' || location.origin === 'null'); } catch(e){ isFile = true; }
-  window.__IS_FILE_ORIGIN = isFile;
-  if (isFile) {
-    console.info('📂 file:// — khong nap Firebase CDN (tranh SecurityError).');
-    return;
-  }
-  function load(src){
-    document.write('<script src="'+src+'"><\/script>');
-  }
-  load('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-  load('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
-  load('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+  try {
+    window.__IS_FILE_ORIGIN = (location.protocol === 'file:' || location.origin === 'null');
+  } catch(e) { window.__IS_FILE_ORIGIN = true; }
 })();
 </script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 /* ============== FIREBASE FALLBACK (chống lỗi "firebase is not defined") ==============
    Nếu vì lý do gì đó (mạng chặn, CDN lỗi...) mà 3 file firebase ở trên
@@ -5188,7 +5183,14 @@ function unsealShimano(){
 })();
 
 function goBack(){
-  window.location.href = '/chat';
+  // relative path: hoat dong tren Pages (root hoac subpath), khong hard-code domain
+  try {
+    var base = (document.querySelector('base') && document.querySelector('base').href) || '';
+    if (base) { window.location.href = new URL('chat', base).href; return; }
+  } catch(e){}
+  // thu cac path pho bien
+  var candidates = ['chat', '../chat', './chat', '/chat'];
+  window.location.href = candidates[0];
 }
 </script>
   <!-- MAP SELECT PANEL -->
