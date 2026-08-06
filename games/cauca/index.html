@@ -4651,7 +4651,28 @@ function applyMapTheme(){
 
 function unlockAbyssMap(){
   if(state.abyssUnlocked){
-    showPanel('abyss');
+    function showPanel(panelName){
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.remove('show');
+    p.style.display='none';
+  });
+
+  const panel=document.getElementById(panelName) ||
+               document.getElementById('panel-'+panelName);
+
+  if(panel){
+    panel.style.display='';
+    panel.classList.add('show');
+  }
+
+  document.querySelectorAll('.navBtn').forEach(btn=>{
+    btn.classList.toggle(
+      'active',
+      btn.dataset.panel===panelName ||
+      btn.dataset.target===panelName
+    );
+  });
+}
     updateAbyssUI();
     spawnAbyssBubbles();
     return;
@@ -4662,7 +4683,28 @@ function unlockAbyssMap(){
     saveState();
     toast('🔓 Đã mở khóa Vực Thẳm!');
     updateAbyssUI();
-    showPanel('abyss');
+    function showPanel(panelName){
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.remove('show');
+    p.style.display='none';
+  });
+
+  const panel=document.getElementById(panelName) ||
+               document.getElementById('panel-'+panelName);
+
+  if(panel){
+    panel.style.display='';
+    panel.classList.add('show');
+  }
+
+  document.querySelectorAll('.navBtn').forEach(btn=>{
+    btn.classList.toggle(
+      'active',
+      btn.dataset.panel===panelName ||
+      btn.dataset.target===panelName
+    );
+  });
+}
     spawnAbyssBubbles();
   } else {
     toast('❌ Bạn cần 500.000 xu để mở khóa Vực Thẳm!');
@@ -4686,7 +4728,28 @@ function spawnAbyssBubbles(){
 }
 
 function openAbyssPanel(){
-  showPanel('abyss');
+  function showPanel(panelName){
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.remove('show');
+    p.style.display='none';
+  });
+
+  const panel=document.getElementById(panelName) ||
+               document.getElementById('panel-'+panelName);
+
+  if(panel){
+    panel.style.display='';
+    panel.classList.add('show');
+  }
+
+  document.querySelectorAll('.navBtn').forEach(btn=>{
+    btn.classList.toggle(
+      'active',
+      btn.dataset.panel===panelName ||
+      btn.dataset.target===panelName
+    );
+  });
+}
   updateAbyssUI();
   spawnAbyssBubbles();
 }
