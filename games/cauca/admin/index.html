@@ -146,13 +146,30 @@
   <!-- PLAYERS -->
   <div class="panelBox show" id="tab-players">
     <h2>Danh sách người chơi</h2>
+
+    <!-- Toggle Bật/Tắt Chat Toàn Máy Chủ -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700; font-size:14px;">Bật/tắt tính năng Chat của Người Chơi</div>
+        <div class="smallDim" id="globalChatStatusText" style="margin-top:3px;">Đang tải...</div>
+      </div>
+      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="smallDim" id="globalChatToggleLabel">—</span>
+        <span style="position:relative; width:46px; height:26px; display:inline-block;">
+          <input type="checkbox" id="globalChatToggle" style="opacity:0; width:0; height:0;">
+          <span id="globalChatToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
+          <span id="globalChatToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
+        </span>
+      </label>
+    </div>
+
     <div class="toolbar">
       <input type="text" id="playerSearch" placeholder="🔎 Tìm theo tên hoặc UID...">
     </div>
     <div class="tblWrap">
       <table>
         <thead><tr>
-          <th>Cần thủ</th><th>ID</th><th>Xu</th><th>Cần câu đang dùng</th><th>Số cần sở hữu</th><th>Hành động</th>
+          <th>Cần thủ</th><th>ID</th><th>Xu</th><th>Cần câu đang dùng</th><th>Số cần sở hữu</th><th>Quyền Chat</th><th>Hành động</th>
         </tr></thead>
         <tbody id="playersBody"></tbody>
       </table>
@@ -439,6 +456,7 @@ let chatCache = {};
 let fishCache = {};
 let monsterCache = {};
 let bossCache = null;
+let globalChatConfigCache = { enabled: true };
 
 const RARITY_LABELS = {
   common: {label:"Thường", color:"#b9c7d3"},
@@ -484,6 +502,12 @@ function startListeners(){
     bossCache = snap.val() || null;
     renderBossStatus();
   }, (err)=>showError('Không tải được trạng thái thủy quái (worldBoss)', err));
+
+  db.ref('chatConfig').on('value', (snap)=>{
+    const val = snap.val() || {};
+    globalChatConfigCache = { enabled: val.enabled !== false };
+    renderGlobalChatToggle();
+  }, (err)=>showError('Không tải được cấu hình chat toàn hệ thống (chatConfig)', err));
 }
 
 function renderStats(){
@@ -500,6 +524,33 @@ function renderStats(){
 }
 
 /* ---- PLAYERS ---- */
+function renderGlobalChatToggle(){
+  const enabled = globalChatConfigCache.enabled !== false;
+  const toggle = document.getElementById('globalChatToggle');
+  const track = document.getElementById('globalChatToggleTrack');
+  const dot = document.getElementById('globalChatToggleDot');
+  const label = document.getElementById('globalChatToggleLabel');
+  const statusText = document.getElementById('globalChatStatusText');
+  toggle.checked = enabled;
+  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
+  dot.style.left = enabled ? '23px' : '3px';
+  label.textContent = enabled ? 'Đang BẬT' : 'Đang TẮT';
+  statusText.textContent = enabled
+    ? 'Tất cả người chơi có thể nhắn tin bình thường (trừ người bị cấm riêng).'
+    : 'Đã CẤM KHÓA CHAT TOÀN SERVER — Tất cả người chơi không thể gửi tin nhắn.';
+}
+
+document.getElementById('globalChatToggle').addEventListener('change', async (e)=>{
+  const enabled = e.target.checked;
+  try{
+    await db.ref('chatConfig/enabled').set(enabled);
+    toast(enabled ? 'Đã MỞ KHÓA chat toàn server.' : 'Đã CẤM CHAT toàn server.');
+  }catch(err){
+    toast('Thao tác thất bại.');
+    renderGlobalChatToggle();
+  }
+});
+
 function renderPlayers(){
   const body = document.getElementById('playersBody');
   const empty = document.getElementById('playersEmpty');
@@ -512,6 +563,7 @@ function renderPlayers(){
     const nick = gs.nickname || '(chưa đặt tên)';
     if(search && !nick.toLowerCase().includes(search) && !uid.toLowerCase().includes(search)) return;
     shown++;
+    const isMuted = gs.chatMuted === true;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(nick)}<div class="smallDim">#${gs.playerId||'—'}</div></td>
@@ -520,7 +572,15 @@ function renderPlayers(){
       <td>${escapeHtml(gs.equippedRod||'—')}</td>
       <td>${(gs.ownedRods||[]).length}</td>
       <td>
+        ${isMuted 
+          ? `<span class="tag" style="background:rgba(255,92,92,.15); color:var(--danger);">🚫 Đã Cấm Chat</span>` 
+          : `<span class="tag tagOnline">🟢 Được Chat</span>`}
+      </td>
+      <td>
         <button class="btn btnGhost rowBtn" data-action="save" data-uid="${uid}">💾 Lưu xu</button>
+        <button class="btn ${isMuted ? 'btnGold' : 'btnDanger'} rowBtn" data-action="toggleMute" data-uid="${uid}" data-muted="${isMuted}">
+          ${isMuted ? '🔓 Mở Chat' : '🔇 Cấm Chat'}
+        </button>
         <button class="btn btnDanger rowBtn" data-action="delete" data-uid="${uid}">🗑 Xoá</button>
       </td>
     `;
@@ -542,6 +602,12 @@ document.getElementById('playersBody').addEventListener('click', async (e)=>{
       await db.ref('users/'+uid+'/gameState/coins').set(newCoins);
       toast('Đã cập nhật xu.');
     }catch(err){ toast('Cập nhật thất bại.'); }
+  } else if(btn.dataset.action === 'toggleMute'){
+    const currentMuted = btn.dataset.muted === 'true';
+    try{
+      await db.ref('users/'+uid+'/gameState/chatMuted').set(!currentMuted);
+      toast(!currentMuted ? 'Đã cấm người chơi chat.' : 'Đã bỏ cấm chat cho người chơi.');
+    }catch(err){ toast('Thao tác thất bại.'); }
   } else if(btn.dataset.action === 'delete'){
     if(!confirm('Xoá toàn bộ dữ liệu người chơi này? Hành động không thể hoàn tác.')) return;
     try{
@@ -1005,7 +1071,7 @@ db.ref('noituConfig').on('value', (snap)=>{
   const val = snap.val() || {};
   noituConfigCache = { enabled: val.enabled !== false };
   renderNoituToggle();
-}, (err)=>showError('Không tải được cấu hình bot Nối từ (noituConfig)', err));
+}, (err)=>showError('Không tải meo cấu hình bot Nối từ (noituConfig)', err));
 
 document.getElementById('noituToggle').addEventListener('change', async (e)=>{
   const enabled = e.target.checked;
