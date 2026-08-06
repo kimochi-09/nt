@@ -4,27 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title> Câu Cá</title>
-<!-- Nạp Firebase từ CDN chính (gstatic). Nếu vì lý do mạng mà CDN này không tải
-     được, tự động dùng document.write để nạp bù từ CDN dự phòng (jsdelivr) ngay
-     trong lúc trang đang phân tích cú pháp (đồng bộ), tránh rơi vào chế độ
-     offline một cách không cần thiết chỉ vì một CDN đơn lẻ bị chặn/lỗi. -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- Firebase CDN: bo qua khi mo bang file:// de tranh SecurityError iframe -->
 <script>
-  if (typeof firebase === 'undefined') {
-    document.write('<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.js"><\/script>');
+(function(){
+  var isFile = false;
+  try { isFile = (location.protocol === 'file:' || location.origin === 'null'); } catch(e){ isFile = true; }
+  window.__IS_FILE_ORIGIN = isFile;
+  if (isFile) {
+    console.info('📂 file:// — khong nap Firebase CDN (tranh SecurityError).');
+    return;
   }
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script>
-  if (typeof firebase === 'undefined' || typeof firebase.auth === 'undefined') {
-    document.write('<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-auth-compat.js"><\/script>');
+  function load(src){
+    document.write('<script src="'+src+'"><\/script>');
   }
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-  if (typeof firebase === 'undefined' || typeof firebase.database === 'undefined') {
-    document.write('<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.js"><\/script>');
-  }
+  load('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+  load('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+  load('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+})();
 </script>
 <script>
 /* ============== FIREBASE FALLBACK (chống lỗi "firebase is not defined") ==============
@@ -34,12 +30,21 @@
    mạng (chat chung, trao đổi, bảng xếp hạng...) sẽ tự động không hoạt động
    thay vì ném lỗi. */
 (function(){
-  // Chỉ coi là "đã tải firebase thật thành công" khi có đủ cả app + auth + database,
-  // tránh trường hợp tải được 1 phần rồi crash ở các phần gọi firebase.auth()/firebase.database().
-  if (typeof window.firebase !== 'undefined'
+  // file:// (origin null) + Firebase iframe = SecurityError → ép offline
+  var isFile = false;
+  try {
+    isFile = (location.protocol === 'file:' || location.origin === 'null' || String(location.href).indexOf('file:') === 0);
+  } catch(e) { isFile = true; }
+  window.__IS_FILE_ORIGIN = isFile;
+
+  var ok = !isFile
+      && (typeof window.firebase !== 'undefined'
       && typeof window.firebase.initializeApp === 'function'
       && typeof window.firebase.auth === 'function'
-      && typeof window.firebase.database === 'function') return;
+      && typeof window.firebase.database === 'function');
+  if (ok) return;
+  // Firebase thiếu/partial/file:// → xóa bản dở rồi gắn stub offline
+  try { window.firebase = undefined; } catch(e) { try { delete window.firebase; } catch(e2){} }
 
   function makeSnap(val){
     return {
@@ -94,7 +99,7 @@
     },
     database: function(){ return { ref: refStub }; }
   };
-  console.warn('⚠️ Không tải được Firebase từ CDN — game chạy ở chế độ offline (một người chơi).');
+  console.info(isFile ? '📂 Mở bằng file:// — game chạy offline (tránh SecurityError iframe).' : '⚠️ Không tải được Firebase từ CDN — game chạy offline (một người chơi).');
 })();
 </script>
 <style>
@@ -1141,6 +1146,21 @@
 <script>
 (function(){
 "use strict";
+// An toan toan cuc: khong de 1 loi nho pha trang
+window.__scriptErrorOnce = window.__scriptErrorOnce || false;
+window.addEventListener('error', function(e){
+  try {
+    var msg = (e && e.message) || '';
+    if (msg === 'Script error.' || msg === 'Script error' || /SecurityError|cross-origin frame|Blocked a frame/i.test(msg)) {
+      if (!window.__scriptErrorOnce) {
+        window.__scriptErrorOnce = true;
+        console.info('[Game] Bo qua loi security/cross-origin (file:// hoac CDN). Game van chay offline.');
+      }
+      e.preventDefault && e.preventDefault();
+      return true;
+    }
+  } catch(_){}
+}, true);
 
 /* ============== SOUND ENGINE (nhạc nền + hiệu ứng, tạo bằng Web Audio API, không cần file mp3) ============== */
 /* ============== SOUND ENGINE (đã tắt âm thanh theo yêu cầu) ============== */
@@ -1163,9 +1183,114 @@ const firebaseConfig = {
   messagingSenderId: "164013580789",
   appId: "1:164013580789:web:94227e94c6d517170f40bc"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+let auth, db;
+try {
+  if (window.__IS_FILE_ORIGIN) {
+    throw new Error('file-origin-offline');
+  }
+  if (firebase.apps && firebase.apps.length) {
+    // da init roi
+  } else {
+    firebase.initializeApp(firebaseConfig);
+  }
+  auth = firebase.auth();
+  db = firebase.database();
+} catch (e) {
+  console.info('[Firebase] dung offline:', (e && e.message) || e);
+  // dam bao co stub
+  if (!window.firebase || !window.firebase.database) {
+    window.firebase = window.firebase || {};
+  }
+  auth = firebase.auth ? firebase.auth() : { currentUser:null, onAuthStateChanged:function(cb){ try{cb(null)}catch(e){} return function(){}; }, signInAnonymously:function(){ return Promise.reject(new Error('offline')); }, signOut:function(){ return Promise.resolve(); } };
+  db = firebase.database ? firebase.database() : { ref: function(){ return { on:function(e,cb){try{cb({val:function(){return null},exists:function(){return false}})}catch(x){}}, off:function(){}, once:function(){return Promise.resolve({val:function(){return null}})}, set:function(){return Promise.resolve()}, update:function(){return Promise.resolve()}, push:function(){return Promise.resolve({key:'local'})}, remove:function(){return Promise.resolve()}, child:function(){return this}, transaction:function(fn,cb){ try{var r=fn(null)}catch(x){r=null} if(cb)try{cb(null,true,{val:function(){return r}})}catch(x){} return Promise.resolve({committed:true}); }, limitToLast:function(){return this}, orderByChild:function(){return this} }; } };
+}
+
+/* ============== CHONG LOI "Timeout reached, aborting!" ==============
+   Firebase RTDB co the nem loi nay khi WebSocket/long-poll bi timeout
+   (mang cham, firewall, CDN). Bat loi toan cuc + theo doi .info/connected
+   de game khong crash trang, tu chuyen offline tam thoi neu can. */
+let __fbConnected = true;
+let __fbTimeoutCount = 0;
+const FB_TIMEOUT_THRESHOLD = 3;
+
+try {
+  if (db && typeof db.ref === 'function') {
+    var connectedRef = db.ref('.info/connected');
+    if (connectedRef && typeof connectedRef.on === 'function') {
+      connectedRef.on('value', function(snap) {
+        try {
+          __fbConnected = !!(snap && snap.val && snap.val());
+          if (__fbConnected) __fbTimeoutCount = 0;
+        } catch (e2) {}
+      });
+    }
+  }
+} catch (e) {
+  __fbConnected = false;
+  console.info('[Firebase] Offline mode (.info/connected unavailable)');
+}
+
+// Bat loi uncaught lien quan timeout/abort cua Firebase
+window.addEventListener('unhandledrejection', function(ev) {
+  try {
+    const msg = (ev.reason && (ev.reason.message || String(ev.reason))) || '';
+    if (/timeout reached|aborting|deadline.?exceeded|network.?error|unavailable|offline|SecurityError|cross-origin frame|Blocked a frame/i.test(msg)) {
+      __fbTimeoutCount++;
+      console.warn('[Firebase] Bo qua loi mang/timeout:', msg);
+      ev.preventDefault();
+      if (__fbTimeoutCount >= FB_TIMEOUT_THRESHOLD) {
+        __fbConnected = false;
+        try {
+          if (typeof toast === 'function') toast('⚠️ Mang cham — game tam chay offline');
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+});
+
+window.addEventListener('error', function(ev) {
+  try {
+    const msg = (ev && ev.message) || '';
+    // "Script error." = loi cross-origin (thuong tu Firebase CDN) — trinh duyet an chi tiet
+    if (/timeout reached|aborting/i.test(msg)) {
+      __fbTimeoutCount++;
+      console.warn('[Firebase] Bo qua error timeout:', msg);
+      if (ev.preventDefault) ev.preventDefault();
+      return true;
+    }
+    if (msg === 'Script error.' || msg === 'Script error' || /SecurityError|cross-origin frame|Blocked a frame/i.test(msg)) {
+      if (!window.__scriptErrorOnce) {
+        window.__scriptErrorOnce = true;
+        console.info('[Game] Bo qua loi security/cross-origin. Game van chay.');
+      }
+      if (ev.preventDefault) ev.preventDefault();
+      return true;
+    }
+  } catch (_) {}
+}, true);
+
+// Wrapper an toan: chi ghi Firebase khi con ket noi
+function fbSafe(fn) {
+  try {
+    if (!__fbConnected) return Promise.resolve(null);
+    const r = fn();
+    if (r && typeof r.catch === 'function') {
+      return r.catch(function(err) {
+        const m = (err && err.message) || String(err);
+        if (/timeout|abort|network|unavailable/i.test(m)) {
+          __fbTimeoutCount++;
+          console.warn('[Firebase] fbSafe catch:', m);
+        }
+        return null;
+      });
+    }
+    return r;
+  } catch (e) {
+    return Promise.resolve(null);
+  }
+}
+try { window.fbSafe = fbSafe; } catch (_) {}
+
 // Dùng chung tài khoản với hệ thống Chat (chatdau.html): nếu người dùng đã
 // đăng nhập bên Chat (Firebase Auth + localStorage 'nt_myId') thì tự nhận
 // diện luôn ở đây, không cần đăng nhập lại trong game câu cá.
@@ -1218,12 +1343,16 @@ function fishDataToFirebaseObj(list){
 }
 
 function attachFishDataSync(){
+  try {
   db.ref('fishData').on('value', (snap)=>{
     const val = snap.val();
     if(!val){
       // Chưa có dữ liệu trên Firebase (lần đầu) -> khởi tạo từ danh sách mặc định
       if(!fishDataLoaded){
-        db.ref('fishData').set(fishDataToFirebaseObj(FISH_LIST)).catch(()=>{});
+        try {
+          const p = db.ref('fishData').set(fishDataToFirebaseObj(FISH_LIST));
+          if (p && p.catch) p.catch(function(e){ console.warn('[fishData] set timeout/offline', e && e.message); });
+        } catch(e){}
       }
       return;
     }
@@ -1241,8 +1370,11 @@ function attachFishDataSync(){
       try{ if(typeof renderCollection==='function') renderCollection(); }catch(e){}
     }
   });
+  } catch (e) {
+    console.warn('[fishData] attach failed (timeout/offline):', e && e.message);
+  }
 }
-attachFishDataSync();
+try{ attachFishDataSync(); }catch(e){ console.warn("[fishData] init error", e); }
 
 /* ============== HỆ THỐNG LEO RANK ============== */
 // Điểm cộng mỗi lần câu được cá, theo độ hiếm (từ Thường -> Thần Thoại): +2 +4 +6 +8 +10
@@ -1569,7 +1701,13 @@ function saveState(){
 
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
   if(currentUser){
-    db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{});
+    try {
+      const p = db.ref('users/'+currentUser.uid+'/gameState').set(state);
+      if (p && p.catch) p.catch(function(e){
+        const m = (e && e.message) || '';
+        if (/timeout|abort|network|unavailable/i.test(m)) console.warn('[saveState] Firebase timeout — giữ local');
+      });
+    } catch(e){}
   }
 }
 loadLocalState();
@@ -3581,13 +3719,11 @@ function enforceGameLimits(){
       state.materials[k] = Math.floor(v);
     });
 
-    // 5) Xu không âm, không vượt trần
-    const COIN_CAP = 500000000;
+    // 5) Xu: chỉ sửa nếu NaN/âm (KHÔNG giới hạn trần, không hoàn tác khi "bất thường")
     if(typeof state.coins !== 'number' || !isFinite(state.coins) || state.coins < 0){
       state.coins = Math.max(0, Number(state.coins)||0);
       fixed = true;
     }
-    if(state.coins > COIN_CAP){ state.coins = COIN_CAP; fixed = true; }
     state.coins = Math.floor(state.coins);
 
     // 6) Rank points không âm / không ảo quá đà
@@ -4734,101 +4870,19 @@ markUserActivity();
    nhưng lớp này làm khó buff thường gặp: /give, chỉnh state qua console,
    tăng xu/cá bất hợp lý. */
 (function AntiCheatFirewall(){
+  // Đã BỎ giới hạn xu / hoàn tác khi "bất thường".
+  // Chỉ còn chặn lệnh chat kiểu /give (không đụng state.coins).
   const BLOCKED_CMD = /^\s*\/(give|god|hack|cheat|addcoin|addcoins|setcoin|setcoins|xp|item|fly|noclip|admin)\b/i;
-  const MAX_COINS = 500000000; // ngưỡng cảnh báo
-  const MAX_JUMP = 5000000;    // tăng xu 1 lần quá lớn = nghi ngờ
-
-  // Chặn lệnh chat kiểu /give me ...
   function isBlockedCommand(text){
     if(!text || typeof text !== 'string') return false;
     return BLOCKED_CMD.test(text);
   }
   window.__acIsBlockedCommand = isBlockedCommand;
 
-  // Bọc addCoins nếu đã có
-  let lastCoins = null;
-  function installCoinGuard(){
-    if(typeof addCoins !== 'function') return false;
-    if(addCoins.__acWrapped) return true;
-    const orig = addCoins;
-    function guardedAddCoins(n){
-      n = Number(n) || 0;
-      if(!isFinite(n)) n = 0;
-      // chặn tăng đột biến bất hợp lý từ console
-      if(n > MAX_JUMP){
-        console.warn('[AntiCheat] Chặn cộng xu bất thường:', n);
-        try{ toast('❌ Hành động bị tường lửa chặn!'); }catch(e){}
-        return;
-      }
-      if(n < -MAX_JUMP){
-        console.warn('[AntiCheat] Chặn trừ xu bất thường:', n);
-        return;
-      }
-      return orig(n);
-    }
-    guardedAddCoins.__acWrapped = true;
-    try{ addCoins = guardedAddCoins; }catch(e){}
-    try{ window.addCoins = guardedAddCoins; }catch(e){}
-    return true;
-  }
-
-  // Giám sát state.coins / inventory
-  function snapshotOk(){
-    try{
-      if(typeof state === 'undefined' || !state) return;
-      if(typeof state.coins === 'number' && state.coins > MAX_COINS){
-        state.coins = MAX_COINS;
-        try{ saveState(); updateHeader(); }catch(e){}
-        try{ toast('⚠️ Xu vượt ngưỡng — đã khóa bởi tường lửa'); }catch(e){}
-      }
-      if(lastCoins != null && typeof state.coins === 'number'){
-        const delta = state.coins - lastCoins;
-        if(delta > MAX_JUMP){
-          console.warn('[AntiCheat] Phát hiện xu tăng bất thường', delta);
-          state.coins = lastCoins;
-          try{ saveState(); updateHeader(); }catch(e){}
-          try{ toast('❌ Buff xu bị tường lửa hoàn tác!'); }catch(e){}
-        }
-      }
-      if(typeof state.coins === 'number') lastCoins = state.coins;
-    }catch(e){}
-  }
-
-  // Chặn một số API console phổ biến khi cố gán state
-  function hardenConsole(){
-    try{
-      const noop = function(){};
-      // Không xóa console hoàn toàn (gây khó debug admin) nhưng ghi log thao tác nguy hiểm
-      const methods = ['log','warn','error','info','debug'];
-      methods.forEach(function(m){
-        if(!console[m] || console[m].__ac) return;
-        const o = console[m].bind(console);
-        console[m] = function(){
-          try{
-            const s = Array.prototype.join.call(arguments, ' ');
-            if(/give\s+me|state\.coins\s*=|ownedRods\.push/i.test(s)){
-              o('[AntiCheat] Phát hiện thao tác đáng ngờ qua console');
-            }
-          }catch(e){}
-          return o.apply(console, arguments);
-        };
-        console[m].__ac = true;
-      });
-    }catch(e){}
-  }
-
-  // Định kỳ kiểm tra
+  // Vẫn chạy enforceGameLimits định kỳ (sách/cần/nguyên liệu) — không còn cap xu
   setInterval(function(){
-    installCoinGuard();
-    snapshotOk();
     try{ if(typeof enforceGameLimits === 'function') enforceGameLimits(); }catch(e){}
   }, 1200);
-
-  // Cài sớm
-  hardenConsole();
-  setTimeout(installCoinGuard, 500);
-  setTimeout(installCoinGuard, 2000);
-  setTimeout(snapshotOk, 800);
 })();
 
 
@@ -4879,28 +4933,6 @@ function applyMapTheme(){
 
 function unlockAbyssMap(){
   if(state.abyssUnlocked){
-    function showPanel(panelName){
-  document.querySelectorAll('.panel').forEach(p=>{
-    p.classList.remove('show');
-    p.style.display='none';
-  });
-
-  const panel=document.getElementById(panelName) ||
-               document.getElementById('panel-'+panelName);
-
-  if(panel){
-    panel.style.display='';
-    panel.classList.add('show');
-  }
-
-  document.querySelectorAll('.navBtn').forEach(btn=>{
-    btn.classList.toggle(
-      'active',
-      btn.dataset.panel===panelName ||
-      btn.dataset.target===panelName
-    );
-  });
-}
     updateAbyssUI();
     spawnAbyssBubbles();
     return;
@@ -4911,28 +4943,6 @@ function unlockAbyssMap(){
     saveState();
     toast('🔓 Đã mở khóa Vực Thẳm!');
     updateAbyssUI();
-    function showPanel(panelName){
-  document.querySelectorAll('.panel').forEach(p=>{
-    p.classList.remove('show');
-    p.style.display='none';
-  });
-
-  const panel=document.getElementById(panelName) ||
-               document.getElementById('panel-'+panelName);
-
-  if(panel){
-    panel.style.display='';
-    panel.classList.add('show');
-  }
-
-  document.querySelectorAll('.navBtn').forEach(btn=>{
-    btn.classList.toggle(
-      'active',
-      btn.dataset.panel===panelName ||
-      btn.dataset.target===panelName
-    );
-  });
-}
     spawnAbyssBubbles();
   } else {
     toast('❌ Bạn cần 500.000 xu để mở khóa Vực Thẳm!');
@@ -4956,30 +4966,16 @@ function spawnAbyssBubbles(){
 }
 
 function openAbyssPanel(){
-  function showPanel(panelName){
-  document.querySelectorAll('.panel').forEach(p=>{
-    p.classList.remove('show');
-    p.style.display='none';
-  });
-
-  const panel=document.getElementById(panelName) ||
-               document.getElementById('panel-'+panelName);
-
-  if(panel){
-    panel.style.display='';
-    panel.classList.add('show');
-  }
-
-  document.querySelectorAll('.navBtn').forEach(btn=>{
-    btn.classList.toggle(
-      'active',
-      btn.dataset.panel===panelName ||
-      btn.dataset.target===panelName
-    );
-  });
-}
   updateAbyssUI();
   spawnAbyssBubbles();
+  try {
+    const panel = document.getElementById('panel-abyss');
+    if(panel){
+      document.querySelectorAll('.panel').forEach(p=>{ p.classList.remove('show'); p.style.display='none'; });
+      panel.style.display='';
+      panel.classList.add('show');
+    }
+  } catch(e){}
 }
 
 function updateAbyssUI(){
