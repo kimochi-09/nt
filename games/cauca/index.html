@@ -1484,8 +1484,7 @@ const MAX_BOOK_SLOTS = 3;
 /* Tổng hợp hiệu ứng của tất cả sách đang được trang bị */
 function getBookEffects(){
   const eff = {coinMult:0, autoHit:false, critHits:0, waitReduce:0, zoneWiden:0, sellBonus:0, doubleChance:0, treasureChance:0, slowFish:0};
-  // Chỉ tính tối đa MAX_BOOK_SLOTS sách (chống buff lố qua F12)
-  const eqBooks = (state.equippedBooks||[]).slice(0, MAX_BOOK_SLOTS);
+  const eqBooks = (state.equippedBooks||[]).slice();
   eqBooks.forEach(bid=>{
     const book = BOOKS.find(b=>b.id===bid);
     if(!book) return;
@@ -1579,7 +1578,6 @@ function ensureBookFields(){
   if(!Array.isArray(state.equippedBooks)) state.equippedBooks = [];
   // bỏ những sách đã trang bị nhưng không còn sở hữu (đề phòng dữ liệu lỗi)
   state.equippedBooks = state.equippedBooks.filter(id=>state.ownedBooks[id]);
-  if(state.equippedBooks.length > MAX_BOOK_SLOTS) state.equippedBooks = state.equippedBooks.slice(0, MAX_BOOK_SLOTS);
 }
 /* Vá dữ liệu cũ: đảm bảo các trường thống kê dùng cho thành tựu luôn tồn tại
    (người chơi đã lưu game từ trước khi có tính năng thành tựu) */
@@ -1692,7 +1690,6 @@ function ensureRodDurability(){
   }
 }
 function saveState(){
-  try{ if(typeof enforceGameLimits==='function') enforceGameLimits(); }catch(e){}
 
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
   if(currentUser){
@@ -3060,11 +3057,6 @@ chatMessagesEl.addEventListener('click', (e)=>{
 function sendWorldChat(){
   const val = worldChatInput.value.trim();
   if(!val) return;
-  if(window.__acIsBlockedCommand && window.__acIsBlockedCommand(val)){
-    toast('❌ Lệnh này bị tường lửa chặn!');
-    worldChatInput.value = '';
-    return;
-  }
   if(noituState && noituState.pending){
     toast('⏳ Bot đang nghĩ từ, chờ 5 giây nữa nhé!');
     return;
@@ -3651,125 +3643,17 @@ function renderEnchantShop(){
 }
 
 
-/* ============== CHỐNG SPAM / BUFF LỐ QUY ĐỊNH ============== */
-function enforceGameLimits(){
-  try{
-    if(typeof state === 'undefined' || !state) return false;
-    let fixed = false;
 
-    // 1) Sách phù phép: tối đa MAX_BOOK_SLOTS, chỉ sách đang sở hữu, không trùng
-    if(!Array.isArray(state.equippedBooks)) state.equippedBooks = [];
-    const validBookIds = new Set((typeof BOOKS !== 'undefined' ? BOOKS : []).map(b=>b.id));
-    const seen = new Set();
-    const cleanedBooks = [];
-    state.equippedBooks.forEach(id=>{
-      if(!id || seen.has(id)) { fixed = true; return; }
-      if(validBookIds.size && !validBookIds.has(id)) { fixed = true; return; }
-      if(!(state.ownedBooks && state.ownedBooks[id])) { fixed = true; return; }
-      seen.add(id);
-      cleanedBooks.push(id);
-    });
-    if(cleanedBooks.length > MAX_BOOK_SLOTS){
-      cleanedBooks.length = MAX_BOOK_SLOTS;
-      fixed = true;
-    }
-    if(cleanedBooks.length !== state.equippedBooks.length || cleanedBooks.some((id,i)=>id!==state.equippedBooks[i])){
-      state.equippedBooks = cleanedBooks;
-      fixed = true;
-    }
-
-    // 2) ownedBooks chỉ nhận id hợp lệ
-    if(state.ownedBooks && typeof state.ownedBooks === 'object' && validBookIds.size){
-      Object.keys(state.ownedBooks).forEach(id=>{
-        if(!validBookIds.has(id)){ delete state.ownedBooks[id]; fixed = true; }
-      });
-    }
-
-    // 3) Cần câu: chỉ id có trong RODS, luôn có tre, shimano cần unsealed
-    if(!Array.isArray(state.ownedRods)) state.ownedRods = ['tre'];
-    const validRodIds = new Set((typeof RODS !== 'undefined' ? RODS : []).map(r=>r.id));
-    const rods = [];
-    const seenRod = new Set();
-    state.ownedRods.forEach(id=>{
-      if(seenRod.has(id)){ fixed = true; return; }
-      if(validRodIds.size && !validRodIds.has(id)){ fixed = true; return; }
-      if(id === 'shimano' && !state.shimanoUnsealed){ fixed = true; return; }
-      seenRod.add(id);
-      rods.push(id);
-    });
-    if(!rods.includes('tre')){ rods.unshift('tre'); fixed = true; }
-    state.ownedRods = rods;
-    if(state.equippedRod && !state.ownedRods.includes(state.equippedRod)){
-      state.equippedRod = 'tre';
-      fixed = true;
-    }
-
-    // 4) Nguyên liệu không âm, không quá trần
-    const MAT_CAP = 99999;
-    if(!state.materials) state.materials = {};
-    (typeof ELEMENT_KEYS !== 'undefined' ? ELEMENT_KEYS : Object.keys(state.materials)).forEach(k=>{
-      let v = Number(state.materials[k])||0;
-      if(v < 0){ v = 0; fixed = true; }
-      if(v > MAT_CAP){ v = MAT_CAP; fixed = true; }
-      state.materials[k] = Math.floor(v);
-    });
-
-    // 5) Xu: chỉ sửa nếu NaN/âm (KHÔNG giới hạn trần, không hoàn tác khi "bất thường")
-    if(typeof state.coins !== 'number' || !isFinite(state.coins) || state.coins < 0){
-      state.coins = Math.max(0, Number(state.coins)||0);
-      fixed = true;
-    }
-    state.coins = Math.floor(state.coins);
-
-    // 6) Rank points không âm / không ảo quá đà
-    if(typeof state.rankPoints === 'number'){
-      if(state.rankPoints < 0){ state.rankPoints = 0; fixed = true; }
-      if(state.rankPoints > 10000000){ state.rankPoints = 10000000; fixed = true; }
-    }
-
-    if(fixed){
-      try{ saveState(); }catch(e){}
-      try{ if(typeof updateHeader==='function') updateHeader(); }catch(e){}
-      try{ if(typeof renderEnchantShop==='function') renderEnchantShop(); }catch(e){}
-    }
-    return fixed;
-  }catch(e){
-    console.warn('[AntiCheat] enforceGameLimits error', e);
-    return false;
-  }
-}
-try{ window.enforceGameLimits = enforceGameLimits; }catch(e){}
-
-let __equipBookLockUntil = 0;
 function equipBook(id){
   if(!state.equippedBooks) state.equippedBooks = [];
-  // Chống spam click trang bị sách
-  const now = Date.now();
-  if(now < __equipBookLockUntil){
-    toast('⏳ Thao tác quá nhanh, thử lại sau!');
-    return;
-  }
-  __equipBookLockUntil = now + 400;
-  // Chuẩn hoá & chống spam buff lố slot
-  enforceGameLimits();
   if(state.equippedBooks.includes(id)) return;
   if(!(state.ownedBooks && state.ownedBooks[id])){
     SoundEngine.sfx.error();
     toast('Bạn chưa sở hữu cuốn sách này!');
     return;
   }
-  if(state.equippedBooks.length >= MAX_BOOK_SLOTS){
-    SoundEngine.sfx.error();
-    toast(`Chỉ có thể trang bị tối đa ${MAX_BOOK_SLOTS} cuốn sách! Hãy tháo bớt sách khác trước.`);
-    return;
-  }
   SoundEngine.sfx.click();
   state.equippedBooks.push(id);
-  // Ép cứng tối đa MAX_BOOK_SLOTS (chống sửa state qua F12 rồi bấm nhanh)
-  if(state.equippedBooks.length > MAX_BOOK_SLOTS){
-    state.equippedBooks = state.equippedBooks.slice(0, MAX_BOOK_SLOTS);
-    toast(`⚠️ Giới hạn ${MAX_BOOK_SLOTS} sách — không thể buff lố!`);
-  }
   saveState();
   renderEnchantShop();
   toast('🪄 Đã trang bị sách vào cần câu!');
@@ -4860,25 +4744,7 @@ updateAchieveBadge();
 startActiveTimeTracker();
 markUserActivity();
 
-/* ============== TƯỜNG LỬA / CHỐNG BUFF (client) ==============
-   Lưu ý: game chạy trên trình duyệt nên không chặn 100% được F12,
-   nhưng lớp này làm khó buff thường gặp: /give, chỉnh state qua console,
-   tăng xu/cá bất hợp lý. */
-(function AntiCheatFirewall(){
-  // Đã BỎ giới hạn xu / hoàn tác khi "bất thường".
-  // Chỉ còn chặn lệnh chat kiểu /give (không đụng state.coins).
-  const BLOCKED_CMD = /^\s*\/(give|god|hack|cheat|addcoin|addcoins|setcoin|setcoins|xp|item|fly|noclip|admin)\b/i;
-  function isBlockedCommand(text){
-    if(!text || typeof text !== 'string') return false;
-    return BLOCKED_CMD.test(text);
-  }
-  window.__acIsBlockedCommand = isBlockedCommand;
 
-  // Vẫn chạy enforceGameLimits định kỳ (sách/cần/nguyên liệu) — không còn cap xu
-  setInterval(function(){
-    try{ if(typeof enforceGameLimits === 'function') enforceGameLimits(); }catch(e){}
-  }, 1200);
-})();
 
 
 
