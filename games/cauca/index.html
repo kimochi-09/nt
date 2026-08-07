@@ -938,7 +938,8 @@
       <div style="display:flex; gap:6px; align-items:center;">
         <button class="stat" id="rankBtn"><span class="ic" id="rankIcon">🥉</span></button>
         <button id="hiddenRodBtn" onclick="showUnsealPanel()" style="position:fixed; right:12px; top:50%; transform:translateY(-50%); width:52px; height:52px; border-radius:50%; border:3px solid #555; background:linear-gradient(180deg,#333,#000); color:#fff; cursor:pointer; font-family:inherit; display:none; align-items:center; justify-content:center; font-size:22px; z-index:25; box-shadow:0 0 14px rgba(120,120,120,.6), 0 4px 0 #111;" title="Cần Câu Ẩn"><span class="ic">🗡️</span></button>
-        <button class="stat" id="leaderboardBtn" onclick="window.location.href='bangxephang'" style="border:none; cursor:pointer; color:var(--text); font-family:inherit;"><span class="ic">🪙</span><span id="coinDisplay">0</span></button>
+        <div class="stat" style="border:2px solid var(--ink);"><span class="ic">🪙</span><span id="coinDisplay">0</span></div>
+        <button class="stat" id="coinLeaderboardBtn" title="Bảng xếp hạng xu" style="border:2px solid var(--ink); cursor:pointer; color:var(--text); font-family:inherit;"><span class="ic">🏆</span></button>
         <div class="stat"><span id="fishCountDisplay">0</span><span class="ic">🔥</span></div>
       </div>
       <button id="abyssMapBtn" onclick="openMapSelect()" style="display:none; background:linear-gradient(180deg,#3aa8ea,#0d6ea8); color:#fff; border:3px solid var(--ink); border-radius:24px; padding:11px 22px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 0 #08405e; letter-spacing:.5px;">🗺️ Bản Đồ</button>
@@ -1070,6 +1071,19 @@
       <div id="rankLeaderboard"><div style="text-align:center; color:var(--text-dim); font-size:12.5px; padding:16px 0;">Đang tải bảng xếp hạng...</div></div>
 
       <div class="rankInfoNote">💡 Mỗi lần câu được cá sẽ cộng điểm rank theo độ hiếm: Thường +2 · Hiếm +4 · Quý +6 · Huyền Thoại +8 · Thần Thoại +10 điểm. Điểm rank sẽ được reset về 0 vào đầu mỗi tháng để mọi người leo lại rank tháng mới!</div>
+    </div>
+  </div>
+
+  <!-- COIN LEADERBOARD PANEL -->
+  <div class="panel" id="panel-coinlb">
+    <div class="panelHeader">
+      <span class="phTitle">🏆 Bảng Xếp Hạng Xu</span>
+      <button id="coinLbRefreshBtn" style="background:#fff; border:2px solid var(--ink); color:var(--gold-dark); font-size:11px; font-weight:700; padding:5px 9px; border-radius:10px; margin-right:6px;">🔄 Làm mới</button>
+      <button class="closeBtn" data-close>✕</button>
+    </div>
+    <div class="panelBody">
+      <div class="rankInfoNote" style="margin-bottom:12px;">💰 Xếp hạng theo số xu hiện có của người chơi trên toàn server. Càng câu nhiều / bán cá nhiều, càng lên top!</div>
+      <div id="coinLeaderboardList"><div style="text-align:center; color:var(--text-dim); font-size:12.5px; padding:16px 0;">Đang tải bảng xếp hạng...</div></div>
     </div>
   </div>
 
@@ -2152,6 +2166,99 @@ function renderRankLeaderboard(){
     container.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:12.5px; padding:16px 0;">Không tải được bảng xếp hạng, thử lại sau.</div>';
   });
 }
+
+
+/* ============== BẢNG XẾP HẠNG XU (toàn server) ============== */
+function renderCoinLeaderboard(){
+  const container = document.getElementById('coinLeaderboardList');
+  if(!container) return;
+  container.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:12.5px; padding:16px 0;">Đang tải bảng xếp hạng...</div>';
+  db.ref('users').once('value').then(snap=>{
+    const val = snap.val() || {};
+    const myUid = currentUser ? currentUser.uid : null;
+    const rows = Object.keys(val).map(uid=>{
+      const gs = (val[uid] && val[uid].gameState) || {};
+      return {
+        uid,
+        nickname: gs.nickname || uid,
+        coins: Math.max(0, Number(gs.coins) || 0)
+      };
+    }).filter(r => r.coins > 0 || r.uid === myUid);
+
+    rows.sort((a,b)=> b.coins - a.coins);
+    const top = rows.slice(0, 50);
+
+    if(top.length === 0){
+      container.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:12.5px; padding:16px 0;">Chưa có dữ liệu xếp hạng xu.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    top.forEach((row, i)=>{
+      const pos = i+1;
+      const isMe = !!myUid && row.uid === myUid;
+      const el = document.createElement('div');
+      el.className = 'lbRow' + (isMe?' me':'') + (pos===1?' top1':pos===2?' top2':pos===3?' top3':'');
+      el.innerHTML = `
+        <div class="lbRank">${pos<=3 ? (pos===1?'🥇':pos===2?'🥈':'🥉') : ('#'+pos)}</div>
+        <div class="lbAvatar" id="coinLbAv_${i}" data-uid="${escapeHtml(row.uid)}" style="cursor:pointer;">🪙</div>
+        <div class="lbInfo">
+          <div class="lbName" data-uid="${escapeHtml(row.uid)}" style="cursor:pointer;">${escapeHtml(row.nickname)}${isMe?' (Bạn)':''}</div>
+          <div class="lbRankName">Số xu hiện có</div>
+        </div>
+        <div class="lbPts">🪙 ${Number(row.coins).toLocaleString('vi-VN')}</div>
+      `;
+      container.appendChild(el);
+      const avClick = ()=>{ try{ if(typeof openPlayerProfile==='function') openPlayerProfile(row.uid); }catch(e){} };
+      const avEl0 = el.querySelector('.lbAvatar');
+      const nameEl0 = el.querySelector('.lbName');
+      if(avEl0) avEl0.addEventListener('click', avClick);
+      if(nameEl0) nameEl0.addEventListener('click', avClick);
+      fetchChatProfile(row.uid).then(p=>{
+        if(!p) return;
+        if(p.avatar){
+          const avEl = document.getElementById('coinLbAv_'+i);
+          if(avEl) avEl.innerHTML = `<img src="${escapeHtml(p.avatar)}" alt="">`;
+        }
+        if(p.displayName){
+          const nameEl = el.querySelector('.lbName');
+          if(nameEl) nameEl.textContent = p.displayName + (isMe?' (Bạn)':'');
+        }
+      });
+    });
+  }).catch(()=>{
+    container.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:12.5px; padding:16px 0;">Không tải được bảng xếp hạng, thử lại sau.</div>';
+  });
+}
+
+function openCoinLeaderboard(){
+  document.querySelectorAll('.panel').forEach(p=>{ p.classList.remove('show'); p.style.display=''; });
+  const panel = document.getElementById('panel-coinlb');
+  if(panel){
+    panel.style.display = 'flex';
+    panel.classList.add('show');
+  }
+  document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));
+  renderCoinLeaderboard();
+}
+
+(function wireCoinLeaderboard(){
+  function bind(){
+    const btn = document.getElementById('coinLeaderboardBtn');
+    if(btn && !btn._coinLbBound){
+      btn._coinLbBound = true;
+      btn.addEventListener('click', openCoinLeaderboard);
+    }
+    const ref = document.getElementById('coinLbRefreshBtn');
+    if(ref && !ref._coinLbBound){
+      ref._coinLbBound = true;
+      ref.addEventListener('click', renderCoinLeaderboard);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+  setTimeout(bind, 300);
+})();
 
 function toast(msg){
   const t = document.createElement('div');
