@@ -373,7 +373,7 @@ loginForm.addEventListener('submit', (e)=>{
   const u = document.getElementById('loginUsername').value.trim();
   const p = document.getElementById('loginPassword').value.trim();
 
-  if(u === 'admindzai' && p === 'LinhChi0611'){
+  if(u === 'tungtungtung' && p === 'chidangyeu'){
     loginScreen.style.display = 'none';
     dashboard.style.display = 'block';
     toast('Đăng nhập thành công!');
@@ -413,13 +413,16 @@ function showError(context, err){
   console.error(context, err);
 }
 
-auth.signInAnonymously().catch((err)=>{
-  showError('Không đăng nhập được với Firebase', err);
-});
-
-auth.onAuthStateChanged((user)=>{
-  if(user) startListeners();
-});
+// Anonymous Auth không bắt buộc — nếu bị tắt trên Firebase Console thì bỏ qua
+try {
+  auth.signInAnonymously().catch(function(err){
+    if(err && err.code !== 'auth/admin-restricted-operation' && err.code !== 'auth/operation-not-allowed'){
+      showError('Không đăng nhập được với Firebase', err);
+    }
+  });
+} catch (e) {
+  // bỏ qua nếu Firebase Auth không sẵn sàng
+}
 
 /* ============== TABS ============== */
 document.querySelectorAll('.tabBtn').forEach(btn=>{
@@ -485,6 +488,9 @@ function startListeners(){
     renderBossStatus();
   }, (err)=>showError('Không tải được trạng thái thủy quái (worldBoss)', err));
 }
+
+// Chạy ngay sau khi hàm đã được định nghĩa (không phụ thuộc Anonymous Auth)
+startListeners();
 
 function renderStats(){
   const userIds = Object.keys(usersCache);
