@@ -3796,11 +3796,16 @@ function tryReelHit(){
     }
     randomizeZone(); // new zone position for next hit, keeps challenge going
   } else {
-    // Miss! không hồi máu cá — chỉ cộng số lần trượt, đủ 3 lần thì cá sổng
+    // Miss! cá hồi máu — giảm số hit đã tích, cập nhật thanh máu; đủ 3 lần trượt thì cá sổng
     SoundEngine.sfx.miss();
     gameArea.classList.add('missFlash');
     setTimeout(()=>gameArea.classList.remove('missFlash'), 300);
-    // Giữ nguyên currentHits / thanh máu (không tăng lại máu khi bấm trượt)
+    // Hồi máu: giảm currentHits (không dưới 0) rồi cập nhật thanh đỏ
+    if(currentHits > 0){
+      currentHits = Math.max(0, currentHits - 1);
+      const healthPct = Math.max(0, Math.round(((requiredHits-currentHits)/requiredHits)*100));
+      comboFill.style.width = healthPct+'%';
+    }
     missCount++;
     if(missCount >= maxMisses){
       fishEscape();
