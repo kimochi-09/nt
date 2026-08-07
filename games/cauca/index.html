@@ -2636,6 +2636,23 @@ document.querySelectorAll('.closeBtn[data-close]').forEach(btn=>{
     document.getElementById('panel-worldchat').classList.add('show');
   });
 });
+/* Expose state cho mini-games (script IIFE khác không truy cập được let state) */
+try {
+  window.__fgGetState = function(){ return state; };
+  window.__fgSetCoins = function(n){
+    state.coins = Math.max(0, Math.floor(Number(n)||0));
+    try{ if(typeof saveState==='function') saveState(); }catch(e){}
+    try{ if(typeof updateHeader==='function') updateHeader(); }catch(e){}
+  };
+  window.__fgSaveState = function(){ try{ saveState(); }catch(e){} };
+  window.__fgUpdateHeader = function(){ try{ updateHeader(); }catch(e){} };
+  window.__fgToast = function(msg){ try{ toast(msg); }catch(e){ try{ alert(msg); }catch(e2){} } };
+  window.__fgAddCoins = function(d){
+    state.coins = Math.max(0, Math.floor(Number(state.coins||0) + Number(d||0)));
+    try{ saveState(); }catch(e){}
+    try{ updateHeader(); }catch(e){}
+  };
+} catch(_){}
 })();
 </script>
 <script>
@@ -3511,23 +3528,94 @@ function mgMyName(){
 function mgMyAvatar(){
   try{ return (state && state.avatar) || '👤'; }catch(e){ return '👤'; }
 }
+function mgGetStateObj(){
+  try{
+    if(typeof window.__fgGetState === 'function'){
+      var s = window.__fgGetState();
+      if(s && typeof s === 'object') return s;
+    }
+  }catch(e){}
+  try{
+    if(typeof state !== 'undefined' && state && typeof state === 'object') return state;
+  }catch(e){}
+  return null;
+}
 function mgCoins(){
-  try{ return Math.max(0, Math.floor(Number(state.coins)||0)); }catch(e){ return 0; }
+  try{
+    var s = mgGetStateObj();
+    if(s && s.coins != null) return Math.max(0, Math.floor(Number(s.coins)||0));
+  }catch(e){}
+  // fallback localStorage
+  try{
+    var raw = localStorage.getItem('fishingWorld_save_v1');
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(parsed && parsed.coins != null) return Math.max(0, Math.floor(Number(parsed.coins)||0));
+    }
+  }catch(e){}
+  // fallback đọc từ UI header
+  try{
+    var el = document.getElementById('wcCoinDisplay');
+    if(el){
+      var m = String(el.textContent||'').replace(/[^\d]/g,'');
+      if(m) return parseInt(m, 10) || 0;
+    }
+  }catch(e){}
+  return 0;
 }
 function mgSetCoins(n){
+  var val = Math.max(0, Math.floor(Number(n)||0));
   try{
-    state.coins = Math.max(0, Math.floor(Number(n)||0));
-    if(typeof saveState === 'function') saveState();
-    if(typeof updateHeader === 'function') updateHeader();
+    if(typeof window.__fgSetCoins === 'function'){
+      window.__fgSetCoins(val);
+      return;
+    }
+  }catch(e){}
+  try{
+    var s = mgGetStateObj();
+    if(s){
+      s.coins = val;
+      if(typeof window.__fgSaveState === 'function') window.__fgSaveState();
+      else if(typeof saveState === 'function') saveState();
+      if(typeof window.__fgUpdateHeader === 'function') window.__fgUpdateHeader();
+      else if(typeof updateHeader === 'function') updateHeader();
+    } else {
+      // ghi thẳng localStorage nếu không có state object
+      try{
+        var raw = localStorage.getItem('fishingWorld_save_v1');
+        var obj = raw ? JSON.parse(raw) : {};
+        if(!obj || typeof obj !== 'object') obj = {};
+        obj.coins = val;
+        localStorage.setItem('fishingWorld_save_v1', JSON.stringify(obj));
+      }catch(e2){}
+    }
+  }catch(e){}
+  try{
     var c2 = document.getElementById('wcCoinDisplay');
-    if(c2) c2.textContent = '🪙 ' + Number(state.coins).toLocaleString('vi-VN');
+    if(c2) c2.textContent = '🪙 ' + val.toLocaleString('vi-VN');
+    var c1 = document.getElementById('cosShopCoin');
+    if(c1) c1.textContent = '🪙 ' + val.toLocaleString('vi-VN');
   }catch(e){}
 }
 function mgAddCoins(d){
-  mgSetCoins(mgCoins() + d);
+  mgSetCoins(mgCoins() + Number(d||0));
 }
 function mgDb(){
   try{ return (typeof db !== 'undefined' && db) ? db : null; }catch(e){ return null; }
+}
+/** true khi Firebase thật sự kết nối được (không phải stub offline / file://) */
+function mgIsOnline(){
+  try{
+    if (window.__IS_FILE_ORIGIN) return false;
+    if (typeof __fbConnected !== 'undefined' && !__fbConnected) return false;
+    var d = mgDb();
+    if (!d || typeof d.ref !== 'function') return false;
+    // stub offline: push trả key local_... hoặc transaction luôn committed với null
+    // kiểm tra firebase.apps có thật không
+    if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return false;
+    // nếu auth stub thì currentUser luôn null và signInAnonymously reject offline
+    return true;
+  }catch(e){ return false; }
 }
 function mgRoomsRef(game){
   var d = mgDb();
@@ -3545,7 +3633,11 @@ function mgEsc(s){
   });
 }
 function mgToast(msg){
-  try{ if(typeof toast==='function') toast(msg); else alert(msg); }catch(e){ alert(msg); }
+  try{
+    if(typeof window.__fgToast === 'function'){ window.__fgToast(msg); return; }
+  }catch(e){}
+  try{ if(typeof toast==='function'){ toast(msg); return; } }catch(e){}
+  try{ alert(msg); }catch(e){}
 }
 function mgNeedLogin(){
   // Cho phép cả khách (uid guest) chơi
@@ -3596,19 +3688,31 @@ function openLobby(game){
 function renderModeSelect(){
   var titles = { baucua:'🎲 Bầu Cua', tienlen:'🃏 Tiến Lên', xidach:'🂡 Xì Dách' };
   var t = titles[MG.game] || 'Mini Game';
+  var online = mgIsOnline();
+  var onlineBtn = online
+    ? '<button class="mgActionBtn ok" id="mgModeOnline" style="width:100%;margin-bottom:10px;padding:14px;">🌐 Chơi Online<br><span style="font-weight:700;font-size:11px;opacity:.85;">Tạo/tham gia phòng với người chơi khác</span></button>'
+    : '<button class="mgActionBtn secondary" id="mgModeOnline" style="width:100%;margin-bottom:10px;padding:14px;opacity:.7;" disabled>🌐 Chơi Online<br><span style="font-weight:700;font-size:11px;opacity:.85;">⚠️ Cần mạng (Firebase) — đang offline</span></button>';
   setMgBody(
     '<div class="mgStatus">'+t+'</div>'+
     '<div class="mgHint" style="text-align:center;margin:12px 0 16px;">Chọn chế độ chơi</div>'+
-    '<button class="mgActionBtn ok" id="mgModeOnline" style="width:100%;margin-bottom:10px;padding:14px;">🌐 Chơi Online<br><span style="font-weight:700;font-size:11px;opacity:.85;">Tạo/tham gia phòng với người chơi khác</span></button>'+
+    onlineBtn +
     '<button class="mgActionBtn" id="mgModeOffline" style="width:100%;padding:14px;background:linear-gradient(180deg,#b8f0c8,#3fbf6d);color:#083a1c;">🤖 Chơi Offline (vs Bot)<br><span style="font-weight:700;font-size:11px;opacity:.85;">Thắng nhận thưởng · Có thể tăng cược</span></button>'+
-    '<div class="mgHint" style="margin-top:14px;text-align:center;">Xu hiện có: 🪙 '+mgCoins().toLocaleString('vi-VN')+'</div>'
+    '<div class="mgHint" style="margin-top:14px;text-align:center;">Xu hiện có: 🪙 '+mgCoins().toLocaleString('vi-VN')+'</div>'+
+    (online ? '' : '<div class="mgHint" style="text-align:center;color:#c40000;">Không cần mạng — chơi Offline vẫn trừ/cộng xu bình thường.</div>')
   );
   setMgFoot('<button class="mgActionBtn secondary" id="mgModeClose">Đóng</button>');
-  document.getElementById('mgModeOnline').onclick = function(){
-    MG.mode = 'online';
-    renderLobby();
-    listenLobby(MG.game);
-  };
+  var onlineEl = document.getElementById('mgModeOnline');
+  if (onlineEl && online) {
+    onlineEl.onclick = function(){
+      MG.mode = 'online';
+      renderLobby();
+      listenLobby(MG.game);
+    };
+  } else if (onlineEl) {
+    onlineEl.onclick = function(){
+      mgToast('⚠️ Cần kết nối mạng để chơi Online. Hãy chọn Offline (vs Bot).');
+    };
+  }
   document.getElementById('mgModeOffline').onclick = function(){
     MG.mode = 'offline';
     renderOfflineSetup();
@@ -3721,8 +3825,12 @@ function renderOffBaucua(){
       if(!selectedSym){ mgToast('Chọn một mặt trước'); return; }
       var add = Math.floor(Number(chip.getAttribute('data-add'))||0);
       MG.localBets = MG.localBets || {};
-      if(add === 0){ MG.localBets[selectedSym] = 0; }
-      else {
+      if(add === 0){
+        // hoàn lại xu đã đặt trên mặt này
+        var prev = Number(MG.localBets[selectedSym]||0);
+        if(prev > 0) mgAddCoins(prev);
+        MG.localBets[selectedSym] = 0;
+      } else {
         if(mgCoins() < add){ mgToast('Không đủ xu'); return; }
         mgAddCoins(-add);
         MG.localBets[selectedSym] = Number(MG.localBets[selectedSym]||0) + add;
@@ -3956,20 +4064,30 @@ function offTlBotTurn(){
 
 function listenLobby(game){
   mgDetachRoom();
+  if (!mgIsOnline()) {
+    mgToast('⚠️ Không có mạng — chuyển sang Offline (vs Bot)');
+    MG.mode = 'offline';
+    renderOfflineSetup();
+    return;
+  }
   var ref = mgRoomsRef(game);
   if(!ref){
-    setMgBody('<div class="mgHint">⚠️ Cần kết nối mạng (Firebase) để tạo/tham gia phòng.</div>');
-    setMgFoot('<button class="mgActionBtn secondary" id="mgBtnClose2">Đóng</button>');
-    document.getElementById('mgBtnClose2').onclick = closeMgOverlay;
+    mgToast('⚠️ Không kết nối được server — chuyển Offline');
+    MG.mode = 'offline';
+    renderOfflineSetup();
     return;
   }
   MG.unsub = ref.orderByChild('createdAt').limitToLast(30).on('value', function(snap){
     var rooms = [];
-    snap.forEach(function(ch){
-      var v = ch.val() || {};
-      v._id = ch.key;
-      if(v.status === 'waiting' || v.status === 'playing') rooms.push(v);
-    });
+    try {
+      if (snap && typeof snap.forEach === 'function') {
+        snap.forEach(function(ch){
+          var v = ch.val() || {};
+          v._id = ch.key;
+          if(v.status === 'waiting' || v.status === 'playing') rooms.push(v);
+        });
+      }
+    } catch (e) {}
     rooms.sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
     if(MG.roomId) return; // đang trong phòng
     renderLobbyList(rooms);
@@ -4042,8 +4160,14 @@ function showCreateRoomForm(){
 }
 
 function createRoom(name, bet){
+  if (!mgIsOnline()) {
+    mgToast('⚠️ Cần mạng để tạo phòng Online. Chuyển Offline...');
+    MG.mode = 'offline';
+    renderOfflineSetup();
+    return;
+  }
   var ref = mgRoomsRef(MG.game);
-  if(!ref){ mgToast('Không kết nối được server'); return; }
+  if(!ref){ mgToast('Không kết nối được server'); MG.mode='offline'; renderOfflineSetup(); return; }
   var uid = mgMyUid();
   var maxp = 5;
   var payload = {
@@ -4075,8 +4199,14 @@ function createRoom(name, bet){
 }
 
 function joinRoom(rid){
+  if (!mgIsOnline()) {
+    mgToast('⚠️ Cần mạng để tham gia phòng. Chuyển Offline...');
+    MG.mode = 'offline';
+    renderOfflineSetup();
+    return;
+  }
   var ref = mgRoomRef(MG.game, rid);
-  if(!ref){ mgToast('Không kết nối được server'); return; }
+  if(!ref){ mgToast('Không kết nối được server'); MG.mode='offline'; renderOfflineSetup(); return; }
   var uid = mgMyUid();
   ref.transaction(function(cur){
     if(!cur) return;
@@ -4318,6 +4448,8 @@ function renderBaucuaPlay(room){
       var add = Math.floor(Number(chip.getAttribute('data-add'))||0);
       MG.localBets = MG.localBets || {};
       if(add === 0){
+        var prev = Number(MG.localBets[selectedSym]||0);
+        if(prev > 0) mgAddCoins(prev);
         MG.localBets[selectedSym] = 0;
       } else {
         if(mgCoins() < add){ mgToast('Không đủ xu'); return; }
