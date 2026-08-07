@@ -2941,8 +2941,9 @@ const btnGoCosmeticShop = document.getElementById('btnGoCosmeticShop');
 if(btnGoCosmeticShop){
   btnGoCosmeticShop.addEventListener('click', ()=>{
     SoundEngine.unlock(); SoundEngine.sfx.open();
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-    document.getElementById('panel-cosmeticshop').classList.add('show');
+    document.querySelectorAll('.panel').forEach(p=>{ p.classList.remove('show'); p.style.display=''; });
+    const cosPanel = document.getElementById('panel-cosmeticshop');
+    if(cosPanel){ cosPanel.classList.add('show'); cosPanel.style.display=''; }
     renderCosmeticShop();
   });
 }
@@ -4426,8 +4427,20 @@ function renderInventory(){
 const navBtns = document.querySelectorAll('.navBtn');
 function goToGameTab(){
   navBtns.forEach(b=>b.classList.remove('active'));
-  document.querySelector('.navBtn[data-panel="game"]').classList.add('active');
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  const gameNav = document.querySelector('.navBtn[data-panel="game"]');
+  if(gameNav) gameNav.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.remove('show');
+    // Xoa style.display inline (panel-coinlb / panel-abyss tung gan display:flex|none)
+    // de CSS .panel { display:none } hoat dong lai khi dong bang nut X
+    p.style.display = '';
+  });
+  try{
+    const us = document.getElementById('unsealPanel');
+    if(us){ us.classList.remove('show'); us.style.display = 'none'; }
+    const mapSel = document.getElementById('mapSelectPanel');
+    if(mapSel) mapSel.classList.remove('show');
+  }catch(e){}
 }
 
 /* Nút hạng ở header: mở panel Rank (không nằm trong thanh nav dưới) */
@@ -4437,8 +4450,9 @@ if(rankBtnEl){
     SoundEngine.unlock();
     SoundEngine.sfx.open();
     navBtns.forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-    document.getElementById('panel-rank').classList.add('show');
+    document.querySelectorAll('.panel').forEach(p=>{ p.classList.remove('show'); p.style.display=''; });
+    const rankPanel = document.getElementById('panel-rank');
+    if(rankPanel){ rankPanel.classList.add('show'); rankPanel.style.display=''; }
     renderRank();
     renderRankLeaderboard();
   });
@@ -4452,8 +4466,9 @@ if(bookShopBtnEl){
     SoundEngine.unlock();
     SoundEngine.sfx.open();
     navBtns.forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-    document.getElementById('panel-bookshop').classList.add('show');
+    document.querySelectorAll('.panel').forEach(p=>{ p.classList.remove('show'); p.style.display=''; });
+    const bookPanel = document.getElementById('panel-bookshop');
+    if(bookPanel){ bookPanel.classList.add('show'); bookPanel.style.display=''; }
     renderBookShop();
   });
 }
@@ -4465,8 +4480,9 @@ if(enchantBtnEl){
     SoundEngine.unlock();
     SoundEngine.sfx.open();
     navBtns.forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-    document.getElementById('panel-enchant').classList.add('show');
+    document.querySelectorAll('.panel').forEach(p=>{ p.classList.remove('show'); p.style.display=''; });
+    const enchPanel = document.getElementById('panel-enchant');
+    if(enchPanel){ enchPanel.classList.add('show'); enchPanel.style.display=''; }
     renderEnchantShop();
   });
 }
@@ -4778,9 +4794,16 @@ navBtns.forEach(btn=>{
     navBtns.forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const target = btn.getAttribute('data-panel');
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+    document.querySelectorAll('.panel').forEach(p=>{
+      p.classList.remove('show');
+      p.style.display = '';
+    });
     if(target!=='game'){
-      document.getElementById('panel-'+target).classList.add('show');
+      const panel = document.getElementById('panel-'+target);
+      if(panel){
+        panel.classList.add('show');
+        panel.style.display = '';
+      }
       if(target==='shop') renderShop();
       if(target==='collection') renderCollection();
       if(target==='inventory') renderInventory();
