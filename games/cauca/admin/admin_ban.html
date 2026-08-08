@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fishing World — Quản trị</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --bg-deep:#04263f;
+    --bg-mid:#0a4a72;
+    --panel:#0e2f4a;
+    --panel-light:#123a5c;
+    --border:rgba(255,255,255,.08);
+    --gold:#ffd35c;
+    --gold-dark:#e0a900;
+    --text:#eaf6ff;
+    --text-dim:#9fc4de;
+    --danger:#ff5c5c;
+    --danger-dark:#c93e3e;
+    --good:#3ddc84;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; min-height:100%; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; color:var(--text);
+    background:radial-gradient(circle at 50% 0%, #0d3a5c 0%, var(--bg-deep) 55%, #01121e 100%);}
+  a{color:inherit;}
+
+  /* ===== LOGIN SCREEN ===== */
+  #loginScreen{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:20px;
+  }
+  .loginBox{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px 24px;
+    width:100%;
+    max-width:380px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .loginBox h2{
+    margin:0 0 18px;
+    text-align:center;
+    font-size:20px;
+    color:var(--gold);
+  }
+
+  /* ===== DASHBOARD ===== */
+  #dashboard{display:none; max-width:1200px; margin:0 auto; padding:18px 16px 60px;}
+  .btn{cursor:pointer; border:none; border-radius:10px; padding:11px 16px; font-weight:700; font-size:14px; transition:transform .1s;}
+  .btn:active{transform:scale(.97);}
+  .btnDanger{background:var(--danger); color:#2a0000;}
+  .btnGhost{background:var(--panel-light); color:var(--text); border:1px solid var(--border);}
+  .btnGold{background:linear-gradient(180deg,var(--gold),var(--gold-dark)); color:#241800;}
+
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:12px; color:var(--text-dim); font-weight:600;}
+  .field input, select{padding:9px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg-deep); color:var(--text); font-size:13px; outline:none;}
+  .field input:focus, select:focus{border-color:var(--gold-dark);}
+  .addFishForm{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; background:var(--panel-light); padding:14px; border-radius:12px; margin-bottom:8px;}
+  .addFishForm .field{min-width:130px;}
+  .addFishForm .field input#newFishIcon{width:70px; text-align:center; font-size:20px;}
+  header.top{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;}
+  header.top h1{font-size:20px; margin:0; display:flex; align-items:center; gap:8px;}
+  header.top .who{font-size:12px; color:var(--text-dim);}
+  .statGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;}
+  .statCard{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px 16px;}
+  .statCard .num{font-size:24px; font-weight:800; color:var(--gold);}
+  .statCard .lbl{font-size:12px; color:var(--text-dim); margin-top:2px;}
+
+  .tabs{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; border-bottom:1px solid var(--border); padding-bottom:10px;}
+  .tabBtn{background:transparent; border:1px solid var(--border); color:var(--text-dim); padding:8px 14px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer;}
+  .tabBtn.active{background:var(--gold); color:#241800; border-color:var(--gold);}
+
+  .panelBox{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; display:none;}
+  .panelBox.show{display:block;}
+  .panelBox h2{margin:0 0 12px; font-size:16px;}
+  .toolbar{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
+  .toolbar input[type=text]{flex:1; min-width:160px; padding:9px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg-deep); color:var(--text); font-size:13px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:.03em; padding:8px 10px; border-bottom:1px solid var(--border);}
+  td{padding:9px 10px; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:middle;}
+  tr:hover td{background:rgba(255,255,255,.03);}
+  .tblWrap{overflow-x:auto;}
+  .miniInput{width:90px; padding:6px 8px; border-radius:8px; border:1px solid var(--border); background:var(--bg-deep); color:var(--text); font-size:13px;}
+  .rowBtn{padding:6px 10px; font-size:12px; border-radius:8px;}
+  .tag{display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700;}
+  .tagOnline{background:rgba(61,220,132,.15); color:var(--good);}
+  .empty{color:var(--text-dim); font-size:13px; text-align:center; padding:30px 10px;}
+  .msgText{max-width:320px; word-break:break-word;}
+  .smallDim{color:var(--text-dim); font-size:11px;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--panel-light); border:1px solid var(--border); padding:10px 18px; border-radius:20px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:100;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="loginBox">
+    <h2>🔐 Đăng Nhập Admin</h2>
+    <form id="loginForm">
+      <div class="field" style="margin-bottom:14px;">
+        <label>Tài khoản</label>
+        <input type="text" id="loginUsername" placeholder="Nhập tài khoản..." required autocomplete="off">
+      </div>
+      <div class="field" style="margin-bottom:20px;">
+        <label>Mật khẩu</label>
+        <input type="password" id="loginPassword" placeholder="Nhập mật khẩu..." required>
+      </div>
+      <button type="submit" class="btn btnGold" style="width:100%;">Đăng nhập</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard">
+  <header class="top">
+    <h1>🎣 Bảng quản trị</h1>
+  </header>
+  <div id="errorBanner" style="display:none; background:rgba(255,92,92,.12); border:1px solid var(--danger); color:#ffb3b3; padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:13px; line-height:1.6;"></div>
+
+  <div class="statGrid">
+    <div class="statCard"><div class="num" id="statPlayers">–</div><div class="lbl">Người chơi</div></div>
+    <div class="statCard"><div class="num" id="statOnline">–</div><div class="lbl">Đang online</div></div>
+    <div class="statCard"><div class="num" id="statCoins">–</div><div class="lbl">Tổng xu toàn server</div></div>
+    <div class="statCard"><div class="num" id="statMsgs">–</div><div class="lbl">Tin nhắn chat hiện có</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tabBtn active" data-tab="players">👤 Người chơi</button>
+    <button class="tabBtn" data-tab="online">🟢 Đang online</button>
+    <button class="tabBtn" data-tab="chat">💬 Chat</button>
+    <button class="tabBtn" data-tab="fish">🐟 Danh sách cá</button>
+    <button class="tabBtn" data-tab="monster">🐙 Thủy quái</button>
+    <button class="tabBtn" data-tab="rods">🎣 Cần câu</button>
+  </div>
+
+  <!-- PLAYERS -->
+  <div class="panelBox show" id="tab-players">
+    <h2>Danh sách người chơi</h2>
+    <div class="toolbar">
+      <input type="text" id="playerSearch" placeholder="🔎 Tìm theo tên hoặc UID...">
+    </div>
+    <div class="tblWrap">
+      <table>
+        <thead><tr>
+          <th>Cần thủ</th><th>ID</th><th>Xu</th><th>Cần câu đang dùng</th><th>Số cần sở hữu</th><th>Hành động</th>
+        </tr></thead>
+        <tbody id="playersBody"></tbody>
+      </table>
+      <div class="empty" id="playersEmpty" style="display:none;">Chưa có người chơi nào.</div>
+    </div>
+  </div>
+
+  <!-- ONLINE -->
+  <div class="panelBox" id="tab-online">
+    <h2>Người chơi đang online</h2>
+    <div class="tblWrap">
+      <table>
+        <thead><tr><th>Cần thủ</th><th>UID</th><th>Trạng thái</th></tr></thead>
+        <tbody id="onlineBody"></tbody>
+      </table>
+      <div class="empty" id="onlineEmpty" style="display:none;">Hiện không có ai online.</div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="panelBox" id="tab-chat">
+    <h2>Quản lý chat</h2>
+
+    <!-- Toggle Bot Nối từ -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:12px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700; font-size:14px;">Bật/tắt bot Nối từ (lệnh /botnoitu)</div>
+        <div class="smallDim" id="noituStatusText" style="margin-top:3px;">Đang tải...</div>
+      </div>
+      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="smallDim" id="noituToggleLabel">—</span>
+        <span style="position:relative; width:46px; height:26px; display:inline-block;">
+          <input type="checkbox" id="noituToggle" style="opacity:0; width:0; height:0;">
+          <span id="noituToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
+          <span id="noituToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
+        </span>
+      </label>
+    </div>
+
+    <!-- Toggle Bot Vua Tiếng Việt -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700; font-size:14px;">Bật/tắt bot Vua Tiếng Việt (lệnh /botvtv)</div>
+        <div class="smallDim" id="vtvStatusText" style="margin-top:3px;">Đang tải...</div>
+      </div>
+      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="smallDim" id="vtvToggleLabel">—</span>
+        <span style="position:relative; width:46px; height:26px; display:inline-block;">
+          <input type="checkbox" id="vtvToggle" style="opacity:0; width:0; height:0;">
+          <span id="vtvToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
+          <span id="vtvToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
+        </span>
+      </label>
+    </div>
+
+    <div class="toolbar">
+      <span class="smallDim">Tin nhắn được lưu lại cho đến khi bạn xoá thủ công.</span>
+      <button class="btn btnDanger rowBtn" id="clearAllChatBtn" style="margin-left:auto;">🗑 Xoá toàn bộ chat</button>
+    </div>
+    <div class="tblWrap">
+      <table>
+        <thead><tr><th>Cần thủ</th><th>Nội dung</th><th>Thời gian</th><th></th></tr></thead>
+        <tbody id="chatBody"></tbody>
+      </table>
+      <div class="empty" id="chatEmpty" style="display:none;">Chưa có tin nhắn nào.</div>
+    </div>
+  </div>
+
+  <!-- FISH -->
+  <div class="panelBox" id="tab-fish">
+    <h2>Thêm cá mới</h2>
+    <div class="addFishForm">
+      <div class="field">
+        <label>Icon (emoji, dùng nếu không chọn ảnh)</label>
+        <input type="text" id="newFishIcon" placeholder="🐟" maxlength="4">
+      </div>
+      <div class="field">
+        <label>Hoặc chọn ảnh từ máy</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <img id="newFishImgPreview" style="display:none; width:40px; height:40px; object-fit:contain; background:rgba(255,255,255,.06); border-radius:8px; border:1px solid var(--border);">
+          <input type="file" id="newFishImgInput" accept="image/*" style="font-size:12px; max-width:150px;">
+        </div>
+      </div>
+      <div class="field">
+        <label>Tên cá</label>
+        <input type="text" id="newFishName" placeholder="Cá chép vàng">
+      </div>
+      <div class="field">
+        <label>Độ hiếm</label>
+        <select id="newFishRarity">
+          <option value="common">Thường</option>
+          <option value="uncommon">Hiếm</option>
+          <option value="rare">Quý</option>
+          <option value="epic">Huyền Thoại</option>
+          <option value="mythic">Thần Thoại</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Giá bán (xu)</label>
+        <input type="number" id="newFishPrice" placeholder="100" min="0">
+      </div>
+      <button class="btn btnGold rowBtn" id="addFishBtn" style="align-self:flex-end;">➕ Thêm cá</button>
+    </div>
+
+    <h2 style="margin-top:22px;">Danh sách cá hiện có (<span id="fishCount">0</span>)</h2>
+    <div class="toolbar">
+      <input type="text" id="fishSearch" placeholder="🔎 Tìm theo tên...">
+      <select id="fishRarityFilter">
+        <option value="">Tất cả độ hiếm</option>
+        <option value="common">Thường</option>
+        <option value="uncommon">Hiếm</option>
+        <option value="rare">Quý</option>
+        <option value="epic">Huyền Thoại</option>
+        <option value="mythic">Thần Thoại</option>
+      </select>
+    </div>
+    <div class="tblWrap">
+      <table>
+        <thead><tr><th>Icon</th><th>Tên cá</th><th>Độ hiếm</th><th>Giá (xu)</th><th>Hành động</th></tr></thead>
+        <tbody id="fishBody"></tbody>
+      </table>
+      <div class="empty" id="fishEmpty" style="display:none;">Chưa có con cá nào.</div>
+    </div>
+  </div>
+
+  <!-- MONSTER (THỦY QUÁI) -->
+  <div class="panelBox" id="tab-monster">
+    <h2>Thêm thủy quái mới</h2>
+    <div style="background:rgba(193,99,255,.08); border:1px solid rgba(193,99,255,.3); border-radius:12px; padding:12px 14px; margin-bottom:14px; font-size:12.5px; color:var(--text-dim); line-height:1.6;">
+      Cứ <b style="color:#c163ff;">4 phút</b> sẽ có <b style="color:#c163ff;">1 con thủy quái</b> xuất hiện ngẫu nhiên từ danh sách bên dưới cho <b>tất cả người chơi</b> cùng câu chung (cơ chế nhấn đúng nhịp giống câu cá thường). Chỉ người ra đòn <b>kết liễu (câu nhanh nhất)</b> mới nhận được cá và xu thưởng.
+    </div>
+    <div class="addFishForm">
+      <div class="field">
+        <label>Icon (emoji, dùng nếu không chọn ảnh)</label>
+        <input type="text" id="newMonsterIcon" placeholder="🐙" maxlength="4">
+      </div>
+      <div class="field">
+        <label>Hoặc chọn ảnh từ máy</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <img id="newMonsterImgPreview" style="display:none; width:40px; height:40px; object-fit:contain; background:rgba(255,255,255,.06); border-radius:8px; border:1px solid var(--border);">
+          <input type="file" id="newMonsterImgInput" accept="image/*" style="font-size:12px; max-width:150px;">
+        </div>
+      </div>
+      <div class="field">
+        <label>Tên thủy quái</label>
+        <input type="text" id="newMonsterName" placeholder="Thủy Quái Viễn Cổ">
+      </div>
+      <div class="field">
+        <label>Số lần nhấn để hạ gục</label>
+        <input type="number" id="newMonsterHp" placeholder="13" min="1" value="13">
+      </div>
+      <div class="field">
+        <label>Thưởng xu (cho mỗi người tham gia)</label>
+        <input type="number" id="newMonsterPrice" placeholder="2000" min="0">
+      </div>
+      <button class="btn btnGold rowBtn" id="addMonsterBtn" style="align-self:flex-end;">➕ Thêm thủy quái</button>
+    </div>
+
+    <h2 style="margin-top:22px;">Danh sách thủy quái (<span id="monsterCount">0</span>)</h2>
+    <div class="toolbar">
+      <input type="text" id="monsterSearch" placeholder="🔎 Tìm theo tên...">
+    </div>
+    <div class="tblWrap">
+      <table>
+        <thead><tr><th>Icon</th><th>Tên thủy quái</th><th>Số lần nhấn để hạ gục</th><th>Thưởng xu (người nhanh nhất)</th><th>Hành động</th></tr></thead>
+        <tbody id="monsterBody"></tbody>
+      </table>
+      <div class="empty" id="monsterEmpty" style="display:none;">Chưa có thủy quái nào.</div>
+    </div>
+
+    <h2 style="margin-top:22px;">Thủy quái đang xuất hiện</h2>
+    <div id="bossStatusBox" style="background:var(--panel-light); border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.8;">Đang tải...</div>
+    <button class="btn btnDanger rowBtn" id="forceRespawnBtn" style="margin-top:10px;">🔄 Buộc thủy quái mới xuất hiện ngay</button>
+  </div>
+
+  <!-- RODS (CẦN CÂU) -->
+  <div class="panelBox" id="tab-rods">
+    <h2>Độ bền cần câu</h2>
+    <div style="background:rgba(255,211,92,.08); border:1px solid rgba(255,211,92,.3); border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:12.5px; color:var(--text-dim); line-height:1.6;">
+      Mỗi cần câu có <b style="color:var(--gold);">số lượt câu tối đa</b> trước khi bị hỏng (trừ Cần Tre Tân Thủ sẽ tự hồi độ bền miễn phí). Chỉnh số ở đây sẽ đồng bộ ngay cho <b>tất cả người chơi</b>. Có thể <b>tắt hẳn</b> cơ chế hao mòn để mọi cần câu dùng vĩnh viễn.
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--panel-light); border-radius:12px; padding:14px 16px; margin-bottom:18px; flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700; font-size:14px;">Bật/tắt hao mòn độ bền cần câu</div>
+        <div class="smallDim" id="durabilityStatusText" style="margin-top:3px;">Đang tải...</div>
+      </div>
+      <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="smallDim" id="durabilityToggleLabel">—</span>
+        <span style="position:relative; width:46px; height:26px; display:inline-block;">
+          <input type="checkbox" id="durabilityToggle" style="opacity:0; width:0; height:0;">
+          <span id="durabilityToggleTrack" style="position:absolute; inset:0; background:#3a4a5a; border-radius:20px; transition:background .15s;"></span>
+          <span id="durabilityToggleDot" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;"></span>
+        </span>
+      </label>
+    </div>
+
+    <h2 style="margin-top:4px;">Số lượt câu tối đa của từng cần</h2>
+    <div class="tblWrap">
+      <table>
+        <thead><tr><th>Icon</th><th>Tên cần câu</th><th>Giá (xu)</th><th>Độ bền mặc định</th><th>Độ bền hiện tại (lượt câu)</th><th>Hành động</th></tr></thead>
+        <tbody id="rodsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============== LOGIC ĐĂNG NHẬP ADMIN ============== */
+const loginScreen = document.getElementById('loginScreen');
+const dashboard = document.getElementById('dashboard');
+const loginForm = document.getElementById('loginForm');
+
+loginForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+
+  if(u === 'tungtungtung' && p === 'chidangyeu'){
+    loginScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    toast('Đăng nhập thành công!');
+  } else {
+    toast('Tài khoản hoặc mật khẩu không chính xác!');
+  }
+});
+
+/* ============== FIREBASE INIT (dùng chung với game) ============== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDH_skpX3D9sD3zz3iiyrHnB28BIVvIMM0",
+  authDomain: "hihi-c6af6.firebaseapp.com",
+  databaseURL: "https://hihi-c6af6-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hihi-c6af6",
+  storageBucket: "hihi-c6af6.firebasestorage.app",
+  messagingSenderId: "164013580789",
+  appId: "1:164013580789:web:94227e94c6d517170f40bc"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+const toastEl = document.getElementById('toast');
+const errorBanner = document.getElementById('errorBanner');
+
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 2200);
+}
+
+function showError(context, err){
+  const msg = (err && err.message) ? err.message : String(err);
+  errorBanner.style.display = 'block';
+  errorBanner.innerHTML += `<div>⚠️ <b>${context}</b>: ${escapeHtml(msg)}</div>`;
+  console.error(context, err);
+}
+
+// Anonymous Auth không bắt buộc — nếu bị tắt trên Firebase Console thì bỏ qua
+try {
+  auth.signInAnonymously().catch(function(err){
+    if(err && err.code !== 'auth/admin-restricted-operation' && err.code !== 'auth/operation-not-allowed'){
+      showError('Không đăng nhập được với Firebase', err);
+    }
+  });
+} catch (e) {
+  // bỏ qua nếu Firebase Auth không sẵn sàng
+}
+
+/* ============== TABS ============== */
+document.querySelectorAll('.tabBtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panelBox').forEach(p=>p.classList.remove('show'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('show');
+  });
+});
+
+/* ============== DỮ LIỆU ============== */
+let listenersStarted = false;
+let usersCache = {};
+let onlineCache = {};
+let chatCache = {};
+let fishCache = {};
+let monsterCache = {};
+let bossCache = null;
+let bansCache = {};
+
+const RARITY_LABELS = {
+  common: {label:"Thường", color:"#b9c7d3"},
+  uncommon: {label:"Hiếm", color:"#3ddc84"},
+  rare: {label:"Quý", color:"#4fb3ff"},
+  epic: {label:"Huyền Thoại", color:"#c163ff"},
+  mythic: {label:"Thần Thoại", color:"#ff7a45"}
+};
+
+function startListeners(){
+  if(listenersStarted) return;
+  listenersStarted = true;
+
+  db.ref('users').on('value', (snap)=>{
+    usersCache = snap.val() || {};
+    renderPlayers();
+    renderStats();
+  }, (err)=>showError('Không tải được danh sách người chơi (users)', err));
+
+  db.ref('bans').on('value', (snap)=>{
+    bansCache = snap.val() || {};
+    renderPlayers();
+  }, (err)=>showError('Không tải được danh sách ban (bans)', err));
+
+  db.ref('presence').on('value', (snap)=>{
+    onlineCache = snap.val() || {};
+    renderOnline();
+    renderStats();
+  }, (err)=>showError('Không tải được danh sách online (presence)', err));
+
+  db.ref('chats/world_fishing').limitToLast(200).on('value', (snap)=>{
+    chatCache = snap.val() || {};
+    renderChat();
+    renderStats();
+  }, (err)=>showError('Không tải được tin nhắn chat (chats/world_fishing)', err));
+
+  db.ref('fishData').on('value', (snap)=>{
+    fishCache = snap.val() || {};
+    renderFish();
+  }, (err)=>showError('Không tải được danh sách cá (fishData)', err));
+
+  db.ref('monsterFishData').on('value', (snap)=>{
+    monsterCache = snap.val() || {};
+    renderMonster();
+  }, (err)=>showError('Không tải được danh sách thủy quái (monsterFishData)', err));
+
+  db.ref('worldBoss').on('value', (snap)=>{
+    bossCache = snap.val() || null;
+    renderBossStatus();
+  }, (err)=>showError('Không tải được trạng thái thủy quái (worldBoss)', err));
+}
+
+// Chạy ngay sau khi hàm đã được định nghĩa (không phụ thuộc Anonymous Auth)
+startListeners();
+
+function renderStats(){
+  const userIds = Object.keys(usersCache);
+  document.getElementById('statPlayers').textContent = userIds.length;
+  document.getElementById('statOnline').textContent = Object.values(onlineCache).filter(p=>p && p.online===true).length;
+  let totalCoins = 0;
+  userIds.forEach(uid=>{
+    const gs = (usersCache[uid]||{}).gameState || {};
+    totalCoins += Number(gs.coins||0);
+  });
+  document.getElementById('statCoins').textContent = totalCoins.toLocaleString('vi-VN');
+  document.getElementById('statMsgs').textContent = Object.keys(chatCache).length;
+}
+
+/* ---- PLAYERS ---- */
+function renderPlayers(){
+  const body = document.getElementById('playersBody');
+  const empty = document.getElementById('playersEmpty');
+  const search = (document.getElementById('playerSearch').value||'').toLowerCase().trim();
+  body.innerHTML = '';
+  const entries = Object.entries(usersCache);
+  let shown = 0;
+  entries.forEach(([uid, u])=>{
+    const gs = u.gameState || {};
+    const nick = gs.nickname || '(chưa đặt tên)';
+    if(search && !nick.toLowerCase().includes(search) && !uid.toLowerCase().includes(search)) return;
+    shown++;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(nick)}${(bansCache[uid]&&bansCache[uid].banned)?' <span class="tag" style="background:rgba(255,92,92,.2);color:var(--danger);">BAN</span>':''}<div class="smallDim">#${gs.playerId||'—'}</div></td>
+      <td class="smallDim">${uid}</td>
+      <td><input type="number" class="miniInput" value="${Number(gs.coins||0)}" data-uid="${uid}" data-field="coins"></td>
+      <td>${escapeHtml(gs.equippedRod||'—')}</td>
+      <td>${(gs.ownedRods||[]).length}</td>
+      <td>
+        <button class="btn btnGhost rowBtn" data-action="save" data-uid="${uid}">💾 Lưu xu</button>
+        ${bansCache[uid] && bansCache[uid].banned
+          ? `<button class="btn btnGhost rowBtn" data-action="unban" data-uid="${uid}">✅ Gỡ ban</button>
+             <span class="tag" style="background:rgba(255,92,92,.2);color:var(--danger);margin-left:4px;">ĐÃ BAN</span>`
+          : `<button class="btn btnDanger rowBtn" data-action="ban" data-uid="${uid}">🚫 Ban</button>`}
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+  empty.style.display = shown ? 'none' : 'block';
+}
+
+document.getElementById('playerSearch').addEventListener('input', renderPlayers);
+
+document.getElementById('playersBody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const uid = btn.dataset.uid;
+  if(btn.dataset.action === 'save'){
+    const input = document.querySelector(`input[data-uid="${uid}"][data-field="coins"]`);
+    const newCoins = Math.max(0, Math.floor(Number(input.value)||0));
+    try{
+      await db.ref('users/'+uid+'/gameState/coins').set(newCoins);
+      toast('Đã cập nhật xu.');
+    }catch(err){ toast('Cập nhật thất bại.'); }
+  } else if(btn.dataset.action === 'ban'){
+    if(!confirm('Ban người chơi này? Họ sẽ không vào được game và thấy thông báo đã bị ban.')) return;
+    try{
+      const nick = ((usersCache[uid]||{}).gameState||{}).nickname || uid;
+      await db.ref('bans/'+uid).set({
+        banned: true,
+        reason: 'Bạn đã bị ban bởi quản trị viên.',
+        at: Date.now(),
+        nickname: nick
+      });
+      await db.ref('users/'+uid+'/banned').set(true);
+      // Đưa offline nếu đang online
+      try{ await db.ref('presence/'+uid).update({ online:false, banned:true, ts: Date.now() }); }catch(e){}
+      toast('Đã ban người chơi: ' + nick);
+      renderPlayers();
+    }catch(err){ toast('Ban thất bại.'); }
+  } else if(btn.dataset.action === 'unban'){
+    if(!confirm('Gỡ ban cho người chơi này?')) return;
+    try{
+      await db.ref('bans/'+uid).remove();
+      await db.ref('users/'+uid+'/banned').set(false);
+      toast('Đã gỡ ban.');
+      renderPlayers();
+    }catch(err){ toast('Gỡ ban thất bại.'); }
+  }
+});
+
+/* ---- ONLINE ---- */
+function renderOnline(){
+  const body = document.getElementById('onlineBody');
+  const empty = document.getElementById('onlineEmpty');
+  body.innerHTML = '';
+  const entries = Object.entries(onlineCache).filter(([uid,p])=>p && p.online===true);
+  entries.forEach(([uid, p])=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.nickname||'Cần thủ')}</td>
+      <td class="smallDim">${uid}</td>
+      <td><span class="tag tagOnline">● Online</span></td>
+    `;
+    body.appendChild(tr);
+  });
+  empty.style.display = entries.length ? 'none' : 'block';
+}
+
+/* ---- CHAT ---- */
+function renderChat(){
+  const body = document.getElementById('chatBody');
+  const empty = document.getElementById('chatEmpty');
+  body.innerHTML = '';
+  const entries = Object.entries(chatCache).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  entries.forEach(([key, m])=>{
+    const tr = document.createElement('tr');
+    const time = m.ts ? new Date(m.ts).toLocaleString('vi-VN') : '—';
+    tr.innerHTML = `
+      <td>${escapeHtml(m.sys ? 'Hệ thống' : (m.s||'Cần thủ'))}</td>
+      <td class="msgText">${escapeHtml(m.t||'')}</td>
+      <td class="smallDim">${time}</td>
+      <td><button class="btn btnDanger rowBtn" data-key="${key}">🗑</button></td>
+    `;
+    body.appendChild(tr);
+  });
+  empty.style.display = entries.length ? 'none' : 'block';
+}
+
+document.getElementById('chatBody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-key]');
+  if(!btn) return;
+  try{
+    await db.ref('chats/world_fishing/'+btn.dataset.key).remove();
+    toast('Đã xoá tin nhắn.');
+  }catch(err){ toast('Xoá thất bại.'); }
+});
+
+document.getElementById('clearAllChatBtn').addEventListener('click', async ()=>{
+  if(!confirm('Xoá toàn bộ tin nhắn chat? Hành động không thể hoàn tác.')) return;
+  try{
+    await db.ref('chats/world_fishing').remove();
+    toast('Đã xoá toàn bộ chat.');
+  }catch(err){ toast('Xoá thất bại.'); }
+});
+
+/* ---- FISH ---- */
+function isImgData(v){ return typeof v==='string' && v.startsWith('data:image'); }
+
+function renderFish(){
+  const body = document.getElementById('fishBody');
+  const empty = document.getElementById('fishEmpty');
+  const search = (document.getElementById('fishSearch').value||'').toLowerCase().trim();
+  const rarityFilter = document.getElementById('fishRarityFilter').value;
+  body.innerHTML = '';
+  const entries = Object.entries(fishCache);
+  document.getElementById('fishCount').textContent = entries.length;
+  let shown = 0;
+  entries.forEach(([id, f])=>{
+    if(search && !(f.name||'').toLowerCase().includes(search)) return;
+    if(rarityFilter && f.rarity !== rarityFilter) return;
+    shown++;
+    const rInfo = RARITY_LABELS[f.rarity] || {label:f.rarity, color:'#ccc'};
+    const tr = document.createElement('tr');
+    const iconIsImg = isImgData(f.icon);
+    tr.innerHTML = `
+      <td>
+        <div style="display:flex; align-items:center; gap:6px;">
+          ${iconIsImg
+            ? `<img src="${f.icon}" style="width:32px; height:32px; object-fit:contain; background:rgba(255,255,255,.06); border-radius:8px; border:1px solid var(--border);">`
+            : `<input type="text" class="miniInput" style="width:44px; text-align:center; font-size:18px;" value="${escapeHtml(f.icon||'')}" data-id="${id}" data-field="icon" maxlength="4">`}
+          <input type="file" accept="image/*" data-imgfor="${id}" style="display:none;">
+          <button class="btn btnGhost rowBtn" data-action="pickimg" data-id="${id}" title="Chọn ảnh từ máy" style="padding:6px 8px;">🖼</button>
+        </div>
+      </td>
+      <td><input type="text" class="miniInput" style="width:170px;" value="${escapeHtml(f.name||'')}" data-id="${id}" data-field="name"></td>
+      <td>
+        <select class="miniInput" style="width:130px;" data-id="${id}" data-field="rarity">
+          ${Object.keys(RARITY_LABELS).map(k=>`<option value="${k}" ${k===f.rarity?'selected':''}>${RARITY_LABELS[k].label}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="number" class="miniInput" value="${Number(f.price)||0}" data-id="${id}" data-field="price" min="0"></td>
+      <td>
+        <button class="btn btnGhost rowBtn" data-action="save" data-id="${id}">💾 Lưu</button>
+        <button class="btn btnDanger rowBtn" data-action="delete" data-id="${id}">🗑 Xoá</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+  empty.style.display = shown ? 'none' : 'block';
+}
+
+document.getElementById('fishSearch').addEventListener('input', renderFish);
+document.getElementById('fishRarityFilter').addEventListener('change', renderFish);
+
+function fileToCompressedDataUrl(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const size = 96;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(size/img.width, size/img.height);
+        const w = img.width*scale, h = img.height*scale;
+        ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+        resolve(canvas.toDataURL('image/webp', 0.85));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let pendingRowImg = {}; 
+
+document.getElementById('fishBody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button');
+  if(btn && btn.dataset.action === 'pickimg'){
+    const id = btn.dataset.id;
+    const fileInput = btn.closest('td').querySelector(`input[type="file"][data-imgfor="${id}"]`);
+    fileInput.click();
+    return;
+  }
+  if(!btn) return;
+  const id = btn.dataset.id;
+  if(btn.dataset.action === 'save'){
+    const row = btn.closest('tr');
+    const iconInput = row.querySelector('[data-field="icon"]');
+    const icon = pendingRowImg[id] || (iconInput ? iconInput.value.trim() : (fishCache[id]||{}).icon) || '🐟';
+    const name = row.querySelector('[data-field="name"]').value.trim();
+    const rarity = row.querySelector('[data-field="rarity"]').value;
+    const price = Math.max(0, Math.floor(Number(row.querySelector('[data-field="price"]').value)||0));
+    if(!name){ toast('Vui lòng nhập tên cá.'); return; }
+    try{
+      await db.ref('fishData/'+id).set({name, rarity, icon, price});
+      delete pendingRowImg[id];
+      toast('Đã lưu cá — đồng bộ cho tất cả người chơi.');
+    }catch(err){ toast('Lưu thất bại.'); }
+  } else if(btn.dataset.action === 'delete'){
+    if(!confirm('Xoá con cá này khỏi trò chơi? Mọi người chơi sẽ không còn câu được cá này nữa.')) return;
+    try{
+      await db.ref('fishData/'+id).remove();
+      toast('Đã xoá cá.');
+    }catch(err){ toast('Xoá thất bại.'); }
+  }
+});
+
+document.getElementById('fishBody').addEventListener('change', async (e)=>{
+  const input = e.target.closest('input[type="file"][data-imgfor]');
+  if(!input || !input.files[0]) return;
+  const id = input.dataset.imgfor;
+  try{
+    const dataUrl = await fileToCompressedDataUrl(input.files[0]);
+    const f = fishCache[id] || {};
+    await db.ref('fishData/'+id).update({ icon: dataUrl, name: f.name||'', rarity: f.rarity||'common', price: Number(f.price)||0 });
+    delete pendingRowImg[id];
+    toast('Đã cập nhật ảnh cá — đồng bộ cho tất cả người chơi.');
+  }catch(err){ toast('Không đổi được ảnh, thử ảnh khác nhé.'); }
+});
+
+const newFishImgInput = document.getElementById('newFishImgInput');
+const newFishImgPreview = document.getElementById('newFishImgPreview');
+let newFishImgData = null;
+newFishImgInput.addEventListener('change', async ()=>{
+  if(!newFishImgInput.files[0]) return;
+  try{
+    newFishImgData = await fileToCompressedDataUrl(newFishImgInput.files[0]);
+    newFishImgPreview.src = newFishImgData;
+    newFishImgPreview.style.display = 'block';
+  }catch(err){ toast('Không đọc được ảnh, thử ảnh khác nhé.'); }
+});
+
+document.getElementById('addFishBtn').addEventListener('click', async ()=>{
+  const icon = newFishImgData || document.getElementById('newFishIcon').value.trim() || '🐟';
+  const name = document.getElementById('newFishName').value.trim();
+  const rarity = document.getElementById('newFishRarity').value;
+  const price = Math.max(0, Math.floor(Number(document.getElementById('newFishPrice').value)||0));
+  if(!name){ toast('Vui lòng nhập tên cá.'); return; }
+  const existingIds = Object.keys(fishCache).map(Number).filter(n=>!isNaN(n));
+  const newId = existingIds.length ? Math.max(...existingIds)+1 : 1;
+  try{
+    await db.ref('fishData/'+newId).set({name, rarity, icon, price});
+    toast('Đã thêm cá mới — đồng bộ cho tất cả người chơi.');
+    document.getElementById('newFishIcon').value='';
+    document.getElementById('newFishName').value='';
+    document.getElementById('newFishPrice').value='';
+    newFishImgInput.value='';
+    newFishImgData = null;
+    newFishImgPreview.style.display='none';
+  }catch(err){ toast('Thêm cá thất bại.'); }
+});
+
+/* ---- THỦY QUÁI (MONSTER FISH) ---- */
+function renderMonster(){
+  const body = document.getElementById('monsterBody');
+  const empty = document.getElementById('monsterEmpty');
+  const search = (document.getElementById('monsterSearch').value||'').toLowerCase().trim();
+  body.innerHTML = '';
+  const entries = Object.entries(monsterCache);
+  document.getElementById('monsterCount').textContent = entries.length;
+  let shown = 0;
+  entries.forEach(([id, m])=>{
+    if(search && !(m.name||'').toLowerCase().includes(search)) return;
+    shown++;
+    const tr = document.createElement('tr');
+    const iconIsImg = isImgData(m.icon);
+    tr.innerHTML = `
+      <td>
+        <div style="display:flex; align-items:center; gap:6px;">
+          ${iconIsImg
+            ? `<img src="${m.icon}" style="width:32px; height:32px; object-fit:contain; background:rgba(255,255,255,.06); border-radius:8px; border:1px solid var(--border);">`
+            : `<input type="text" class="miniInput" style="width:44px; text-align:center; font-size:18px;" value="${escapeHtml(m.icon||'')}" data-mid="${id}" data-field="icon" maxlength="4">`}
+          <input type="file" accept="image/*" data-monsterimgfor="${id}" style="display:none;">
+          <button class="btn btnGhost rowBtn" data-action="pickimg" data-mid="${id}" title="Chọn ảnh từ máy" style="padding:6px 8px;">🖼</button>
+        </div>
+      </td>
+      <td><input type="text" class="miniInput" style="width:170px;" value="${escapeHtml(m.name||'')}" data-mid="${id}" data-field="name"></td>
+      <td><input type="number" class="miniInput" value="${Number(m.hp)||13}" data-mid="${id}" data-field="hp" min="1"></td>
+      <td><input type="number" class="miniInput" value="${Number(m.price)||0}" data-mid="${id}" data-field="price" min="0"></td>
+      <td>
+        <button class="btn btnGhost rowBtn" data-action="save" data-mid="${id}">💾 Lưu</button>
+        <button class="btn btnDanger rowBtn" data-action="delete" data-mid="${id}">🗑 Xoá</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+  empty.style.display = shown ? 'none' : 'block';
+}
+
+document.getElementById('monsterSearch').addEventListener('input', renderMonster);
+
+let pendingMonsterImg = {}; 
+
+document.getElementById('monsterBody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button');
+  if(btn && btn.dataset.action === 'pickimg'){
+    const id = btn.dataset.mid;
+    const fileInput = btn.closest('td').querySelector(`input[type="file"][data-monsterimgfor="${id}"]`);
+    fileInput.click();
+    return;
+  }
+  if(!btn) return;
+  const id = btn.dataset.mid;
+  if(btn.dataset.action === 'save'){
+    const row = btn.closest('tr');
+    const iconInput = row.querySelector('[data-field="icon"]');
+    const icon = pendingMonsterImg[id] || (iconInput ? iconInput.value.trim() : (monsterCache[id]||{}).icon) || '🐙';
+    const name = row.querySelector('[data-field="name"]').value.trim();
+    const hp = Math.max(1, Math.floor(Number(row.querySelector('[data-field="hp"]').value)||13));
+    const price = Math.max(0, Math.floor(Number(row.querySelector('[data-field="price"]').value)||0));
+    if(!name){ toast('Vui lòng nhập tên thủy quái.'); return; }
+    try{
+      await db.ref('monsterFishData/'+id).set({name, icon, hp, price});
+      delete pendingMonsterImg[id];
+      toast('Đã lưu thủy quái — đồng bộ cho tất cả người chơi.');
+    }catch(err){ toast('Lưu thất bại.'); }
+  } else if(btn.dataset.action === 'delete'){
+    if(!confirm('Xoá thủy quái này khỏi danh sách? Trò chơi sẽ không còn cho nó xuất hiện nữa.')) return;
+    try{
+      await db.ref('monsterFishData/'+id).remove();
+      toast('Đã xoá thủy quái.');
+    }catch(err){ toast('Xoá thất bại.'); }
+  }
+});
+
+document.getElementById('monsterBody').addEventListener('change', async (e)=>{
+  const input = e.target.closest('input[type="file"][data-monsterimgfor]');
+  if(!input || !input.files[0]) return;
+  const id = input.dataset.monsterimgfor;
+  try{
+    const dataUrl = await fileToCompressedDataUrl(input.files[0]);
+    const m = monsterCache[id] || {};
+    await db.ref('monsterFishData/'+id).update({ icon: dataUrl, name: m.name||'', hp: Number(m.hp)||13, price: Number(m.price)||0 });
+    delete pendingMonsterImg[id];
+    toast('Đã cập nhật ảnh thủy quái — đồng bộ cho tất cả người chơi.');
+  }catch(err){ toast('Không đổi được ảnh, thử ảnh khác nhé.'); }
+});
+
+const newMonsterImgInput = document.getElementById('newMonsterImgInput');
+const newMonsterImgPreview = document.getElementById('newMonsterImgPreview');
+let newMonsterImgData = null;
+newMonsterImgInput.addEventListener('change', async ()=>{
+  if(!newMonsterImgInput.files[0]) return;
+  try{
+    newMonsterImgData = await fileToCompressedDataUrl(newMonsterImgInput.files[0]);
+    newMonsterImgPreview.src = newMonsterImgData;
+    newMonsterImgPreview.style.display = 'block';
+  }catch(err){ toast('Không đọc được ảnh, thử ảnh khác nhé.'); }
+});
+
+document.getElementById('addMonsterBtn').addEventListener('click', async ()=>{
+  const icon = newMonsterImgData || document.getElementById('newMonsterIcon').value.trim() || '🐙';
+  const name = document.getElementById('newMonsterName').value.trim();
+  const hp = Math.max(1, Math.floor(Number(document.getElementById('newMonsterHp').value)||13));
+  const price = Math.max(0, Math.floor(Number(document.getElementById('newMonsterPrice').value)||0));
+  if(!name){ toast('Vui lòng nhập tên thủy quái.'); return; }
+  const newId = 'monster_' + Date.now();
+  try{
+    await db.ref('monsterFishData/'+newId).set({name, icon, hp, price});
+    toast('Đã thêm thủy quái mới — đồng bộ cho tất cả người chơi.');
+    document.getElementById('newMonsterIcon').value='';
+    document.getElementById('newMonsterName').value='';
+    document.getElementById('newMonsterHp').value='13';
+    document.getElementById('newMonsterPrice').value='';
+    newMonsterImgInput.value='';
+    newMonsterImgData = null;
+    newMonsterImgPreview.style.display='none';
+  }catch(err){ toast('Thêm thủy quái thất bại.'); }
+});
+
+/* ---- TRẠNG THÁI THỦY QUÁI ĐANG XUẤT HIỆN ---- */
+function renderBossStatus(){
+  const box = document.getElementById('bossStatusBox');
+  if(!bossCache){
+    box.innerHTML = 'Chưa có thủy quái nào xuất hiện.';
+    return;
+  }
+  const b = bossCache;
+  const hp = Number(b.hp)||0, hpMax = Number(b.hpMax)||13;
+  const defeated = !!b.defeated || hp<=0;
+  const totalPlayers = b.contributors ? Object.keys(b.contributors).length : 0;
+  const iconIsImg = isImgData(b.icon);
+  box.innerHTML = `
+    <div>${iconIsImg ? `<img src="${b.icon}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;">` : (b.icon||'🐙')} <b>${escapeHtml(b.name||'')}</b></div>
+    <div>Trạng thái: ${defeated ? '<span style="color:var(--good);">Đã bị hạ gục</span>' : `<span style="color:var(--gold);">Đang bị đánh (${hp}/${hpMax})</span>`}</div>
+    ${defeated && b.defeatedBy ? `<div>🏆 Người câu nhanh nhất: <b>${escapeHtml(b.defeatedBy)}</b></div>` : ''}
+    <div>Số người đã tham gia câu: ${totalPlayers}</div>
+    <div>Thưởng xu (chỉ người nhanh nhất): ${(Number(b.price)||0).toLocaleString('vi-VN')}</div>
+  `;
+}
+
+document.getElementById('forceRespawnBtn').addEventListener('click', async ()=>{
+  if(!confirm('Xoá thủy quái hiện tại để buộc một con mới xuất hiện ngay cho tất cả người chơi?')) return;
+  try{
+    await db.ref('worldBoss').remove();
+    toast('Đã đặt lại — thủy quái mới sẽ xuất hiện trong vài giây.');
+  }catch(err){ toast('Thao tác thất bại.'); }
+});
+
+/* ---- CẦN CÂU (RODS) — độ bền & bật/tắt hao mòn ---- */
+const ROD_META = [
+  {id:"tre", name:"Cần Tre Tân Thủ", icon:"🎋", price:0, defaultDurability:20},
+  {id:"thuytinh", name:"Cần Sợi Thủy Tinh", icon:"🪶", price:1000, defaultDurability:25},
+  {id:"carbon", name:"Cần Carbon Hiện Đại", icon:"⚙️", price:10000, defaultDurability:30},
+  {id:"hoanggia", name:"Cần Câu Hoàng Gia", icon:"👑", price:50000, defaultDurability:35},
+  {id:"poseidon", name:"Cần Định Mệnh Poseidon", icon:"🔱", price:200000, defaultDurability:40}
+];
+
+let rodConfigCache = { durabilityEnabled:true, durability:{} };
+
+function renderDurabilityToggle(){
+  const enabled = rodConfigCache.durabilityEnabled !== false;
+  const toggle = document.getElementById('durabilityToggle');
+  const track = document.getElementById('durabilityToggleTrack');
+  const dot = document.getElementById('durabilityToggleDot');
+  const label = document.getElementById('durabilityToggleLabel');
+  const statusText = document.getElementById('durabilityStatusText');
+  toggle.checked = enabled;
+  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
+  dot.style.left = enabled ? '23px' : '3px';
+  label.textContent = enabled ? 'Đang BẬT' : 'Đang TẮT';
+  statusText.textContent = enabled
+    ? 'Cần câu sẽ hao mòn theo số lượt câu và có thể hỏng như bình thường.'
+    : 'Cần câu KHÔNG hao mòn — mọi người chơi dùng cần vĩnh viễn, không bao giờ hỏng.';
+}
+
+function renderRods(){
+  const body = document.getElementById('rodsBody');
+  body.innerHTML = '';
+  ROD_META.forEach(rod=>{
+    const dur = Number(rodConfigCache.durability[rod.id]) || rod.defaultDurability;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-size:20px;">${rod.icon}</td>
+      <td>${escapeHtml(rod.name)}</td>
+      <td>${rod.price.toLocaleString('vi-VN')}</td>
+      <td class="smallDim">${rod.defaultDurability} lượt</td>
+      <td><input type="number" class="miniInput" value="${dur}" min="1" data-rodid="${rod.id}"></td>
+      <td><button class="btn btnGhost rowBtn" data-action="saveRod" data-rodid="${rod.id}">💾 Lưu</button></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+db.ref('rodConfig').on('value', (snap)=>{
+  const val = snap.val() || {};
+  rodConfigCache = {
+    durabilityEnabled: val.durabilityEnabled !== false,
+    durability: val.durability || {}
+  };
+  renderDurabilityToggle();
+  renderRods();
+}, (err)=>showError('Không tải được cấu hình cần câu (rodConfig)', err));
+
+document.getElementById('durabilityToggle').addEventListener('change', async (e)=>{
+  const enabled = e.target.checked;
+  try{
+    await db.ref('rodConfig/durabilityEnabled').set(enabled);
+    toast(enabled ? 'Đã BẬT hao mòn độ bền — đồng bộ cho tất cả người chơi.' : 'Đã TẮT hao mòn độ bền — cần câu dùng vĩnh viễn cho tất cả người chơi.');
+  }catch(err){
+    toast('Thao tác thất bại.');
+    renderDurabilityToggle(); 
+  }
+});
+
+document.getElementById('rodsBody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action="saveRod"]');
+  if(!btn) return;
+  const rodId = btn.dataset.rodid;
+  const row = btn.closest('tr');
+  const input = row.querySelector(`input[data-rodid="${rodId}"]`);
+  const val = Math.max(1, Math.floor(Number(input.value)||1));
+  try{
+    await db.ref('rodConfig/durability/'+rodId).set(val);
+    toast('Đã lưu độ bền — đồng bộ cho tất cả người chơi.');
+  }catch(err){ toast('Lưu thất bại.'); }
+});
+
+/* ---- BOT NỐI TỪ ---- */
+function renderNoituToggle(){
+  const enabled = noituConfigCache.enabled !== false;
+  const toggle = document.getElementById('noituToggle');
+  const track = document.getElementById('noituToggleTrack');
+  const dot = document.getElementById('noituToggleDot');
+  const label = document.getElementById('noituToggleLabel');
+  const statusText = document.getElementById('noituStatusText');
+  toggle.checked = enabled;
+  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
+  dot.style.left = enabled ? '23px' : '3px';
+  label.textContent = enabled ? 'Đang BẬT' : 'Đang TẮT';
+  statusText.textContent = enabled
+    ? 'Người chơi gõ /botnoitu trong chat chung để chơi nối từ bình thường.'
+    : 'Đã TẮT — gõ /botnoitu sẽ không mở ván mới, bot báo hết tiền trong chat.';
+}
+
+let noituConfigCache = { enabled:true };
+db.ref('noituConfig').on('value', (snap)=>{
+  const val = snap.val() || {};
+  noituConfigCache = { enabled: val.enabled !== false };
+  renderNoituToggle();
+}, (err)=>showError('Không tải được cấu hình bot Nối từ (noituConfig)', err));
+
+document.getElementById('noituToggle').addEventListener('change', async (e)=>{
+  const enabled = e.target.checked;
+  try{
+    await db.ref('noituConfig/enabled').set(enabled);
+    toast(enabled ? 'Đã BẬT bot Nối từ.' : 'Đã TẮT bot Nối từ — bot sẽ báo hết tiền khi ai gõ /botnoitu.');
+  }catch(err){
+    toast('Thao tác thất bại.');
+    renderNoituToggle();
+  }
+});
+
+/* ---- BOT VUA TIẾNG VIỆT (/botvtv) ---- */
+function renderVtvToggle(){
+  const enabled = vtvConfigCache.enabled !== false;
+  const toggle = document.getElementById('vtvToggle');
+  const track = document.getElementById('vtvToggleTrack');
+  const dot = document.getElementById('vtvToggleDot');
+  const label = document.getElementById('vtvToggleLabel');
+  const statusText = document.getElementById('vtvStatusText');
+  toggle.checked = enabled;
+  track.style.background = enabled ? 'var(--good)' : '#3a4a5a';
+  dot.style.left = enabled ? '23px' : '3px';
+  label.textContent = enabled ? 'Đang BẬT' : 'Đang TẮT';
+  statusText.textContent = enabled
+    ? 'Người chơi gõ /botvtv trong chat chung để chơi Vua Tiếng Việt bình thường.'
+    : 'Đã TẮT — gõ /botvtv sẽ không mở ván mới, bot báo bảo trì/tắt trong chat.';
+}
+
+let vtvConfigCache = { enabled:true };
+db.ref('vtvConfig').on('value', (snap)=>{
+  const val = snap.val() || {};
+  vtvConfigCache = { enabled: val.enabled !== false };
+  renderVtvToggle();
+}, (err)=>showError('Không tải được cấu hình bot Vua Tiếng Việt (vtvConfig)', err));
+
+document.getElementById('vtvToggle').addEventListener('change', async (e)=>{
+  const enabled = e.target.checked;
+  try{
+    await db.ref('vtvConfig/enabled').set(enabled);
+    toast(enabled ? 'Đã BẬT bot Vua Tiếng Việt.' : 'Đã TẮT bot Vua Tiếng Việt — bot sẽ báo tạm dừng khi gõ /botvtv.');
+  }catch(err){
+    toast('Thao tác thất bại.');
+    renderVtvToggle();
+  }
+});
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
