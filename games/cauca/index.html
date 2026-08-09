@@ -1922,12 +1922,14 @@ function buildFishList(){
   function push(names, rarityKey){
     const r = RARITIES[rarityKey];
     names.forEach((n,i)=>{
+      const defaultClicks = {common:2, uncommon:3, rare:4, epic:5, mythic:6}[rarityKey] || 3;
       list.push({
         id:id++,
         name:n,
         rarity:rarityKey,
         icon:r.icons[i % r.icons.length],
-        price: Math.round((r.priceRange[0] + Math.random()*(r.priceRange[1]-r.priceRange[0]))/1)
+        price: Math.round((r.priceRange[0] + Math.random()*(r.priceRange[1]-r.priceRange[0]))/1),
+        clicks: defaultClicks
       });
     });
   }
@@ -1943,7 +1945,10 @@ let fishDataLoaded = false;
 
 function fishDataToFirebaseObj(list){
   const obj = {};
-  list.forEach(f=>{ obj[f.id] = {name:f.name, rarity:f.rarity, icon:f.icon, price:f.price}; });
+  list.forEach(f=>{
+    const defC = {common:2, uncommon:3, rare:4, epic:5, mythic:6}[f.rarity] || 3;
+    obj[f.id] = {name:f.name, rarity:f.rarity, icon:f.icon, price:f.price, clicks: Math.max(1, Number(f.clicks)||defC)};
+  });
   return obj;
 }
 
@@ -1963,7 +1968,9 @@ function attachFishDataSync(){
     }
     const list = Object.keys(val).map(id=>{
       const f = val[id];
-      return {id: isNaN(id)?id:Number(id), name:f.name, rarity:f.rarity, icon:f.icon, price:Number(f.price)||0};
+      const defC = {common:2, uncommon:3, rare:4, epic:5, mythic:6}[f.rarity] || 3;
+      const clicks = Math.max(1, Math.floor(Number(f.clicks)||defC));
+      return {id: isNaN(id)?id:Number(id), name:f.name, rarity:f.rarity, icon:f.icon, price:Number(f.price)||0, clicks:clicks};
     });
     if(list.length){
       FISH_LIST = list;
@@ -5208,11 +5215,13 @@ function biteFish(){
   statusText.style.display='none';
   statusText.textContent='';
 
-  // Higher rarity fish require more successful hits & move faster
+  // Số lần nhấp lấy từ fishData.clicks (admin cấu hình). Fallback theo độ hiếm nếu chưa set.
   const hitsByRarity = {common:2, uncommon:3, rare:4, epic:5, mythic:6};
   const bkHits = getBookEffects();
   const bEasy = rodBonus();
-  let hitNeed = (hitsByRarity[pendingFish.rarity] || 3) - bkHits.critHits;
+  const adminClicks = Math.max(1, Math.floor(Number(pendingFish.clicks)||0));
+  const baseHits = adminClicks > 0 ? adminClicks : (hitsByRarity[pendingFish.rarity] || 3);
+  let hitNeed = baseHits - (bkHits.critHits||0);
   if(bEasy.easy) hitNeed = Math.max(1, hitNeed - 3); // câu dễ dàng
   requiredHits = Math.max(1, hitNeed);
   currentHits = 0;
