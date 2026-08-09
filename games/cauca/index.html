@@ -498,12 +498,19 @@
   }
   #app.app-dark .msg .name{ color:#c9d4e0 !important; }
   #app.app-dark .msg .msgTime{ color:#8a9aab !important; }
-  #app.app-dark .msg .bubble2{
+  /* Bubble mặc định tối — KHÔNG ghi đè khi có khung chat (cf-*) */
+  #app.app-dark .msg .bubble2:not([class*="cf-c"]):not(.cf-none){
     background:#1c2738 !important;
     color:#e8eef5 !important;
     border-color:#3a4a5e !important;
   }
-  #app.app-dark .msg.me .bubble2{
+  #app.app-dark .msg .bubble2.cf-none{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .msg.me .bubble2:not([class*="cf-c"]):not(.cf-none),
+  #app.app-dark .msg.me .bubble2.cf-none{
     background:#3d5a80 !important;
     color:#fff !important;
     border-color:#5a7aa0 !important;
@@ -513,18 +520,22 @@
     border-color:#4a5a6a !important;
     color:#c9d4e0 !important;
   }
-  #app.app-dark .msg .av{
+  /* Avatar mặc định tối — KHÔNG ghi đè khi có khung avt (avf-*) */
+  #app.app-dark .msg .av:not([class*="avf-f"]):not(.avf-none),
+  #app.app-dark .msg .av.avf-none,
+  #app.app-dark .profileAvatarCircle:not([class*="avf-f"]):not(.avf-none),
+  #app.app-dark .profileAvatarCircle.avf-none{
     background:#1c2738 !important;
     border-color:#3a4a5e !important;
   }
-  #app.app-dark .voiceBubble,
-  #app.app-dark .imageBubble{
+  #app.app-dark .voiceBubble:not([class*="cf-c"]),
+  #app.app-dark .imageBubble:not([class*="cf-c"]){
     background:#1c2738 !important;
     border-color:#3a4a5e !important;
     color:#e8eef5 !important;
   }
-  #app.app-dark .msg.me .voiceBubble,
-  #app.app-dark .msg.me .imageBubble{
+  #app.app-dark .msg.me .voiceBubble:not([class*="cf-c"]),
+  #app.app-dark .msg.me .imageBubble:not([class*="cf-c"]){
     background:#3d5a80 !important;
     border-color:#5a7aa0 !important;
   }
@@ -624,6 +635,179 @@
   .cf-c10{background:linear-gradient(135deg,#ff0040,#ff9100,#ffea00,#00e676,#00b0ff,#8b3fd1) !important; background-size:300% 300% !important; color:#fff !important; border:3px solid #fff !important; box-shadow:0 0 18px #fff, 0 0 28px #ffcd3c; animation:cfRainbow 4s linear infinite, cfPulse 1.5s infinite alternate;}
   @keyframes cfPulse{ from{filter:brightness(1);} to{filter:brightness(1.15);} }
   @keyframes cfRainbow{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+  /* ===== DARK MODE: khung avatar + khung chat GIỮ MÀU + PHÁT SÁNG ===== */
+  @keyframes darkFramePulse{
+    from{ filter:brightness(1.05) saturate(1.15); }
+    to{ filter:brightness(1.35) saturate(1.35); }
+  }
+  @keyframes darkFrameHalo{
+    0%{ opacity:.85; }
+    50%{ opacity:1; }
+    100%{ opacity:.85; }
+  }
+
+  /* Avatar frames glow in dark */
+  #app.app-dark .av.avf-f1,
+  #app.app-dark .profileAvatarCircle.avf-f1{
+    border-color:#cfd8dc !important;
+    box-shadow:0 0 0 2px #cfd8dc, 0 0 12px #b0bec5, 0 0 22px rgba(176,190,197,.7) !important;
+    animation:darkFramePulse 1.8s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f2,
+  #app.app-dark .profileAvatarCircle.avf-f2{
+    border-color:#a1887f !important;
+    box-shadow:0 0 0 2px #a1887f, 0 0 12px #8d6e63, 0 0 22px rgba(141,110,99,.75) !important;
+    animation:darkFramePulse 1.8s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f3,
+  #app.app-dark .profileAvatarCircle.avf-f3{
+    border-color:#66bb6a !important;
+    box-shadow:0 0 0 3px #4caf50, 0 0 14px #4caf50, 0 0 26px rgba(76,175,80,.8) !important;
+    animation:darkFramePulse 1.7s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f4,
+  #app.app-dark .profileAvatarCircle.avf-f4{
+    border-color:#4fc3f7 !important;
+    box-shadow:0 0 0 3px #29b6f6, 0 0 14px #29b6f6, 0 0 26px rgba(41,182,246,.85) !important;
+    animation:darkFramePulse 1.7s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f5,
+  #app.app-dark .profileAvatarCircle.avf-f5{
+    border-color:#b388ff !important;
+    box-shadow:0 0 0 3px #8b3fd1, 0 0 16px #8b3fd1, 0 0 28px rgba(139,63,209,.85) !important;
+    animation:darkFramePulse 1.6s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f6,
+  #app.app-dark .profileAvatarCircle.avf-f6{
+    border-color:#ff8a50 !important;
+    box-shadow:0 0 0 3px #e0611f, 0 0 16px #e0611f, 0 0 30px rgba(224,97,31,.9) !important;
+    animation:darkFramePulse 1.5s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f7,
+  #app.app-dark .profileAvatarCircle.avf-f7{
+    border-color:#ffe08a !important;
+    box-shadow:0 0 0 4px #ffcd3c, 0 0 18px #ffcd3c, 0 0 32px rgba(255,205,60,.95) !important;
+    animation:avfGlow 1.4s infinite alternate, darkFramePulse 1.4s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f8,
+  #app.app-dark .profileAvatarCircle.avf-f8{
+    border-color:#ff80ab !important;
+    box-shadow:0 0 0 4px #ff4081, 0 0 20px #ff4081, 0 0 34px rgba(255,64,129,.95) !important;
+    animation:avfGlow 1.3s infinite alternate, avfBounce 2.4s ease-in-out infinite, darkFramePulse 1.3s ease-in-out infinite alternate;
+  }
+  #app.app-dark .av.avf-f9,
+  #app.app-dark .profileAvatarCircle.avf-f9{
+    border-color:#111 !important;
+    background:#0a0a0a !important;
+    box-shadow:0 0 0 3px #ffcd3c, 0 0 0 6px #111, 0 0 24px #ffcd3c, 0 0 40px rgba(255,205,60,.9) !important;
+    animation:avfBlackPulse 1.6s ease-in-out infinite alternate, avfGlow 1.2s infinite alternate;
+  }
+  #app.app-dark .av.avf-f10,
+  #app.app-dark .profileAvatarCircle.avf-f10{
+    border-image:linear-gradient(45deg,#ff0040,#ff9100,#ffea00,#00e676,#00b0ff,#8b3fd1) 1;
+    box-shadow:0 0 22px #fff, 0 0 36px #ffcd3c, 0 0 48px rgba(255,205,60,.7) !important;
+    animation:avfSpin 3s linear infinite, avfGlow .9s infinite alternate, darkFramePulse 1.2s ease-in-out infinite alternate;
+  }
+
+  /* Chat frames: giữ màu gốc + phát sáng mạnh khi dark */
+  #app.app-dark .bubble2.cf-c1,
+  #app.app-dark .voiceBubble.cf-c1,
+  #app.app-dark .imageBubble.cf-c1{
+    border-color:#b0bec5 !important;
+    box-shadow:0 0 10px #90a4ae, 0 0 18px rgba(144,164,174,.65) !important;
+    animation:darkFramePulse 1.9s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c2,
+  #app.app-dark .voiceBubble.cf-c2,
+  #app.app-dark .imageBubble.cf-c2{
+    background:#f1f8e9 !important;
+    border-color:#7cb342 !important;
+    color:#1b5e20 !important;
+    box-shadow:0 0 12px #7cb342, 0 0 22px rgba(124,179,66,.75) !important;
+    animation:darkFramePulse 1.8s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c3,
+  #app.app-dark .voiceBubble.cf-c3,
+  #app.app-dark .imageBubble.cf-c3{
+    background:#e3f2fd !important;
+    border-color:#1e88e5 !important;
+    color:#0d47a1 !important;
+    box-shadow:0 0 12px #1e88e5, 0 0 22px rgba(30,136,229,.8) !important;
+    animation:darkFramePulse 1.8s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c4,
+  #app.app-dark .voiceBubble.cf-c4,
+  #app.app-dark .imageBubble.cf-c4{
+    background:#fff3e0 !important;
+    border-color:#fb8c00 !important;
+    color:#e65100 !important;
+    box-shadow:0 0 12px #fb8c00, 0 0 22px rgba(251,140,0,.8) !important;
+    animation:darkFramePulse 1.7s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c5,
+  #app.app-dark .voiceBubble.cf-c5,
+  #app.app-dark .imageBubble.cf-c5{
+    background:#f3e5f5 !important;
+    border-color:#8b3fd1 !important;
+    color:#4a148c !important;
+    box-shadow:0 0 14px #8b3fd1, 0 0 24px rgba(139,63,209,.85) !important;
+    animation:darkFramePulse 1.6s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c6,
+  #app.app-dark .voiceBubble.cf-c6,
+  #app.app-dark .imageBubble.cf-c6{
+    background:linear-gradient(135deg,#fff,#ffe08a) !important;
+    border-color:#e0a900 !important;
+    color:#3a2400 !important;
+    box-shadow:0 0 14px #ffcd3c, 0 0 26px rgba(224,169,0,.85) !important;
+    animation:darkFramePulse 1.5s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c7,
+  #app.app-dark .voiceBubble.cf-c7,
+  #app.app-dark .imageBubble.cf-c7{
+    background:linear-gradient(135deg,#e0f7fa,#b2ebf2) !important;
+    border-color:#00acc1 !important;
+    color:#006064 !important;
+    box-shadow:0 0 16px #00acc1, 0 0 28px rgba(0,172,193,.9) !important;
+    animation:darkFramePulse 1.5s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c8,
+  #app.app-dark .voiceBubble.cf-c8,
+  #app.app-dark .imageBubble.cf-c8{
+    background:linear-gradient(135deg,#fce4ec,#f8bbd0) !important;
+    border-color:#ff4081 !important;
+    color:#880e4f !important;
+    box-shadow:0 0 16px #ff4081, 0 0 30px rgba(255,64,129,.9) !important;
+    animation:cfPulse 1.6s infinite alternate, darkFramePulse 1.4s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c9,
+  #app.app-dark .voiceBubble.cf-c9,
+  #app.app-dark .imageBubble.cf-c9{
+    background:linear-gradient(135deg,#0a0a0a,#1a1a1a) !important;
+    color:#ffcd3c !important;
+    border:3px solid #ffcd3c !important;
+    box-shadow:0 0 18px #ffcd3c, 0 0 32px rgba(255,205,60,.85), inset 0 0 12px rgba(255,205,60,.2) !important;
+    animation:cfPulse 1.5s infinite alternate, darkFramePulse 1.3s ease-in-out infinite alternate;
+  }
+  #app.app-dark .bubble2.cf-c10,
+  #app.app-dark .voiceBubble.cf-c10,
+  #app.app-dark .imageBubble.cf-c10{
+    background:linear-gradient(135deg,#ff0040,#ff9100,#ffea00,#00e676,#00b0ff,#8b3fd1) !important;
+    background-size:300% 300% !important;
+    color:#fff !important;
+    border:3px solid #fff !important;
+    box-shadow:0 0 22px #fff, 0 0 36px #ffcd3c, 0 0 48px rgba(255,205,60,.75) !important;
+    animation:cfRainbow 4s linear infinite, cfPulse 1.3s infinite alternate, darkFramePulse 1.2s ease-in-out infinite alternate;
+  }
+
+  /* lbAvatar / profile trong dark cũng giữ glow nếu có frame */
+  #app.app-dark .lbAvatar[class*="avf-f"],
+  #app.app-dark .profileAvatarCircle[class*="avf-f"]{
+    position:relative;
+  }
+
+
 
   /* STICKER PICKER + REPLY BAR */
   #stickerBtn, #voiceBtn, #imageBtn{
