@@ -254,6 +254,10 @@
         <label>Giá bán (xu)</label>
         <input type="number" id="newFishPrice" placeholder="100" min="0">
       </div>
+      <div class="field">
+        <label>Số lần nhấp</label>
+        <input type="number" id="newFishClicks" placeholder="1" min="1" value="1">
+      </div>
       <button class="btn btnGold rowBtn" id="addFishBtn" style="align-self:flex-end;">➕ Thêm cá</button>
     </div>
 
@@ -271,7 +275,7 @@
     </div>
     <div class="tblWrap">
       <table>
-        <thead><tr><th>Icon</th><th>Tên cá</th><th>Độ hiếm</th><th>Giá (xu)</th><th>Hành động</th></tr></thead>
+        <thead><tr><th>Icon</th><th>Tên cá</th><th>Độ hiếm</th><th>Giá (xu)</th><th>Số lần nhấp</th><th>Hành động</th></tr></thead>
         <tbody id="fishBody"></tbody>
       </table>
       <div class="empty" id="fishEmpty" style="display:none;">Chưa có con cá nào.</div>
@@ -675,6 +679,7 @@ function renderFish(){
         </select>
       </td>
       <td><input type="number" class="miniInput" value="${Number(f.price)||0}" data-id="${id}" data-field="price" min="0"></td>
+      <td><input type="number" class="miniInput" value="${Math.max(1, Number(f.clicks)||1)}" data-id="${id}" data-field="clicks" min="1" title="Số lần nhấp để câu được"></td>
       <td>
         <button class="btn btnGhost rowBtn" data-action="save" data-id="${id}">💾 Lưu</button>
         <button class="btn btnDanger rowBtn" data-action="delete" data-id="${id}">🗑 Xoá</button>
@@ -730,9 +735,11 @@ document.getElementById('fishBody').addEventListener('click', async (e)=>{
     const name = row.querySelector('[data-field="name"]').value.trim();
     const rarity = row.querySelector('[data-field="rarity"]').value;
     const price = Math.max(0, Math.floor(Number(row.querySelector('[data-field="price"]').value)||0));
+    const clicksEl = row.querySelector('[data-field="clicks"]');
+    const clicks = Math.max(1, Math.floor(Number(clicksEl ? clicksEl.value : 1)||1));
     if(!name){ toast('Vui lòng nhập tên cá.'); return; }
     try{
-      await db.ref('fishData/'+id).set({name, rarity, icon, price});
+      await db.ref('fishData/'+id).set({name, rarity, icon, price, clicks});
       delete pendingRowImg[id];
       toast('Đã lưu cá — đồng bộ cho tất cả người chơi.');
     }catch(err){ toast('Lưu thất bại.'); }
@@ -752,7 +759,7 @@ document.getElementById('fishBody').addEventListener('change', async (e)=>{
   try{
     const dataUrl = await fileToCompressedDataUrl(input.files[0]);
     const f = fishCache[id] || {};
-    await db.ref('fishData/'+id).update({ icon: dataUrl, name: f.name||'', rarity: f.rarity||'common', price: Number(f.price)||0 });
+    await db.ref('fishData/'+id).update({ icon: dataUrl, name: f.name||'', rarity: f.rarity||'common', price: Number(f.price)||0, clicks: Math.max(1, Number(f.clicks)||1) });
     delete pendingRowImg[id];
     toast('Đã cập nhật ảnh cá — đồng bộ cho tất cả người chơi.');
   }catch(err){ toast('Không đổi được ảnh, thử ảnh khác nhé.'); }
@@ -775,15 +782,17 @@ document.getElementById('addFishBtn').addEventListener('click', async ()=>{
   const name = document.getElementById('newFishName').value.trim();
   const rarity = document.getElementById('newFishRarity').value;
   const price = Math.max(0, Math.floor(Number(document.getElementById('newFishPrice').value)||0));
+  const clicks = Math.max(1, Math.floor(Number(document.getElementById('newFishClicks').value)||1));
   if(!name){ toast('Vui lòng nhập tên cá.'); return; }
   const existingIds = Object.keys(fishCache).map(Number).filter(n=>!isNaN(n));
   const newId = existingIds.length ? Math.max(...existingIds)+1 : 1;
   try{
-    await db.ref('fishData/'+newId).set({name, rarity, icon, price});
+    await db.ref('fishData/'+newId).set({name, rarity, icon, price, clicks});
     toast('Đã thêm cá mới — đồng bộ cho tất cả người chơi.');
     document.getElementById('newFishIcon').value='';
     document.getElementById('newFishName').value='';
     document.getElementById('newFishPrice').value='';
+    document.getElementById('newFishClicks').value='1';
     newFishImgInput.value='';
     newFishImgData = null;
     newFishImgPreview.style.display='none';
