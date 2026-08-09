@@ -288,6 +288,277 @@
     50%{box-shadow:0 3px 0 #a5720a, 0 0 12px #ffcd3c;}
   }
 
+  #btnChatTheme{
+    background:#fff; color:#111; font-weight:900; font-size:16px;
+    border:3px solid #111; border-radius:50%; width:38px; height:38px; padding:0;
+    box-shadow:0 3px 0 #888; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #btnChatTheme:active{transform:translateY(2px); box-shadow:0 1px 0 #888;}
+
+  /* ===== APP DARK THEME (toàn bộ) ===== */
+  #app.app-dark{
+    background:#0b1220 !important;
+  }
+  #app.app-dark #header{
+    background:#121a2a !important;
+    border-bottom-color:#2a3548 !important;
+  }
+  #app.app-dark #header .stat,
+  #app.app-dark #accountBtn,
+  #app.app-dark #soundToggleBtn,
+  #app.app-dark .back-btn{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark #header .stat .ic,
+  #app.app-dark #playerName{ color:#e8eef5 !important; }
+  #app.app-dark #coinDisplay,
+  #app.app-dark #fishCountDisplay{ color:#ffcd3c !important; }
+
+  /* Game area */
+  #app.app-dark #gameArea{
+    background:linear-gradient(180deg,#0d1524 0%, #0a101c 45%, #05080f 100%) !important;
+  }
+  #app.app-dark #gameArea.map2{
+    background:linear-gradient(180deg,#05070a 0%, #020305 45%, #000 100%) !important;
+  }
+  #app.app-dark #waterLine{
+    background:linear-gradient(90deg,#2a3a50,#1a2535,#2a3a50) !important;
+  }
+  #app.app-dark .bubble{
+    background:rgba(180,200,230,.18) !important;
+  }
+  #app.app-dark #statusText{
+    color:#d0dce8 !important;
+    text-shadow:0 2px 8px rgba(0,0,0,.7);
+  }
+
+  /* Bottom nav */
+  #app.app-dark #nav{
+    background:#121a2a !important;
+    border-top-color:#2a3548 !important;
+  }
+  #app.app-dark .navBtn{ color:#8a9aab !important; }
+  #app.app-dark .navBtn.active{ color:#ffcd3c !important; }
+
+  /* Generic panels */
+  #app.app-dark .panel{
+    background:#0f1624 !important;
+    color:#e8eef5 !important;
+  }
+  #app.app-dark .panelHeader{
+    background:#121a2a !important;
+    color:#e8eef5 !important;
+    border-bottom-color:#2a3548 !important;
+  }
+  #app.app-dark .panelHeader .phTitle{ color:#e8eef5 !important; }
+  #app.app-dark .closeBtn{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .panelBody{ color:#e8eef5 !important; }
+
+  /* Cards common */
+  #app.app-dark .rodCard,
+  #app.app-dark .bookCard,
+  #app.app-dark .cosCard,
+  #app.app-dark .invItem,
+  #app.app-dark .fishCell,
+  #app.app-dark .rankRow,
+  #app.app-dark .lbRow,
+  #app.app-dark .achieveRow,
+  #app.app-dark .matBar,
+  #app.app-dark .enchantSlotsInfo,
+  #app.app-dark .rankHead,
+  #app.app-dark .rankInfoNote{
+    background:#1a2334 !important;
+    border-color:#3a4a5e !important;
+    color:#e8eef5 !important;
+  }
+  #app.app-dark .rodCard.owned,
+  #app.app-dark .bookCard.owned,
+  #app.app-dark .cosCard.owned{ border-color:#1f9d5c !important; }
+  #app.app-dark .rodCard.equipped,
+  #app.app-dark .bookCard.equipped,
+  #app.app-dark .cosCard.equipped{
+    background:#243044 !important;
+    border-color:#e0a900 !important;
+  }
+  #app.app-dark .rodInfo .rname,
+  #app.app-dark .bookInfo .bname,
+  #app.app-dark .cosCard .cname,
+  #app.app-dark .invItem .iname,
+  #app.app-dark .rrName,
+  #app.app-dark .lbName,
+  #app.app-dark .achieveRowName{ color:#e8eef5 !important; }
+  #app.app-dark .rodInfo .rdesc,
+  #app.app-dark .bookInfo .bdesc,
+  #app.app-dark .cosCard .cdesc,
+  #app.app-dark .invItem .iprice,
+  #app.app-dark .rrMin,
+  #app.app-dark .lbRankName,
+  #app.app-dark .collectionHead span{ color:#8a9aab !important; }
+
+  #app.app-dark .rodBtn,
+  #app.app-dark .bookBtn,
+  #app.app-dark .cosBtn,
+  #app.app-dark .sellOneBtn,
+  #app.app-dark .sellAllBtn,
+  #app.app-dark .cosTab{
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .rodBtn.disabled,
+  #app.app-dark .bookBtn.disabled,
+  #app.app-dark .cosBtn.disabled,
+  #app.app-dark .bookBtn.lockedBtn{
+    background:#2a3548 !important;
+    color:#6a7a8a !important;
+  }
+  #app.app-dark .cosTab{ background:#1c2738 !important; color:#8a9aab !important; }
+  #app.app-dark .cosTab.active{ background:#e0a900 !important; color:#1a1200 !important; }
+
+  #app.app-dark .fishCell.locked{ opacity:.35; }
+  #app.app-dark .matChip{
+    background:#243044 !important;
+    border-color:#3a4a5e !important;
+    color:#e8eef5 !important;
+  }
+  #app.app-dark .rankProgBar,
+  #app.app-dark .achieveSegBar{
+    background:#0f1624 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .achieveSeg{ background:#2a3548 !important; }
+  #app.app-dark .rankProgLabel,
+  #app.app-dark .rankListHead{ color:#8a9aab !important; }
+  #app.app-dark .rankRow.current,
+  #app.app-dark .lbRow.me{
+    background:#243044 !important;
+    border-color:#e0a900 !important;
+  }
+  #app.app-dark .profileStatBox{
+    background:#1c2738 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .profileStatBox .psValue,
+  #app.app-dark .profileNameBox{ color:#e8eef5 !important; }
+  #app.app-dark #profileCard,
+  #app.app-dark #achieveCard,
+  #app.app-dark #tradeCard{
+    background:#1a2334 !important;
+    border-color:#3a4a5e !important;
+    color:#e8eef5 !important;
+  }
+  #app.app-dark .toast{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .catchPopup{
+    background:#1a2334 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .catchPopup .cweight{ color:#8a9aab !important; }
+
+  /* World chat under global dark */
+  #app.app-dark #panel-worldchat,
+  #app.app-dark #panel-worldchat.chat-dark{
+    background:#0f1624 !important;
+  }
+  #app.app-dark #chatMessages{
+    background:#0b1220 !important;
+  }
+  #app.app-dark #chatInputBar{
+    background:#121a2a !important;
+    border-top-color:#2a3548 !important;
+  }
+  #app.app-dark #chatInputBar input{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark #chatInputBar input::placeholder{ color:#8a9aab !important; }
+  #app.app-dark #replyBar,
+  #app.app-dark #chatMediaPreview{
+    background:#1c2738 !important;
+    border-top-color:#3a4a5e !important;
+    color:#c9d4e0 !important;
+  }
+  #app.app-dark #stickerPicker{
+    background:#1a2334 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark #stickerPicker .spItem{
+    background:#243044 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .msg .name{ color:#c9d4e0 !important; }
+  #app.app-dark .msg .msgTime{ color:#8a9aab !important; }
+  #app.app-dark .msg .bubble2{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .msg.me .bubble2{
+    background:#3d5a80 !important;
+    color:#fff !important;
+    border-color:#5a7aa0 !important;
+  }
+  #app.app-dark .msg.sys .bubble2{
+    background:#243044 !important;
+    border-color:#4a5a6a !important;
+    color:#c9d4e0 !important;
+  }
+  #app.app-dark .msg .av{
+    background:#1c2738 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark .voiceBubble,
+  #app.app-dark .imageBubble{
+    background:#1c2738 !important;
+    border-color:#3a4a5e !important;
+    color:#e8eef5 !important;
+  }
+  #app.app-dark .msg.me .voiceBubble,
+  #app.app-dark .msg.me .imageBubble{
+    background:#3d5a80 !important;
+    border-color:#5a7aa0 !important;
+  }
+  #app.app-dark .roomInviteCard{
+    background:#1c2738 !important;
+    border-color:#3a4a5e !important;
+    color:#e8eef5 !important;
+  }
+  #app.app-dark .msg .quoteBox{
+    background:rgba(255,255,255,.08) !important;
+    color:#a0b0c0 !important;
+  }
+  #app.app-dark #wcChatText{ color:#e8eef5 !important; }
+  #app.app-dark #wcChatIcon{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+  }
+  #app.app-dark #wcChatIcon svg path{ fill:#e8eef5 !important; }
+  #app.app-dark #wcChatIcon svg circle{ fill:#121a2a !important; }
+
+  #app.app-dark #abyssMapBtn{
+    background:linear-gradient(180deg,#2a3a50,#152030) !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark #datingSearchInput{
+    background:#1c2738 !important;
+    color:#e8eef5 !important;
+    border-color:#3a4a5e !important;
+  }
+  #app.app-dark #titleEquippedInfo,
+  #app.app-dark #titleList{ color:#e8eef5 !important; }
+
+  /* Keep map2 / abyss already dark looking */
+
   /* COSMETIC SHOP (stickers / khung avatar / khung chat) */
   .cosTabs{display:flex; gap:6px; margin-bottom:10px;}
   .cosTab{
@@ -1083,6 +1354,7 @@
         <span id="wcChatText">chat chung</span>
       </span>
       <button id="btnGoCosmeticShop">🛍️ Shop</button>
+      <button id="btnChatTheme" title="Nền sáng / tối">🌙</button>
       <button id="btnGoArena">Đấu trường</button>
       <button id="btnMusic" title="Nghe nhạc">🎵</button>
       <button class="closeBtn" data-close>✕</button>
@@ -3785,6 +4057,67 @@ function syncEquippedFramesToProfile(){
   chatProfileCache[currentUser.uid] = Object.assign(chatProfileCache[currentUser.uid] || {}, upd);
   updateChatMsgCosmetics(currentUser.uid, chatProfileCache[currentUser.uid]);
 }
+/* ===== APP THEME TOGGLE (sáng / tối toàn bộ) ===== */
+(function wireChatThemeToggle(){
+  const KEY = 'cauca_app_theme';
+  function applyTheme(dark){
+    const app = document.getElementById('app');
+    const panel = document.getElementById('panel-worldchat');
+    const btn = document.getElementById('btnChatTheme');
+    if(app){
+      if(dark) app.classList.add('app-dark');
+      else app.classList.remove('app-dark');
+    }
+    // giữ class cũ cho tương thích
+    if(panel){
+      if(dark) panel.classList.add('chat-dark');
+      else panel.classList.remove('chat-dark');
+    }
+    try{
+      document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      if(document.body){
+        document.body.style.background = dark
+          ? 'linear-gradient(180deg,#0b1220 0%, #0a101c 55%, #05080f 100%)'
+          : '';
+      }
+    }catch(e){}
+    if(btn){
+      btn.textContent = dark ? '☀️' : '🌙';
+      btn.title = dark ? 'Chuyển nền sáng' : 'Chuyển nền tối';
+      if(dark){
+        btn.style.background = '#ffcd3c';
+        btn.style.boxShadow = '0 3px 0 #a5720a';
+      } else {
+        btn.style.background = '#fff';
+        btn.style.boxShadow = '0 3px 0 #888';
+      }
+    }
+    try{ localStorage.setItem(KEY, dark ? 'dark' : 'light'); }catch(e){}
+  }
+  function toggle(){
+    const app = document.getElementById('app');
+    const isDark = app && app.classList.contains('app-dark');
+    applyTheme(!isDark);
+  }
+  function bind(){
+    const btn = document.getElementById('btnChatTheme');
+    if(!btn || btn._themeBound) return;
+    btn._themeBound = true;
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      toggle();
+    });
+    let saved = 'light';
+    try{ saved = localStorage.getItem(KEY) || localStorage.getItem('cauca_chat_theme') || 'light'; }catch(e){}
+    applyTheme(saved === 'dark');
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+  setTimeout(bind, 300);
+  setTimeout(bind, 1000);
+})();
+
 const btnGoCosmeticShop = document.getElementById('btnGoCosmeticShop');
 if(btnGoCosmeticShop){
   btnGoCosmeticShop.addEventListener('click', ()=>{
