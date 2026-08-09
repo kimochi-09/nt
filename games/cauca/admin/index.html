@@ -99,6 +99,7 @@
   .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--panel-light); border:1px solid var(--border); padding:10px 18px; border-radius:20px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:100;}
   .toast.show{opacity:1;}
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -555,11 +556,23 @@ document.getElementById('playersBody').addEventListener('click', async (e)=>{
   if(!btn) return;
   const uid = btn.dataset.uid;
   if(btn.dataset.action === 'save'){
-    const input = document.querySelector(`input[data-uid="${uid}"][data-field="coins"]`);
+    // Tìm input xu trong cùng hàng với nút bấm (tránh lấy nhầm hàng khác)
+    const row = btn.closest('tr');
+    const input = row.querySelector('input[data-field="coins"]');
+    if(!input){ toast('Không tìm thấy ô xu.'); return; }
     const newCoins = Math.max(0, Math.floor(Number(input.value)||0));
     try{
-      await db.ref('users/'+uid+'/gameState/coins').set(newCoins);
-      toast('Đã cập nhật xu.');
+      await db.ref('users/'+uid+'/gameState').update({
+        coins: newCoins,
+        coinsUpdatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      // Cập nhật local cache để hiển thị ngay không cần chờ Firebase trả về
+      if(!usersCache[uid]) usersCache[uid] = {};
+      if(!usersCache[uid].gameState) usersCache[uid].gameState = {};
+      usersCache[uid].gameState.coins = newCoins;
+      renderPlayers();
+      renderStats();
+      toast('Đã cập nhật xu cho ngườichơi.');
     }catch(err){ toast('Cập nhật thất bại.'); }
   } else if(btn.dataset.action === 'ban'){
     if(!confirm('Ban người chơi này? Họ sẽ không vào được game và thấy thông báo đã bị ban.')) return;
