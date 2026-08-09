@@ -5044,9 +5044,17 @@ function showCatchPopup(fish, weight, rankPts, rankedUpTo, doubledItems, materia
     ${rankPts ? `<div class="crankpts">🏅 +${rankPts} điểm Rank</div>` : ''}
     ${rankedUpTo ? `<div class="crankup">🎉 Thăng hạng: ${rankedUpTo.icon} ${escapeHtml(rankedUpTo.name)}!</div>` : ''}
     <button class="cclose">Tuyệt vời!</button>
+    <button class="cclose csellall" style="display:block;width:100%;margin-top:8px;background:linear-gradient(180deg,#8ee8ab,var(--uncommon));color:#04351f;">🪙 Bán hết cá trong kho</button>
   `;
   gameArea.appendChild(pop);
-  pop.querySelector('.cclose').addEventListener('click', ()=> pop.remove());
+  pop.querySelector('.cclose:not(.csellall)').addEventListener('click', ()=> pop.remove());
+  const sellAllBtn = pop.querySelector('.csellall');
+  if(sellAllBtn){
+    sellAllBtn.addEventListener('click', ()=>{
+      pop.remove();
+      sellAllFishInInventory();
+    });
+  }
   setTimeout(()=>{ if(pop.parentNode) pop.remove(); }, rankedUpTo ? 6000 : 4500);
   if(rankedUpTo){
     toast('🎉 Chúc mừng! Bạn đã thăng hạng ' + rankedUpTo.name + '!');
@@ -5388,6 +5396,49 @@ function consumeCursedOnSell(fishId, qty){
   if(state.cursedInventory[fishId] === 0) delete state.cursedInventory[fishId];
 }
 
+function getSellMultiplier(){
+  const b = rodBonus();
+  const bk = getBookEffects();
+  let mult = 1 + (b.sellBonus||0) + bk.coinMult + bk.sellBonus;
+  return Math.max(0, mult);
+}
+
+function calcInventoryTotalBaseValue(){
+  if(!state.cursedInventory) state.cursedInventory = {};
+  let total = 0;
+  Object.keys(state.inventory||{}).forEach(id=>{
+    const qty = state.inventory[id]||0;
+    if(qty<=0) return;
+    const fish = FISH_LIST.find(f=>f.id==id);
+    if(!fish) return;
+    total += calcFishStackValue(id, fish, qty);
+  });
+  return total;
+}
+
+/** Bán hết toàn bộ cá trong kho đồ. Trả về số xu nhận được (0 nếu kho trống). */
+function sellAllFishInInventory(){
+  const ids = Object.keys(state.inventory||{}).filter(id=>(state.inventory[id]||0)>0);
+  if(ids.length===0){
+    toast('Kho đồ trống, không có cá để bán!');
+    return 0;
+  }
+  const baseTotal = calcInventoryTotalBaseValue();
+  const mult = getSellMultiplier();
+  const value = Math.round(baseTotal * mult);
+  try{ SoundEngine.sfx.sell(); }catch(e){}
+  addCoins(value);
+  state.inventory = {};
+  state.cursedInventory = {};
+  saveState();
+  updateHeader();
+  try{ renderInventory(); }catch(e){}
+  try{ updateAchieveBadge(); }catch(e){}
+  toast(`Đã bán hết cá trong kho, nhận ${value.toLocaleString('vi-VN')} xu!`);
+  return value;
+}
+window.sellAllFishInInventory = sellAllFishInInventory;
+
 function renderInventory(){
   const wrap = document.getElementById('invList');
   wrap.innerHTML='';
@@ -5397,6 +5448,7 @@ function renderInventory(){
     return;
   }
   if(!state.cursedInventory) state.cursedInventory = {};
+  const mult = getSellMultiplier();
   let totalValue = 0;
   ids.forEach(id=>{
     const fish = FISH_LIST.find(f=>f.id==id);
@@ -5411,6 +5463,7 @@ function renderInventory(){
     const priceNote = cursedQty > 0
       ? `${fish.price.toLocaleString('vi-VN')} xu / con · 🌑x5 cho ${cursedQty} con`
       : `${fish.price.toLocaleString('vi-VN')} xu / con`;
+    const sellShow = Math.round(stackVal * mult);
     item.innerHTML = `
       <div class="fic">${fishIconHtml(fish.icon, 28)}</div>
       <div class="iinfo">
@@ -5418,7 +5471,7 @@ function renderInventory(){
         <div class="iprice">${priceNote}</div>
       </div>
       <div class="iqty">x${qty}</div>
-      <button class="sellOneBtn" data-sell-id="${id}">Bán (${stackVal.toLocaleString('vi-VN')} 🪙)</button>
+      <button class="sellOneBtn" data-sell-id="${id}">Bán (${sellShow.toLocaleString('vi-VN')} 🪙)</button>
     `;
     wrap.appendChild(item);
   });
@@ -5429,10 +5482,7 @@ function renderInventory(){
       const qty = state.inventory[id]||0;
       if(qty<=0) return;
       SoundEngine.sfx.sell();
-      const b = rodBonus();
-      const bk = getBookEffects();
-      let mult = 1 + (b.sellBonus||0) + bk.coinMult + bk.sellBonus;
-      mult = Math.max(0, mult);
+      const mult = getSellMultiplier();
       let baseVal = calcFishStackValue(id, fish, qty);
       let value = Math.round(baseVal*mult);
       addCoins(value);
@@ -5445,24 +5495,12 @@ function renderInventory(){
       toast(`Đã bán ${fish.name}, nhận ${value.toLocaleString('vi-VN')} xu!`);
     });
   });
+  const finalTotal = Math.round(totalValue * mult);
   const sellBtn = document.createElement('button');
   sellBtn.className='sellAllBtn';
-  sellBtn.textContent = `🪙 Bán tất cả (nhận ${totalValue.toLocaleString('vi-VN')} xu)`;
+  sellBtn.textContent = `🪙 Bán tất cả (nhận ${finalTotal.toLocaleString('vi-VN')} xu)`;
   sellBtn.addEventListener('click', ()=>{
-    SoundEngine.sfx.sell();
-    const b = rodBonus();
-    const bk = getBookEffects();
-    let mult = 1 + (b.sellBonus||0) + bk.coinMult + bk.sellBonus;
-    mult = Math.max(0, mult);
-    let value = Math.round(totalValue*mult);
-    addCoins(value);
-    state.inventory = {};
-    state.cursedInventory = {};
-    saveState();
-    updateHeader();
-    renderInventory();
-    updateAchieveBadge();
-    toast(`Đã bán cá, nhận ${value.toLocaleString('vi-VN')} xu!`);
+    sellAllFishInInventory();
   });
   wrap.appendChild(sellBtn);
 }
