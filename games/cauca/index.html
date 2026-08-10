@@ -1453,6 +1453,46 @@
   #txBetInput::placeholder{ color:rgba(255,230,180,.45); }
   #app.app-dark #txBetInput{ background:rgba(0,0,0,.28); color:#fff8e7; border-color:rgba(212,175,55,.7); }
 
+  /* Multi-bet slip */
+  .txBetSlip{
+    margin: 0 0 10px; padding: 8px 10px; border-radius: 12px;
+    background: rgba(0,0,0,.28); border: 1.5px solid rgba(212,175,55,.45);
+    min-height: 36px;
+  }
+  .txBetSlipEmpty{ font-size: 11.5px; color: rgba(255,236,200,.65); text-align: center; font-weight: 700; }
+  .txBetSlipList{ display:flex; flex-wrap:wrap; gap:6px; }
+  .txBetChip{
+    display:inline-flex; align-items:center; gap:4px;
+    background: linear-gradient(180deg, rgba(255,205,60,.25), rgba(212,175,55,.15));
+    border: 1.5px solid rgba(255,224,138,.7); border-radius: 999px;
+    padding: 4px 8px 4px 10px; font-size: 11.5px; font-weight: 800; color: #ffe9a8;
+  }
+  .txBetChip .txBetChipRm{
+    width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(255,200,200,.6);
+    background: rgba(180,40,40,.55); color:#fff; font-size:11px; font-weight:900;
+    cursor:pointer; line-height:1; padding:0; display:flex; align-items:center; justify-content:center;
+  }
+  .txBetChip .txBetChipRm:active{ transform:scale(.92); }
+  .txBetSlipBar{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:6px; }
+  .txBetSlipTotal{ font-size:12px; font-weight:800; color:#ffe08a; }
+  #txClearBetsBtn{
+    border:1.5px solid rgba(255,180,180,.5); background:rgba(120,30,30,.45);
+    color:#ffd0d0; border-radius:10px; padding:5px 10px; font-size:11.5px; font-weight:800; cursor:pointer;
+  }
+  #txClearBetsBtn:active{ transform:translateY(1px); }
+  .txSideBtn .txSideBetAmt, .txNumBtn .txNumBetAmt{
+    display:block; font-size:10px; font-weight:800; margin-top:3px; color:#ffe08a;
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+  .txNumBtn.has-bet{
+    border-color:#ffe08a !important;
+    background:linear-gradient(180deg, rgba(255,205,60,.45), rgba(212,175,55,.3)) !important;
+    color:#fff !important;
+    box-shadow:0 0 0 2px rgba(255,224,138,.5);
+  }
+  .txSideBtn.has-bet{ filter:brightness(1.08); }
+
+
   #txRollBtn{
     width:100%; border:2px solid #f0d278; border-radius:14px;
     padding:13px 12px; font-size:16px; font-weight:900; cursor:pointer;
@@ -1993,10 +2033,19 @@
         <button type="button" class="txChip" data-tx-chip="all">ALL</button>
       </div>
       <div class="txBetInputWrap">
-        <input id="txBetInput" type="number" min="1" step="1" placeholder="Nhập số xu..." inputmode="numeric">
+        <input id="txBetInput" type="number" min="1" step="1" placeholder="Nhập số xu mỗi cửa..." inputmode="numeric">
+      </div>
+      <div class="txBetLabel">CƯỢC ĐÃ ĐẶT (có thể nhiều cửa)</div>
+      <div class="txBetSlip" id="txBetSlip">
+        <div class="txBetSlipEmpty" id="txBetSlipEmpty">Chưa có cược — chọn cửa/số để thêm</div>
+        <div class="txBetSlipList" id="txBetSlipList" style="display:none;"></div>
+        <div class="txBetSlipBar" id="txBetSlipBar" style="display:none;">
+          <span class="txBetSlipTotal" id="txBetSlipTotal">Tổng: 0 🪙</span>
+          <button type="button" id="txClearBetsBtn">Xóa hết</button>
+        </div>
       </div>
       <button type="button" id="txRollBtn">🎲 LẮC XÚC XẮC</button>
-      <div class="txHint">Chọn Tài/Xỉu/Chẵn/Lẻ (1:1) hoặc 1 số 3–18 (1:10) → đặt cược → Lắc.</div>
+      <div class="txHint">Chọn mức cược → bấm nhiều cửa/số để cược nhiều cùng lúc → Lắc. Tài/Xỉu/Chẵn/Lẻ ăn 1:1 · Số ăn 1:10.</div>
     </div>
   </div>
 
@@ -6671,11 +6720,12 @@ if(titleBtnEl){
 
 /* ============== TÀI XỈU ============== */
 (function(){
-  // pick: 'tai'|'xiu'|'chan'|'le'|'so'
-  let txPick = null;
-  let txNumber = null; // 3..18 khi cược số
+  // Multi-bet: key 'tai'|'xiu'|'chan'|'le'|'so:N' -> amount
+  let txBets = {};
   let txBusy = false;
   const dieFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+  const SIDE_LABELS = {tai:'TÀI', xiu:'XỈU', chan:'CHẴN', le:'LẺ'};
+  const SIDE_IDS = {tai:'txPickTai', xiu:'txPickXiu', chan:'txPickChan', le:'txPickLe'};
 
   function openTaiXiu(){
     try{ SoundEngine.unlock(); SoundEngine.sfx.open(); }catch(e){}
@@ -6684,10 +6734,11 @@ if(titleBtnEl){
     buildNumButtons();
     ov.classList.add('show');
     refreshTxBalance();
+    renderBetSlip();
     const res = document.getElementById('txResult');
     if(res && !txBusy){
       res.className = 'txResult';
-      res.textContent = 'Chọn cửa / số rồi đặt cược';
+      res.textContent = Object.keys(txBets).length ? 'Sẵn sàng lắc' : 'Chọn nhiều cửa / số rồi đặt cược';
     }
   }
   function closeTaiXiu(){
@@ -6700,39 +6751,131 @@ if(titleBtnEl){
     const el = document.getElementById('txBalance');
     if(el) el.textContent = (state.coins||0).toLocaleString('vi-VN');
   }
-  function clearPickUI(){
-    document.querySelectorAll('[data-tx-pick]').forEach(b=> b.classList.remove('selected'));
-    document.querySelectorAll('.txNumBtn').forEach(b=> b.classList.remove('selected'));
+  function totalBetAmount(){
+    let t = 0;
+    Object.keys(txBets).forEach(k=>{ t += (txBets[k]||0); });
+    return t;
   }
-  function setPick(kind){
+  function getBetAmountFromInput(){
+    const inp = document.getElementById('txBetInput');
+    let bet = Math.floor(Number(inp && inp.value) || 0);
+    return bet;
+  }
+  function betKeyLabel(key){
+    if(SIDE_LABELS[key]) return SIDE_LABELS[key];
+    if(key.indexOf('so:')===0) return 'Số ' + key.slice(3);
+    return key;
+  }
+  function renderBetSlip(){
+    const empty = document.getElementById('txBetSlipEmpty');
+    const list = document.getElementById('txBetSlipList');
+    const bar = document.getElementById('txBetSlipBar');
+    const totalEl = document.getElementById('txBetSlipTotal');
+    const keys = Object.keys(txBets).filter(k => (txBets[k]||0) > 0);
+    // side buttons selected state
+    ['tai','xiu','chan','le'].forEach(kind=>{
+      const el = document.getElementById(SIDE_IDS[kind]);
+      if(!el) return;
+      const amt = txBets[kind]||0;
+      el.classList.toggle('selected', amt > 0);
+      el.classList.toggle('has-bet', amt > 0);
+      let badge = el.querySelector('.txSideBetAmt');
+      if(amt > 0){
+        if(!badge){
+          badge = document.createElement('span');
+          badge.className = 'txSideBetAmt';
+          el.appendChild(badge);
+        }
+        badge.textContent = amt.toLocaleString('vi-VN') + ' 🪙';
+      } else if(badge){
+        badge.remove();
+      }
+    });
+    // number buttons
+    document.querySelectorAll('.txNumBtn').forEach(btn=>{
+      const n = btn.getAttribute('data-tx-num');
+      const key = 'so:' + n;
+      const amt = txBets[key]||0;
+      btn.classList.toggle('selected', amt > 0);
+      btn.classList.toggle('has-bet', amt > 0);
+      let badge = btn.querySelector('.txNumBetAmt');
+      if(amt > 0){
+        if(!badge){
+          badge = document.createElement('span');
+          badge.className = 'txNumBetAmt';
+          btn.appendChild(badge);
+        }
+        badge.textContent = amt.toLocaleString('vi-VN');
+      } else if(badge){
+        badge.remove();
+      }
+    });
+    if(!keys.length){
+      if(empty) empty.style.display = '';
+      if(list){ list.style.display = 'none'; list.innerHTML = ''; }
+      if(bar) bar.style.display = 'none';
+      return;
+    }
+    if(empty) empty.style.display = 'none';
+    if(list){
+      list.style.display = 'flex';
+      list.innerHTML = keys.map(k=>{
+        const amt = txBets[k];
+        return '<span class="txBetChip" data-tx-rm="'+k+'">'
+          + betKeyLabel(k) + ' · ' + amt.toLocaleString('vi-VN')
+          + ' <button type="button" class="txBetChipRm" data-tx-rm="'+k+'" title="Xóa">×</button></span>';
+      }).join('');
+      list.querySelectorAll('[data-tx-rm]').forEach(el=>{
+        el.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          if(txBusy) return;
+          const k = el.getAttribute('data-tx-rm');
+          delete txBets[k];
+          renderBetSlip();
+        });
+      });
+    }
+    if(bar) bar.style.display = 'flex';
+    if(totalEl) totalEl.textContent = 'Tổng: ' + totalBetAmount().toLocaleString('vi-VN') + ' 🪙';
+  }
+  function addSideBet(kind){
     if(txBusy) return;
-    txPick = kind;
-    txNumber = null;
-    clearPickUI();
-    const map = {tai:'txPickTai', xiu:'txPickXiu', chan:'txPickChan', le:'txPickLe'};
-    const el = document.getElementById(map[kind]);
-    if(el) el.classList.add('selected');
+    if(!SIDE_LABELS[kind]) return;
+    const bet = getBetAmountFromInput();
+    if(bet < 1){ toast('Nhập số xu cược trước!'); return; }
+    const already = totalBetAmount() - (txBets[kind]||0);
+    if(already + bet > (state.coins||0)){ toast('Không đủ xu cho tổng cược!'); refreshTxBalance(); return; }
+    txBets[kind] = (txBets[kind]||0) + bet;
+    renderBetSlip();
     const res = document.getElementById('txResult');
     if(res && !txBusy){
-      const labels = {tai:'TÀI (11–18)', xiu:'XỈU (3–10)', chan:'CHẴN', le:'LẺ'};
       res.className = 'txResult';
-      res.textContent = 'Đang chọn: ' + (labels[kind]||kind) + ' · Ăn 1:1';
+      res.textContent = 'Đã thêm ' + SIDE_LABELS[kind] + ' +' + bet.toLocaleString('vi-VN') + ' · Tổng ' + totalBetAmount().toLocaleString('vi-VN');
     }
   }
-  function setNumber(n){
+  function addNumberBet(n){
     if(txBusy) return;
     n = Math.floor(Number(n));
     if(n < 3 || n > 18) return;
-    txPick = 'so';
-    txNumber = n;
-    clearPickUI();
-    const btn = document.querySelector('.txNumBtn[data-tx-num="'+n+'"]');
-    if(btn) btn.classList.add('selected');
+    const bet = getBetAmountFromInput();
+    if(bet < 1){ toast('Nhập số xu cược trước!'); return; }
+    const key = 'so:' + n;
+    const already = totalBetAmount() - (txBets[key]||0);
+    if(already + bet > (state.coins||0)){ toast('Không đủ xu cho tổng cược!'); refreshTxBalance(); return; }
+    txBets[key] = (txBets[key]||0) + bet;
+    renderBetSlip();
     const res = document.getElementById('txResult');
     if(res && !txBusy){
       res.className = 'txResult';
-      res.textContent = 'Đang chọn SỐ ' + n + ' · Ăn 1:10';
+      res.textContent = 'Đã thêm Số ' + n + ' +' + bet.toLocaleString('vi-VN') + ' · Tổng ' + totalBetAmount().toLocaleString('vi-VN');
     }
+  }
+  function clearAllBets(){
+    if(txBusy) return;
+    txBets = {};
+    renderBetSlip();
+    const res = document.getElementById('txResult');
+    if(res){ res.className = 'txResult'; res.textContent = 'Đã xóa hết cược'; }
   }
   function buildNumButtons(){
     const row = document.getElementById('txNumRow');
@@ -6745,7 +6888,7 @@ if(titleBtnEl){
       b.className = 'txNumBtn';
       b.setAttribute('data-tx-num', String(n));
       b.textContent = String(n);
-      b.addEventListener('click', ()=> setNumber(n));
+      b.addEventListener('click', ()=> addNumberBet(n));
       row.appendChild(b);
     }
   }
@@ -6780,22 +6923,28 @@ if(titleBtnEl){
     const chanLe = (sum % 2 === 0) ? 'CHẴN' : 'LẺ';
     return sum + ' → ' + taiXiu + ' · ' + chanLe;
   }
-  function isWin(sum){
-    if(txPick === 'tai') return sum >= 11;
-    if(txPick === 'xiu') return sum <= 10;
-    if(txPick === 'chan') return (sum % 2) === 0;
-    if(txPick === 'le') return (sum % 2) === 1;
-    if(txPick === 'so') return (typeof txNumber === 'number' && sum === txNumber);
+  function isBetWin(key, sum){
+    if(key === 'tai') return sum >= 11;
+    if(key === 'xiu') return sum <= 10;
+    if(key === 'chan') return (sum % 2) === 0;
+    if(key === 'le') return (sum % 2) === 1;
+    if(key.indexOf('so:')===0){
+      const n = Number(key.slice(3));
+      return sum === n;
+    }
     return false;
+  }
+  function payoutFor(key, bet){
+    if(key.indexOf('so:')===0) return bet * 11; // 1:10 profit + stake
+    return bet * 2; // 1:1
   }
   function doRoll(){
     if(txBusy) return;
-    if(!txPick){ toast('Hãy chọn Tài / Xỉu / Chẵn / Lẻ hoặc một số!'); return; }
-    if(txPick === 'so' && (typeof txNumber !== 'number' || txNumber < 3 || txNumber > 18)){ toast('Chọn số từ 3 đến 18!'); return; }
-    const inp = document.getElementById('txBetInput');
-    let bet = Math.floor(Number(inp && inp.value) || 0);
-    if(bet < 1){ toast('Nhập số xu cược hợp lệ!'); return; }
-    if(bet > (state.coins||0)){ toast('Không đủ xu!'); refreshTxBalance(); return; }
+    const keys = Object.keys(txBets).filter(k => (txBets[k]||0) > 0);
+    if(!keys.length){ toast('Hãy chọn ít nhất một cửa / số để cược!'); return; }
+    const total = totalBetAmount();
+    if(total < 1){ toast('Nhập số xu cược hợp lệ!'); return; }
+    if(total > (state.coins||0)){ toast('Không đủ xu!'); refreshTxBalance(); return; }
 
     txBusy = true;
     const rollBtn = document.getElementById('txRollBtn');
@@ -6803,49 +6952,84 @@ if(titleBtnEl){
     const res = document.getElementById('txResult');
     if(res){ res.className = 'txResult'; res.textContent = 'Đang lắc...'; }
 
+    // snapshot bets for this round
+    const roundBets = {};
+    keys.forEach(k=>{ roundBets[k] = txBets[k]; });
+
     try{
-      if(typeof addCoins === 'function') addCoins(-bet);
-      else state.coins = Math.max(0, (state.coins||0) - bet);
+      if(typeof addCoins === 'function') addCoins(-total);
+      else state.coins = Math.max(0, (state.coins||0) - total);
     }catch(e){ console.warn(e); txBusy=false; if(rollBtn) rollBtn.disabled=false; return; }
     refreshTxBalance();
     try{ updateHeader(); }catch(e){}
 
     setDiceRolling(true);
     let ticks = 0;
-    const anim = setInterval(()=>{
+    const maxTicks = 18;
+    const timer = setInterval(()=>{
+      ticks++;
       const r1 = 1 + Math.floor(Math.random()*6);
       const r2 = 1 + Math.floor(Math.random()*6);
       const r3 = 1 + Math.floor(Math.random()*6);
-      rollDiceFaces(r1,r2,r3);
-      ticks++;
-      if(ticks >= 14){
-        clearInterval(anim);
+      rollDiceFaces(r1, r2, r3);
+      if(ticks >= maxTicks){
+        clearInterval(timer);
+        setDiceRolling(false);
         const d1 = 1 + Math.floor(Math.random()*6);
         const d2 = 1 + Math.floor(Math.random()*6);
         const d3 = 1 + Math.floor(Math.random()*6);
-        rollDiceFaces(d1,d2,d3);
-        setDiceRolling(false);
+        rollDiceFaces(d1, d2, d3);
         const sum = d1 + d2 + d3;
-        const win = isWin(sum);
         const label = outcomeLabel(sum);
-        if(win){
-          // Tài/Xỉu/Chẵn/Lẻ: 1:1 → trả gốc + lãi = bet*2
-          // Cược số: 1:10 → trả gốc + lãi 10 lần = bet*11
-          const payout = (txPick === 'so') ? (bet * 11) : (bet * 2);
-          const profit = payout - bet;
-          addCoins(payout);
-          if(res){
-            res.className = 'txResult win';
-            res.textContent = '🎉 ' + label + ' · Thắng +' + profit.toLocaleString('vi-VN') + ' 🪙 (nhận ' + payout.toLocaleString('vi-VN') + ')';
+
+        let totalPayout = 0;
+        let winParts = [];
+        let loseParts = [];
+        Object.keys(roundBets).forEach(k=>{
+          const bet = roundBets[k];
+          if(isBetWin(k, sum)){
+            const pay = payoutFor(k, bet);
+            totalPayout += pay;
+            const profit = pay - bet;
+            winParts.push(betKeyLabel(k) + ' +' + profit.toLocaleString('vi-VN'));
+          } else {
+            loseParts.push(betKeyLabel(k) + ' -' + bet.toLocaleString('vi-VN'));
           }
-          toast('Thắng +' + profit.toLocaleString('vi-VN') + ' 🪙');
-        } else {
-          if(res){
-            res.className = 'txResult lose';
-            res.textContent = '😢 ' + label + ' · Thua -' + bet.toLocaleString('vi-VN') + ' 🪙';
-          }
-          toast('Thua -' + bet.toLocaleString('vi-VN') + ' 🪙');
+        });
+
+        if(totalPayout > 0){
+          try{
+            if(typeof addCoins === 'function') addCoins(totalPayout);
+            else state.coins = (state.coins||0) + totalPayout;
+          }catch(e){}
         }
+
+        const net = totalPayout - total;
+        if(res){
+          if(net > 0){
+            res.className = 'txResult win';
+            res.textContent = '🎉 ' + label + ' · Thắng +' + net.toLocaleString('vi-VN') + ' 🪙'
+              + (winParts.length ? ' (' + winParts.join(', ') + ')' : '');
+          } else if(net === 0){
+            res.className = 'txResult';
+            res.textContent = '⚖️ ' + label + ' · Hòa vốn'
+              + (winParts.length ? ' · Thắng: ' + winParts.join(', ') : '')
+              + (loseParts.length ? ' · Thua: ' + loseParts.join(', ') : '');
+          } else {
+            res.className = 'txResult lose';
+            res.textContent = '😢 ' + label + ' · Thua ' + net.toLocaleString('vi-VN') + ' 🪙'
+              + (loseParts.length ? ' (' + loseParts.join(', ') + ')' : '')
+              + (winParts.length ? ' · Vẫn thắng: ' + winParts.join(', ') : '');
+          }
+        }
+        if(net > 0) toast('Thắng +' + net.toLocaleString('vi-VN') + ' 🪙');
+        else if(net < 0) toast('Thua ' + net.toLocaleString('vi-VN') + ' 🪙');
+        else toast('Hòa vốn');
+
+        // clear bets after roll so player places new ones
+        txBets = {};
+        renderBetSlip();
+
         try{ saveState(); updateHeader(); }catch(e){}
         refreshTxBalance();
         txBusy = false;
@@ -6874,7 +7058,7 @@ if(titleBtnEl){
       const el = document.getElementById(id);
       if(el && !el._txBound){
         el._txBound = true;
-        el.addEventListener('click', ()=> setPick(el.getAttribute('data-tx-pick')));
+        el.addEventListener('click', ()=> addSideBet(el.getAttribute('data-tx-pick')));
       }
     });
     document.querySelectorAll('[data-tx-chip]').forEach(ch=>{
@@ -6884,6 +7068,11 @@ if(titleBtnEl){
     });
     const roll = document.getElementById('txRollBtn');
     if(roll && !roll._txBound){ roll._txBound = true; roll.addEventListener('click', doRoll); }
+    const clearBtn = document.getElementById('txClearBetsBtn');
+    if(clearBtn && !clearBtn._txBound){
+      clearBtn._txBound = true;
+      clearBtn.addEventListener('click', clearAllBets);
+    }
     buildNumButtons();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
