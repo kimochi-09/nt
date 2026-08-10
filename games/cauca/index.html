@@ -3406,8 +3406,14 @@ function ensureRodDurability(){
 function saveState(){
   try{ if(typeof clampEquippedBooks==='function') clampEquippedBooks(); else if(state&&Array.isArray(state.equippedBooks)&&state.equippedBooks.length>MAX_BOOK_SLOTS) state.equippedBooks=state.equippedBooks.slice(0,MAX_BOOK_SLOTS); }catch(e){}
 
-
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  // Lưu local theo từng tài khoản (uid hoặc guest) để logout/login không mất data
+  try{
+    const ownerKey = (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) ? currentUser.uid : '__guest__';
+    const key = (typeof getLocalSaveKey === 'function') ? getLocalSaveKey(ownerKey) : SAVE_KEY;
+    localStorage.setItem(key, JSON.stringify(state));
+    // Giữ luôn bản key chung để tương thích code cũ / lần mở đầu
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  }catch(e){}
   if(currentUser){
     try {
       const p = db.ref('users/'+currentUser.uid+'/gameState').set(state);
@@ -3962,19 +3968,61 @@ function attachBanListener(uid){
   });
 }
 
+function getLocalSaveKey(ownerKey){
+  // Mỗi tài khoản (và guest) có file local riêng → đăng xuất rồi đăng nhập lại không mất data
+  if(ownerKey && ownerKey !== '__guest__') return SAVE_KEY + '_uid_' + ownerKey;
+  return SAVE_KEY + '_guest';
+}
+function loadLocalStateForOwner(ownerKey){
+  try{
+    const key = getLocalSaveKey(ownerKey);
+    let raw = localStorage.getItem(key);
+    // Tương thích bản cũ: nếu chưa có key theo uid thì thử key chung
+    if(!raw && ownerKey && ownerKey !== '__guest__'){
+      try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){}
+    }
+    if(!raw && ownerKey === '__guest__'){
+      try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){}
+    }
+    if(raw){
+      const parsed = JSON.parse(raw);
+      const prev = state;
+      state = Object.assign(getDefaultState(), parsed);
+      if(typeof state.coins !== 'number' || !Number.isFinite(state.coins)) state.coins = (prev && prev.coins) || 100;
+      if(typeof state.rankPoints !== 'number' || !Number.isFinite(state.rankPoints)) state.rankPoints = (prev && prev.rankPoints) || 0;
+      if(typeof state.catchStreak !== 'number' || !Number.isFinite(state.catchStreak)) state.catchStreak = (prev && prev.catchStreak) || 0;
+      if(typeof state.bestCatchStreak !== 'number' || !Number.isFinite(state.bestCatchStreak)) state.bestCatchStreak = (prev && prev.bestCatchStreak) || 0;
+      if(state.coins < 0) state.coins = 0;
+      if(state.rankPoints < 0) state.rankPoints = 0;
+      if(state.catchStreak < 0) state.catchStreak = 0;
+    } else {
+      state = getDefaultState();
+    }
+  }catch(e){
+    state = getDefaultState();
+  }
+  try{ ensureRodDurability(); ensureAchievementFields(); ensureBookFields(); ensureCosmeticFields(); }catch(e){}
+}
 function initSharedAccount(){
   const sharedId = (function(){ try{ return localStorage.getItem('nt_myId'); }catch(e){ return null; } })();
   const ownerKey = sharedId || '__guest__';
   let savedOwner = null;
   try{ savedOwner = localStorage.getItem(OWNER_KEY); }catch(e){}
+
+  // Đổi tài khoản (logout → guest, guest → login, hoặc login A → login B):
+  // KHÔNG xoá tiến trình. Chỉ tải local cache của tài khoản mới, rồi đồng bộ cloud.
   if(savedOwner !== null && savedOwner !== ownerKey){
-    // Máy này vừa đổi sang một tài khoản khác (tạo mới hoặc đăng nhập tài khoản khác)
-    // -> xoá sạch tiến trình (xu, đồ đạc...) đang lưu tạm trên máy của tài khoản cũ,
-    // để tài khoản mới không bị "thừa hưởng" nhầm số xu của tài khoản trước.
-    state = getDefaultState();
-    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+    // Lưu nhanh state hiện tại vào cache của tài khoản cũ (nếu còn) trước khi đổi
+    try{
+      if(savedOwner){
+        localStorage.setItem(getLocalSaveKey(savedOwner), JSON.stringify(state));
+      }
+    }catch(e){}
     cloudSynced = false;
     presenceStarted = false;
+    _banListenerAttached = false; // cho phép gắn lại listener ban cho uid mới
+    // Tải tiến trình local của tài khoản mới (không đụng cloud của ai)
+    loadLocalStateForOwner(ownerKey);
   }
   try{ localStorage.setItem(OWNER_KEY, ownerKey); }catch(e){}
 
@@ -3983,6 +4031,7 @@ function initSharedAccount(){
     state.nickname = state.nickname || sharedId;
     try{ attachBanListener(currentUser.uid); }catch(e){}
     try{ attachDatingListeners(); loadMyDating(); updateRelationshipTitles(); }catch(e){}
+    // Luôn đồng bộ cloud khi (re)login — kể cả đã từng sync trước đó trong session
     if(!cloudSynced){
       cloudSynced = true;
       syncCloudState();
@@ -3991,6 +4040,9 @@ function initSharedAccount(){
       presenceStarted = true;
       setOnlinePresence();
     }
+  } else {
+    // Guest: chỉ dùng local guest, không ghi đè cloud của tài khoản đã logout
+    try{ updatePlayerNameDisplay(); }catch(e){}
   }
   updatePlayerNameDisplay();
   updateHeader();
@@ -4119,23 +4171,38 @@ function mergeGameState(local, remote){
 }
 function syncCloudState(){
   if(!currentUser) return;
-  db.ref('users/'+currentUser.uid+'/gameState').once('value').then(snap=>{
+  const uid = currentUser.uid;
+  db.ref('users/'+uid+'/gameState').once('value').then(snap=>{
+    // Nếu trong lúc chờ user đã đổi tài khoản thì bỏ qua kết quả cũ
+    if(!currentUser || currentUser.uid !== uid) return;
     const remote = snap.val();
     if(remote){
       // Gộp an toàn: không ghi đè xu / chuỗi / rank thấp hơn từ cloud lỗi hoặc bản cũ
       const localSnapshot = state;
       state = mergeGameState(localSnapshot, remote);
       try{ ensureRodDurability(); ensureAchievementFields(); ensureBookFields(); ensureCosmeticFields(); }catch(e){}
-      try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+      try{
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        if(typeof getLocalSaveKey === 'function'){
+          localStorage.setItem(getLocalSaveKey(uid), JSON.stringify(state));
+        }
+      }catch(e){}
       checkMonthlyRankReset();
       // Đẩy bản đã gộp lên cloud để 2 thiết bị thống nhất
-      try{ db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{}); }catch(e){}
+      try{ db.ref('users/'+uid+'/gameState').set(state).catch(()=>{}); }catch(e){}
       toast('✅ Đã đồng bộ tiến trình');
     } else {
       // Chưa có dữ liệu trên đám mây cho tài khoản này -> đẩy tiến trình hiện tại lên
-      db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{});
+      try{ db.ref('users/'+uid+'/gameState').set(state).catch(()=>{}); }catch(e){}
+      try{
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        if(typeof getLocalSaveKey === 'function'){
+          localStorage.setItem(getLocalSaveKey(uid), JSON.stringify(state));
+        }
+      }catch(e){}
     }
     updateHeader();
+    try{ updatePlayerNameDisplay(); }catch(e){}
   }).catch(()=>{});
 }
 
