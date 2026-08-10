@@ -572,12 +572,13 @@ document.getElementById('playersBody').addEventListener('click', async (e)=>{
       usersCache[uid].gameState.coins = newCoins;
       renderPlayers();
       renderStats();
-      toast('Đã cập nhật xu cho ngườichơi.');
+      toast('Đã cập nhật xu cho người chơi.');
     }catch(err){ toast('Cập nhật thất bại.'); }
   } else if(btn.dataset.action === 'ban'){
-    if(!confirm('Ban người chơi này? Họ sẽ không vào được game và thấy thông báo đã bị ban.')) return;
+    if(!confirm('Ban người chơi này?\n\nHọ sẽ không vào được game và thấy thông báo "Bạn đã bị ban".\n\nDữ liệu (xu, rank, chuỗi, sách, cá...) sẽ KHÔNG bị xóa.')) return;
     try{
       const nick = ((usersCache[uid]||{}).gameState||{}).nickname || uid;
+      // Chỉ ghi cờ ban + lý do. KHÔNG đụng vào gameState (xu, rank, streak, books, fish...)
       await db.ref('bans/'+uid).set({
         banned: true,
         reason: 'Bạn đã bị ban bởi quản trị viên.',
@@ -587,7 +588,7 @@ document.getElementById('playersBody').addEventListener('click', async (e)=>{
       await db.ref('users/'+uid+'/banned').set(true);
       // Đưa offline nếu đang online
       try{ await db.ref('presence/'+uid).update({ online:false, banned:true, ts: Date.now() }); }catch(e){}
-      toast('Đã ban người chơi: ' + nick);
+      toast('Đã ban người chơi: ' + nick + ' (dữ liệu được giữ nguyên)');
       renderPlayers();
     }catch(err){ toast('Ban thất bại.'); }
   } else if(btn.dataset.action === 'unban'){
