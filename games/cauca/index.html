@@ -3191,6 +3191,8 @@ function getDefaultState(){
     caughtIds: {},       // fishId -> {count, maxWeight}
     rankPoints: 0,        // điểm rank tích luỹ, dùng để leo hạng
     rankMonth: "",         // "YYYY-MM" của lần cập nhật rank gần nhất, dùng để tự reset rank đầu mỗi tháng
+    catchStreak: 0,       // chuỗi câu liên tiếp hiện tại (không reset tùy tiện khi load/sync)
+    bestCatchStreak: 0,   // chuỗi câu cao nhất từng đạt
     nickname: "",
     avatar: "👤",
     playerId: Math.floor(1000+Math.random()*8999),
@@ -3235,7 +3237,17 @@ function loadLocalState(){
     const raw = localStorage.getItem(SAVE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      state = Object.assign(state, parsed);
+      // Gán đè lên default nhưng KHÔNG cho phép null/undefined làm mất xu/chuỗi/rank
+      const prev = state;
+      state = Object.assign(getDefaultState(), parsed);
+      if(typeof state.coins !== 'number' || !Number.isFinite(state.coins)) state.coins = prev.coins || 100;
+      if(typeof state.rankPoints !== 'number' || !Number.isFinite(state.rankPoints)) state.rankPoints = prev.rankPoints || 0;
+      if(typeof state.catchStreak !== 'number' || !Number.isFinite(state.catchStreak)) state.catchStreak = prev.catchStreak || 0;
+      if(typeof state.bestCatchStreak !== 'number' || !Number.isFinite(state.bestCatchStreak)) state.bestCatchStreak = prev.bestCatchStreak || 0;
+      // Không bao giờ để coins âm sau khi load
+      if(state.coins < 0) state.coins = 0;
+      if(state.rankPoints < 0) state.rankPoints = 0;
+      if(state.catchStreak < 0) state.catchStreak = 0;
     }
   }catch(e){}
   ensureRodDurability();
@@ -3420,6 +3432,12 @@ function currentMonthKey(){
 }
 function checkMonthlyRankReset(){
   const nowKey = currentMonthKey();
+  // Lần đầu (chưa từng có rankMonth): chỉ gắn tháng hiện tại, KHÔNG xóa điểm đang có
+  if(!state.rankMonth){
+    state.rankMonth = nowKey;
+    saveState();
+    return;
+  }
   if(state.rankMonth !== nowKey){
     const hadPoints = (state.rankPoints||0) > 0;
     state.rankPoints = 0;
@@ -3989,19 +4007,130 @@ function setOnlinePresence(){
 }
 
 /* Tải tiến trình đã lưu trên đám mây gắn với tài khoản chung (nếu có) rồi đồng bộ 2 chiều */
+function mergeProgressNumber(a, b){
+  const na = Number(a), nb = Number(b);
+  const va = Number.isFinite(na) ? na : 0;
+  const vb = Number.isFinite(nb) ? nb : 0;
+  return Math.max(va, vb);
+}
+function mergeOwnedMap(localMap, remoteMap){
+  const out = Object.assign({}, remoteMap || {});
+  const loc = localMap || {};
+  Object.keys(loc).forEach(k=>{
+    if(typeof loc[k] === 'number'){
+      out[k] = Math.max(Number(out[k])||0, Number(loc[k])||0);
+    } else if(loc[k]){
+      out[k] = out[k] || loc[k];
+    }
+  });
+  return out;
+}
+function mergeCaughtIds(localMap, remoteMap){
+  const out = Object.assign({}, remoteMap || {});
+  const loc = localMap || {};
+  Object.keys(loc).forEach(id=>{
+    const L = loc[id] || {};
+    const R = out[id] || {};
+    out[id] = {
+      count: Math.max(Number(L.count)||0, Number(R.count)||0),
+      maxWeight: Math.max(Number(L.maxWeight)||0, Number(R.maxWeight)||0)
+    };
+  });
+  return out;
+}
+function mergeStringArrayUnique(a, b){
+  const set = new Set([].concat(Array.isArray(a)?a:[], Array.isArray(b)?b:[]));
+  return Array.from(set);
+}
+/* Gộp local + remote: KHÔNG tùy tiện reset xu / chuỗi / điểm rank.
+   - Số tiến trình (coins, rankPoints cùng tháng, streak, totals...): lấy max
+   - Kho đồ / cá đã câu / nguyên liệu: gộp theo hướng không mất dữ liệu
+   - Chỉ reset rankPoints khi sang tháng mới (checkMonthlyRankReset) */
+function mergeGameState(local, remote){
+  const base = Object.assign(getDefaultState(), remote || {});
+  const loc = local || getDefaultState();
+  // Xu & chuỗi: luôn giữ giá trị cao hơn giữa local và remote
+  base.coins = mergeProgressNumber(loc.coins, base.coins);
+  base.catchStreak = mergeProgressNumber(loc.catchStreak, base.catchStreak);
+  base.bestCatchStreak = mergeProgressNumber(loc.bestCatchStreak, base.bestCatchStreak);
+  // Rank: chỉ lấy max khi cùng rankMonth; nếu khác tháng thì để checkMonthlyRankReset xử lý sau
+  const localMonth = loc.rankMonth || "";
+  const remoteMonth = (remote && remote.rankMonth) || "";
+  if(localMonth && remoteMonth && localMonth === remoteMonth){
+    base.rankPoints = mergeProgressNumber(loc.rankPoints, base.rankPoints);
+    base.rankMonth = localMonth;
+  } else if(localMonth && !remoteMonth){
+    base.rankPoints = mergeProgressNumber(loc.rankPoints, base.rankPoints);
+    base.rankMonth = localMonth;
+  } else if(!localMonth && remoteMonth){
+    base.rankMonth = remoteMonth;
+    // rankPoints đã từ remote qua Object.assign
+  } else {
+    // cả hai trống hoặc khác tháng — giữ max điểm, rankMonth sẽ được chuẩn hóa ở checkMonthlyRankReset
+    base.rankPoints = mergeProgressNumber(loc.rankPoints, base.rankPoints);
+    base.rankMonth = remoteMonth || localMonth || "";
+  }
+  // Tổng lifetime / stats: max
+  base.totalCasts = mergeProgressNumber(loc.totalCasts, base.totalCasts);
+  base.totalCoinsEarned = mergeProgressNumber(loc.totalCoinsEarned, base.totalCoinsEarned);
+  base.totalActiveSeconds = mergeProgressNumber(loc.totalActiveSeconds, base.totalActiveSeconds);
+  base.totalChatMessages = mergeProgressNumber(loc.totalChatMessages, base.totalChatMessages);
+  base.totalCoinsGifted = mergeProgressNumber(loc.totalCoinsGifted, base.totalCoinsGifted);
+  base.totalFishCaught = mergeProgressNumber(loc.totalFishCaught, base.totalFishCaught);
+  base.legendaryDefaultRodCatches = mergeProgressNumber(loc.legendaryDefaultRodCatches, base.legendaryDefaultRodCatches);
+  // Kho / sở hữu: gộp không mất
+  base.inventory = mergeOwnedMap(loc.inventory, base.inventory);
+  base.caughtIds = mergeCaughtIds(loc.caughtIds, base.caughtIds);
+  base.materials = mergeOwnedMap(loc.materials, base.materials);
+  base.cursedInventory = mergeOwnedMap(loc.cursedInventory, base.cursedInventory);
+  base.ownedBooks = Object.assign({}, base.ownedBooks || {}, loc.ownedBooks || {});
+  base.ownedTitles = Object.assign({}, base.ownedTitles || {}, loc.ownedTitles || {});
+  base.ownedRods = mergeStringArrayUnique(loc.ownedRods, base.ownedRods);
+  if(!base.ownedRods.includes('tre')) base.ownedRods.unshift('tre');
+  base.ownedStickerPacks = mergeStringArrayUnique(loc.ownedStickerPacks, base.ownedStickerPacks);
+  base.ownedAvatarFrames = mergeStringArrayUnique(loc.ownedAvatarFrames, base.ownedAvatarFrames);
+  if(!base.ownedAvatarFrames.includes('none')) base.ownedAvatarFrames.unshift('none');
+  base.ownedChatFrames = mergeStringArrayUnique(loc.ownedChatFrames, base.ownedChatFrames);
+  if(!base.ownedChatFrames.includes('none')) base.ownedChatFrames.unshift('none');
+  // Độ bền cần: lấy max còn lại từng cần
+  base.rodDurability = Object.assign({}, base.rodDurability || {});
+  const locDur = loc.rodDurability || {};
+  Object.keys(locDur).forEach(id=>{
+    base.rodDurability[id] = mergeProgressNumber(locDur[id], base.rodDurability[id]);
+  });
+  // Flag mở khóa: OR
+  base.abyssUnlocked = !!(loc.abyssUnlocked || base.abyssUnlocked);
+  base.shimanoUnsealed = !!(loc.shimanoUnsealed || base.shimanoUnsealed);
+  // Nickname / avatar: ưu tiên remote nếu có, không thì local
+  base.nickname = (remote && remote.nickname) || loc.nickname || base.nickname;
+  base.avatar = (remote && remote.avatar) || loc.avatar || base.avatar;
+  // Giữ equipped nếu vẫn sở hữu
+  if(loc.equippedRod && base.ownedRods.includes(loc.equippedRod)) base.equippedRod = loc.equippedRod;
+  if(loc.equippedAvatarFrame && base.ownedAvatarFrames.includes(loc.equippedAvatarFrame)) base.equippedAvatarFrame = loc.equippedAvatarFrame;
+  if(loc.equippedChatFrame && base.ownedChatFrames.includes(loc.equippedChatFrame)) base.equippedChatFrame = loc.equippedChatFrame;
+  if(Array.isArray(loc.equippedBooks) && loc.equippedBooks.length){
+    base.equippedBooks = loc.equippedBooks.filter(id => base.ownedBooks && base.ownedBooks[id]);
+  }
+  if(loc.equippedTitle && base.ownedTitles && base.ownedTitles[loc.equippedTitle]) base.equippedTitle = loc.equippedTitle;
+  if(typeof loc.currentMap === 'number') base.currentMap = loc.currentMap;
+  // achievementsClaimed: union
+  base.achievementsClaimed = Object.assign({}, base.achievementsClaimed || {}, loc.achievementsClaimed || {});
+  return base;
+}
 function syncCloudState(){
   if(!currentUser) return;
   db.ref('users/'+currentUser.uid+'/gameState').once('value').then(snap=>{
     const remote = snap.val();
     if(remote){
-      // Có tiến trình trên đám mây (ví dụ đăng nhập từ thiết bị/trình duyệt khác) -> ưu tiên dùng bản đám mây
-      const nickname = state.nickname, avatar = state.avatar;
-      state = Object.assign(getDefaultState(), remote);
-      state.nickname = remote.nickname || nickname;
-      state.avatar = remote.avatar || avatar;
+      // Gộp an toàn: không ghi đè xu / chuỗi / rank thấp hơn từ cloud lỗi hoặc bản cũ
+      const localSnapshot = state;
+      state = mergeGameState(localSnapshot, remote);
+      try{ ensureRodDurability(); ensureAchievementFields(); ensureBookFields(); ensureCosmeticFields(); }catch(e){}
       try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
       checkMonthlyRankReset();
-      toast('✅ Đã gọi hồn về');
+      // Đẩy bản đã gộp lên cloud để 2 thiết bị thống nhất
+      try{ db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{}); }catch(e){}
+      toast('✅ Đã đồng bộ tiến trình');
     } else {
       // Chưa có dữ liệu trên đám mây cho tài khoản này -> đẩy tiến trình hiện tại lên
       db.ref('users/'+currentUser.uid+'/gameState').set(state).catch(()=>{});
