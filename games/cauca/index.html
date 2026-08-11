@@ -3452,7 +3452,60 @@ function ensureRodDurability(){
     }
   }
 }
-function saveState(){
+/* Debounce + hàng đợi ghi cloud để tránh ghi đè lẫn nhau khi spam save */
+let _cloudSaveTimer = null;
+let _cloudSaveInFlight = false;
+let _cloudSavePending = false;
+let _lastCloudSaveUid = null;
+let _suppressRemoteMergeUntil = 0; // tránh vòng lặp: vừa ghi lên cloud lại nhận onValue merge lại
+
+function flushCloudSave(){
+  if(!currentUser) return;
+  if(_cloudSaveInFlight){ _cloudSavePending = true; return; }
+  const uid = currentUser.uid;
+  _lastCloudSaveUid = uid;
+  _cloudSaveInFlight = true;
+  _cloudSavePending = false;
+  let payload;
+  try{ payload = JSON.parse(JSON.stringify(state)); }catch(e){ payload = state; }
+  _suppressRemoteMergeUntil = Date.now() + 2500;
+  try{
+    const p = db.ref('users/'+uid+'/gameState').set(payload);
+    const done = function(){
+      _cloudSaveInFlight = false;
+      if(_cloudSavePending && currentUser && currentUser.uid === uid){
+        flushCloudSave();
+      }
+    };
+    if(p && p.then){
+      p.then(done).catch(function(e){
+        const m = (e && e.message) || '';
+        if (/timeout|abort|network|unavailable/i.test(m)) console.warn('[saveState] Firebase timeout — giữ local');
+        else console.warn('[saveState] Firebase error', m);
+        done();
+      });
+    } else {
+      done();
+    }
+  }catch(e){
+    _cloudSaveInFlight = false;
+  }
+}
+
+function scheduleCloudSave(immediate){
+  if(!currentUser) return;
+  if(_cloudSaveTimer){ clearTimeout(_cloudSaveTimer); _cloudSaveTimer = null; }
+  if(immediate){
+    flushCloudSave();
+    return;
+  }
+  _cloudSaveTimer = setTimeout(function(){
+    _cloudSaveTimer = null;
+    flushCloudSave();
+  }, 600);
+}
+
+function saveState(forceCloud){
   try{ if(typeof clampEquippedBooks==='function') clampEquippedBooks(); else if(state&&Array.isArray(state.equippedBooks)&&state.equippedBooks.length>MAX_BOOK_SLOTS) state.equippedBooks=state.equippedBooks.slice(0,MAX_BOOK_SLOTS); }catch(e){}
 
   // Lưu local theo từng tài khoản (uid hoặc guest) để logout/login không mất data
@@ -3464,13 +3517,7 @@ function saveState(){
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   }catch(e){}
   if(currentUser){
-    try {
-      const p = db.ref('users/'+currentUser.uid+'/gameState').set(state);
-      if (p && p.catch) p.catch(function(e){
-        const m = (e && e.message) || '';
-        if (/timeout|abort|network|unavailable/i.test(m)) console.warn('[saveState] Firebase timeout — giữ local');
-      });
-    } catch(e){}
+    scheduleCloudSave(!!forceCloud);
   }
 }
 loadLocalState();
@@ -4067,6 +4114,9 @@ function initSharedAccount(){
         localStorage.setItem(getLocalSaveKey(savedOwner), JSON.stringify(state));
       }
     }catch(e){}
+    // Flush cloud save còn treo của tài khoản cũ (nếu có) rồi tách listener
+    try{ if(_cloudSaveTimer){ clearTimeout(_cloudSaveTimer); _cloudSaveTimer=null; } }catch(e){}
+    try{ if(typeof detachGameStateListener==='function') detachGameStateListener(); }catch(e){}
     cloudSynced = false;
     presenceStarted = false;
     _banListenerAttached = false; // cho phép gắn lại listener ban cho uid mới
@@ -4091,6 +4141,7 @@ function initSharedAccount(){
     }
   } else {
     // Guest: chỉ dùng local guest, không ghi đè cloud của tài khoản đã logout
+    try{ if(typeof detachGameStateListener==='function') detachGameStateListener(); }catch(e){}
     try{ updatePlayerNameDisplay(); }catch(e){}
   }
   updatePlayerNameDisplay();
@@ -4218,9 +4269,57 @@ function mergeGameState(local, remote){
   base.achievementsClaimed = Object.assign({}, base.achievementsClaimed || {}, loc.achievementsClaimed || {});
   return base;
 }
-function syncCloudState(){
+let _gameStateListenerUid = null;
+let _gameStateListenerRef = null;
+let _gameStateListenerFn = null;
+
+function detachGameStateListener(){
+  try{
+    if(_gameStateListenerRef && _gameStateListenerFn){
+      _gameStateListenerRef.off('value', _gameStateListenerFn);
+    }
+  }catch(e){}
+  _gameStateListenerRef = null;
+  _gameStateListenerFn = null;
+  _gameStateListenerUid = null;
+}
+
+function attachGameStateListener(uid){
+  if(!uid) return;
+  if(_gameStateListenerUid === uid && _gameStateListenerRef) return;
+  detachGameStateListener();
+  _gameStateListenerUid = uid;
+  _gameStateListenerRef = db.ref('users/'+uid+'/gameState');
+  _gameStateListenerFn = function(snap){
+    try{
+      if(!currentUser || currentUser.uid !== uid) return;
+      if(Date.now() < (_suppressRemoteMergeUntil||0)) return; // vừa tự ghi lên, bỏ qua echo
+      const remote = snap.val();
+      if(!remote || typeof remote !== 'object') return;
+      // Soft merge realtime (2 thiết bị): chỉ nâng tiến trình, không hạ
+      const beforeCoins = state.coins;
+      const beforeRank = state.rankPoints;
+      const beforeFish = state.totalFishCaught;
+      state = mergeGameState(state, remote);
+      try{ ensureRodDurability(); ensureAchievementFields(); ensureBookFields(); ensureCosmeticFields(); }catch(e){}
+      try{
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        if(typeof getLocalSaveKey === 'function') localStorage.setItem(getLocalSaveKey(uid), JSON.stringify(state));
+      }catch(e){}
+      try{ updateHeader(); }catch(e){}
+      // Nếu remote mang tiến trình cao hơn rõ rệt thì báo nhẹ (tránh spam)
+      if((state.coins||0) > (beforeCoins||0) + 50 || (state.rankPoints||0) > (beforeRank||0) + 5){
+        try{ toast('☁️ Đã cập nhật tiến trình từ thiết bị khác'); }catch(e){}
+      }
+    }catch(e){ console.warn('[gameState listener]', e); }
+  };
+  try{ _gameStateListenerRef.on('value', _gameStateListenerFn); }catch(e){}
+}
+
+function syncCloudState(retryCount){
   if(!currentUser) return;
   const uid = currentUser.uid;
+  const attempt = retryCount || 0;
   db.ref('users/'+uid+'/gameState').once('value').then(snap=>{
     // Nếu trong lúc chờ user đã đổi tài khoản thì bỏ qua kết quả cũ
     if(!currentUser || currentUser.uid !== uid) return;
@@ -4237,11 +4336,13 @@ function syncCloudState(){
         }
       }catch(e){}
       checkMonthlyRankReset();
-      // Đẩy bản đã gộp lên cloud để 2 thiết bị thống nhất
+      // Đẩy bản đã gộp lên cloud để 2 thiết bị thống nhất (ghi ngay, không debounce)
+      _suppressRemoteMergeUntil = Date.now() + 2500;
       try{ db.ref('users/'+uid+'/gameState').set(state).catch(()=>{}); }catch(e){}
       toast('✅ Đã đồng bộ tiến trình');
     } else {
       // Chưa có dữ liệu trên đám mây cho tài khoản này -> đẩy tiến trình hiện tại lên
+      _suppressRemoteMergeUntil = Date.now() + 2500;
       try{ db.ref('users/'+uid+'/gameState').set(state).catch(()=>{}); }catch(e){}
       try{
         localStorage.setItem(SAVE_KEY, JSON.stringify(state));
@@ -4252,7 +4353,17 @@ function syncCloudState(){
     }
     updateHeader();
     try{ updatePlayerNameDisplay(); }catch(e){}
-  }).catch(()=>{});
+    attachGameStateListener(uid);
+  }).catch(function(err){
+    console.warn('[syncCloudState] fail', err);
+    // Thử lại tối đa 3 lần khi mạng lỗi
+    if(attempt < 3){
+      setTimeout(function(){ syncCloudState(attempt + 1); }, 1500 * (attempt + 1));
+    } else {
+      cloudSynced = false; // cho phép initSharedAccount gọi lại lần sau
+      try{ toast('⚠️ Đồng bộ cloud tạm lỗi — vẫn chơi được offline'); }catch(e){}
+    }
+  });
 }
 
 function updatePlayerNameDisplay(){
@@ -4262,6 +4373,21 @@ function updatePlayerNameDisplay(){
 }
 auth.onAuthStateChanged(()=>{ initSharedAccount(); });
 initSharedAccount();
+
+/* Đảm bảo tiến trình được đẩy lên cloud khi đóng tab / ẩn trang */
+try{
+  window.addEventListener('beforeunload', function(){
+    try{
+      if(typeof saveState === 'function') saveState(true);
+    }catch(e){}
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden'){
+      try{ if(typeof saveState === 'function') saveState(true); }catch(e){}
+    }
+  });
+}catch(e){}
+
 
 /* ============== BUBBLES BG ============== */
 function spawnBubbles(){
