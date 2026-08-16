@@ -1322,7 +1322,7 @@
   // HP về 0 -> chết: trả 100 xu để hồi sinh ngay, hoặc chờ 3 phút.
   const STAMINA_DRAIN_PER_SEC = 100 / 480; // ~8 phút cạn stamina nếu chỉ đi lại
   const STAMINA_COST_GATHER = 3;
-  const HP_DRAIN_WHEN_STARVING = 100 / 75; // hết stamina ~75s là chết nếu không ăn
+  const HP_DRAIN_WHEN_STARVING = 100 / 240; // hết stamina ~240s (4 phút) là chết nếu không ăn
   const RESPAWN_COIN_COST = 100;
   const RESPAWN_WAIT_MS = 3 * 60 * 1000; // 3 phút
   let isDead = false;
@@ -1594,7 +1594,7 @@
       m.hitCooldown = Math.max(0, (m.hitCooldown||0) - dt);
       if (dist < 20 && m.hitCooldown <= 0) {
         m.hitCooldown = 1.1;
-        player.hp = Math.max(0, player.hp - 8);
+        player.hp = Math.max(0, player.hp - 3);
         updateStatusHud();
         if (typeof scheduleSave === 'function') scheduleSave();
         if (typeof sfx !== 'undefined') sfx.error();
