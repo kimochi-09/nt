@@ -2541,7 +2541,7 @@
       const goBack = () => {
         if (left) return;
         left = true;
-        window.location.href = '/';
+        window.location.href = '/world';
       };
       // Luôn ghi localStorage đồng bộ trước khi rời trang (không phụ thuộc mạng)
       if (progressReady && myKey) {
@@ -2559,7 +2559,7 @@
   (async function initFromChatAccount() {
     const savedName = localStorage.getItem(CHAT_LS_KEY);
     if (!savedName) {
-      window.location.href = '/';
+      window.location.href = '/world';
       return;
     }
     const key = toKey(savedName);
@@ -2973,7 +2973,7 @@
     return sfxCtx;
   }
   // beep đơn giản: tần số, thời lượng (giây), dạng sóng, âm lượng
-  function playTone(freq, dur, type, vol) {/
+  function playTone(freq, dur, type, vol) {
     const ctx2 = getSfxCtx();
     if (!ctx2) return;
     const osc = ctx2.createOscillator();
