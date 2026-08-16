@@ -1,85 +1,664 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LTL Link</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body, html {
-            height: 100%;
-            width: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #f8fafc;
-        }
-        .container {
-            text-align: center;
-            padding: 2.5rem 3rem;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            max-width: 90%;
-            width: 480px;
-        }
-        .icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            display: inline-block;
-        }
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: #e2e8f0;
-            letter-spacing: -0.02em;
-        }
-        .link-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px 28px;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.05rem;
-            border-radius: 12px;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
-            word-break: break-all;
-        }
-        .link-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-        }
-        .subtext {
-            margin-top: 1.25rem;
-            font-size: 0.875rem;
-            color: #94a3b8;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World — Đăng nhập</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+      color: #f4e9d8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(90, 160, 220, .35), transparent 45%),
+        radial-gradient(ellipse at 80% 90%, rgba(60, 120, 80, .25), transparent 40%),
+        linear-gradient(180deg, #1a2740 0%, #0d1524 45%, #162018 100%);
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 12% 70%, rgba(76, 175, 80, .12) 0 2px, transparent 3px),
+        radial-gradient(circle at 88% 30%, rgba(255, 255, 255, .08) 0 1.5px, transparent 3px),
+        radial-gradient(circle at 60% 80%, rgba(255, 210, 120, .1) 0 2px, transparent 3px);
+      background-size: 120px 120px, 90px 90px, 150px 150px;
+      pointer-events: none;
+      opacity: .7;
+    }
+
+    .auth-container {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 26px 24px;
+      border-radius: 18px;
+      border: 3px solid #6e4a28;
+      background:
+        linear-gradient(180deg, rgba(255, 205, 120, .1), transparent 28%),
+        linear-gradient(150deg, #402c1b 0%, #291c11 55%, #1e160f 100%);
+      box-shadow:
+        0 18px 48px rgba(0, 0, 0, .55),
+        inset 0 0 0 1px rgba(255, 255, 255, .06),
+        inset 0 1px 0 rgba(255, 230, 180, .12);
+      overflow: hidden;
+    }
+
+    .auth-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(255, 210, 130, .55), transparent);
+      pointer-events: none;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .auth-header .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 72px;
+      height: 44px;
+      padding: 0 18px;
+      margin: 0 auto 12px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .6px;
+      color: #fff;
+      background: linear-gradient(145deg, #63d270, #2f9e5c);
+      border: 1px solid rgba(255, 255, 255, .28);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .35);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+    }
+
+    .auth-header h1 {
+      font-size: 22px;
+      color: #fff8eb;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+    }
+
+    .auth-header p {
+      color: rgba(244, 233, 216, .7);
+      font-size: 13px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(0, 0, 0, .28);
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 14px;
+      padding: 5px;
+      margin-bottom: 18px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 11px 8px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(244, 233, 216, .55);
+      border: none;
+      background: transparent;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .tab.active {
+      color: #1a2a18;
+      background: linear-gradient(180deg, #ffd97a, #e0a84a);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .35);
+    }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #e9cd97;
+      margin-bottom: 7px;
+      letter-spacing: .2px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid rgba(255, 210, 130, .28);
+      border-radius: 12px;
+      font-size: 15px;
+      color: #fff8eb;
+      outline: none;
+      background: rgba(0, 0, 0, .28);
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+
+    .form-group input:focus {
+      border-color: rgba(99, 210, 112, .7);
+      background: rgba(0, 0, 0, .38);
+      box-shadow: 0 0 0 3px rgba(99, 210, 112, .18);
+    }
+
+    .form-group input::placeholder {
+      color: rgba(244, 233, 216, .35);
+    }
+
+    .password-hint {
+      font-size: 11px;
+      color: rgba(244, 233, 216, .45);
+      margin-top: 5px;
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      font-size: 13px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(244, 233, 216, .75);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .remember input {
+      width: 15px;
+      height: 15px;
+      accent-color: #63d270;
+      cursor: pointer;
+    }
+
+    .forgot {
+      color: #ffd97a;
+      text-decoration: none;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0;
+    }
+
+    .forgot:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid rgba(255, 255, 255, .25);
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(180deg, #63d270, #3e9e4c);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .3);
+      transition: transform .15s, box-shadow .15s, filter .15s;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, .28);
+    }
+
+    .btn-submit:disabled {
+      opacity: .65;
+      cursor: not-allowed;
+      filter: grayscale(.2);
+    }
+
+    .message {
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .message.error {
+      display: block;
+      background: rgba(180, 40, 40, .22);
+      color: #ffb4b4;
+      border: 1px solid rgba(255, 120, 120, .35);
+    }
+
+    .message.success {
+      display: block;
+      background: rgba(40, 140, 80, .22);
+      color: #9bffd0;
+      border: 1px solid rgba(100, 220, 160, .35);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 18px 0 14px;
+      color: rgba(244, 233, 216, .45);
+      font-size: 12px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 210, 130, .3), transparent);
+    }
+
+    .divider span {
+      padding: 0 10px;
+      white-space: nowrap;
+    }
+
+    .social-login {
+      display: flex;
+      gap: 10px;
+    }
+
+    .social-btn {
+      flex: 1;
+      padding: 11px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: rgba(255, 255, 255, .06);
+      color: #f4e9d8;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .2s, border-color .2s, transform .15s;
+    }
+
+    .social-btn:hover {
+      background: rgba(255, 255, 255, .12);
+      border-color: rgba(255, 255, 255, .28);
+    }
+
+    .social-btn:active { transform: translateY(1px); }
+
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+
+    .foot-hint {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(244, 233, 216, .4);
+    }
+
+    @media (max-width: 480px) {
+      .auth-container { padding: 24px 18px 20px; }
+      .social-login { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">🔗</div>
-        <h1>Truy cập liên kết bên dưới</h1>
-        <a href="https://lalai09.github.io/ltl/" target="_blank" rel="noopener noreferrer" class="link-btn">
-            lalai09.github.io/ltl
-        </a>
-        <p class="subtext">Bấm vào đường dẫn để chuyển hướng đến trang web</p>
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="logo">🌍 World</div>
+      <h1 id="pageTitle">Đăng nhập</h1>
+      <p id="pageSubtitle">Chào mừng bạn quay trở lại thế giới!</p>
     </div>
+
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="login">Đăng nhập</button>
+      <button type="button" class="tab" data-tab="register">Đăng ký</button>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div id="loginPanel" class="form-panel active">
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginUsername">Tên đăng nhập</label>
+          <input type="text" id="loginUsername" placeholder="Nhập tên đăng nhập" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Mật khẩu</label>
+          <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+        </div>
+
+        <div class="options">
+          <label class="remember">
+            <input type="checkbox" id="remember">
+            Ghi nhớ đăng nhập
+          </label>
+          <button type="button" class="forgot" id="forgotPassword">Quên mật khẩu?</button>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnLogin">Vào thế giới</button>
+      </form>
+    </div>
+
+    <div id="registerPanel" class="form-panel">
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="registerUsername">Tên đăng nhập</label>
+          <input type="text" id="registerUsername" placeholder="Nhập tên đăng nhập" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="registerPassword">Mật khẩu</label>
+          <input type="password" id="registerPassword" placeholder="Nhập mật khẩu" required minlength="6" autocomplete="new-password">
+          <p class="password-hint">Tối thiểu 6 ký tự</p>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Xác nhận mật khẩu</label>
+          <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu" required autocomplete="new-password">
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnRegister">Tạo tài khoản</button>
+      </form>
+    </div>
+
+    <div class="divider">
+      <span>hoặc tiếp tục với</span>
+    </div>
+
+    <div class="social-login">
+      <button type="button" class="social-btn" id="btnGoogle">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Google
+      </button>
+      <button type="button" class="social-btn" id="btnFacebook">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+        Facebook
+      </button>
+    </div>
+
+    <p class="foot-hint">Cùng khám phá · thu thập · xây dựng trong World</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      FacebookAuthProvider,
+      sendPasswordResetEmail,
+      setPersistence,
+      browserLocalPersistence,
+      browserSessionPersistence
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvI-JLyimy7e_IXxsaHDDCG_f1lNBkQ2k",
+      authDomain: "world-e431e.firebaseapp.com",
+      databaseURL: "https://world-e431e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "world-e431e",
+      storageBucket: "world-e431e.firebasestorage.app",
+      messagingSenderId: "382023798145",
+      appId: "1:382023798145:web:9af37cb2131416f2e96c80",
+      measurementId: "G-CVHYP9KRH0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const LS_KEY = 'world_login';
+    function toKey(name) {
+      return name.trim().toLowerCase().replace(/[.#$\[\]\/]/g, '_');
+    }
+
+    async function enterGame(username) {
+      localStorage.setItem(LS_KEY, username);
+      try {
+        await set(ref(db, 'chat_users/' + toKey(username)), {
+          displayName: username,
+          lastLogin: Date.now()
+        });
+      } catch (e) {
+        console.warn('Không ghi được chat_users:', e);
+      }
+      window.location.href = 'map';
+    }
+
+    const tabs = document.querySelectorAll('.tab');
+    const loginPanel = document.getElementById('loginPanel');
+    const registerPanel = document.getElementById('registerPanel');
+    const pageTitle = document.getElementById('pageTitle');
+    const pageSubtitle = document.getElementById('pageSubtitle');
+    const messageEl = document.getElementById('message');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnRegister = document.getElementById('btnRegister');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        clearMessage();
+
+        if (tab.dataset.tab === 'login') {
+          loginPanel.classList.add('active');
+          registerPanel.classList.remove('active');
+          pageTitle.textContent = 'Đăng nhập';
+          pageSubtitle.textContent = 'Chào mừng bạn quay trở lại thế giới!';
+        } else {
+          loginPanel.classList.remove('active');
+          registerPanel.classList.add('active');
+          pageTitle.textContent = 'Đăng ký';
+          pageSubtitle.textContent = 'Tạo nhân vật mới để bắt đầu hành trình';
+        }
+      });
+    });
+
+    function showMessage(text, type = 'error') {
+      messageEl.textContent = text;
+      messageEl.className = `message ${type}`;
+    }
+
+    function clearMessage() {
+      messageEl.className = 'message';
+      messageEl.textContent = '';
+    }
+
+    function toEmail(username) {
+      return username.trim().toLowerCase().replace(/\s+/g, '') + '@world.app';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMessage();
+
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const remember = document.getElementById('remember').checked;
+
+      if (!username || !password) {
+        showMessage('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu');
+        return;
+      }
+
+      if (username.includes('@') || username.includes(' ')) {
+        showMessage('Tên đăng nhập không được chứa khoảng trắng hoặc ký tự @');
+        return;
+      }
+
+      const email = toEmail(username);
+
+      btnLogin.disabled = true;
+      btnLogin.textContent = 'Đang vào thế giới...';
+
+      try {
+        const persistence = remember ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+
+        await signInWithEmailAndPassword(auth, email, password);
+        showMessage(`Đăng nhập thành công! Xin chào ${username}`, 'success');
+        setTimeout(() => enterGame(username), 600);
+      } catch (error) {
+        let msg = 'Đăng nhập thất bại. Vui lòng thử lại.';
+        switch (error.code) {
+          case 'auth/user-disabled':
+            msg = 'Tài khoản đã bị vô hiệu hóa.';
+            break;
+          case 'auth/user-not-found':
+            msg = 'Không tìm thấy tài khoản này.';
+            break;
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            msg = 'Tên đăng nhập hoặc mật khẩu không đúng.';
+            break;
+          case 'auth/too-many-requests':
+            msg = 'Quá nhiều lần thử. Vui lòng thử lại sau.';
+            break;
+        }
+        showMessage(msg);
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Vào thế giới';
+      }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMessage();
+
+      const username = document.getElementById('registerUsername').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (!username || !password || !confirmPassword) {
+        showMessage('Vui lòng điền đầy đủ thông tin.');
+        return;
+      }
+
+      if (username.includes('@') || username.includes(' ')) {
+        showMessage('Tên đăng nhập không được chứa khoảng trắng hoặc ký tự @');
+        return;
+      }
+
+      if (username.length < 3) {
+        showMessage('Tên đăng nhập phải có ít nhất 3 ký tự.');
+        return;
+      }
+
+      if (password.length < 6) {
+        showMessage('Mật khẩu phải có ít nhất 6 ký tự.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showMessage('Mật khẩu xác nhận không khớp.');
+        return;
+      }
+
+      const email = toEmail(username);
+
+      btnRegister.disabled = true;
+      btnRegister.textContent = 'Đang tạo tài khoản...';
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        showMessage(`Đăng ký thành công! Xin chào ${username}`, 'success');
+        setTimeout(() => enterGame(username), 600);
+      } catch (error) {
+        let msg = 'Đăng ký thất bại. Vui lòng thử lại.';
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            msg = 'Tên đăng nhập này đã được sử dụng.';
+            break;
+          case 'auth/weak-password':
+            msg = 'Mật khẩu quá yếu (tối thiểu 6 ký tự).';
+            break;
+        }
+        showMessage(msg);
+        btnRegister.disabled = false;
+        btnRegister.textContent = 'Tạo tài khoản';
+      }
+    });
+
+    document.getElementById('forgotPassword').addEventListener('click', async () => {
+      clearMessage();
+      showMessage('Tính năng quên mật khẩu cần email. Hiện tại đang dùng tên đăng nhập nên không hỗ trợ.');
+    });
+
+    document.getElementById('btnGoogle').addEventListener('click', async () => {
+      clearMessage();
+      const provider = new GoogleAuthProvider();
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const name = result.user.displayName || (result.user.email || 'player').split('@')[0];
+        showMessage(`Thành công! Xin chào ${name}`, 'success');
+        setTimeout(() => enterGame(name), 600);
+      } catch (error) {
+        if (error.code !== 'auth/popup-closed-by-user') {
+          showMessage('Đăng nhập Google thất bại: ' + error.message);
+        }
+      }
+    });
+
+    document.getElementById('btnFacebook').addEventListener('click', async () => {
+      clearMessage();
+      const provider = new FacebookAuthProvider();
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const name = result.user.displayName || (result.user.email || 'player').split('@')[0];
+        showMessage(`Thành công! Xin chào ${name}`, 'success');
+        setTimeout(() => enterGame(name), 600);
+      } catch (error) {
+        if (error.code === 'auth/operation-not-allowed') {
+          showMessage('Facebook Login chưa được bật trong Firebase Console.');
+        } else if (error.code !== 'auth/popup-closed-by-user') {
+          showMessage('Đăng nhập Facebook thất bại: ' + error.message);
+        }
+      }
+    });
+  </script>
 </body>
 </html>
