@@ -1397,7 +1397,7 @@
     { id:'card_dragon',   icon:'🐉', name:'Rồng',       rarity:'Huyền thoại', weight:1,  color:'#ff7043' }
   ];
   WHEEL_CARDS.forEach(c => { ITEM_META[c.id] = { icon:c.icon, name:c.name }; });
-  const WHEEL_SPIN_COST = 20;
+  const WHEEL_SPIN_COST = 30;
   let wheelRotation = 0;
   let wheelSpinning = false;
 
@@ -2791,7 +2791,7 @@
       const goBack = () => {
         if (left) return;
         left = true;
-        window.location.href = '/world';
+        window.location.href = '/';
       };
       // Luôn ghi localStorage đồng bộ trước khi rời trang (không phụ thuộc mạng)
       if (progressReady && myKey) {
@@ -2809,7 +2809,7 @@
   (async function initFromChatAccount() {
     const savedName = localStorage.getItem(CHAT_LS_KEY);
     if (!savedName) {
-      window.location.href = '/world';
+      window.location.href = '/';
       return;
     }
     const key = toKey(savedName);
