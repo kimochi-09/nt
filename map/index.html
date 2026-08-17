@@ -301,111 +301,6 @@
   .recipeBtn.sellBtn { background:linear-gradient(180deg,#ffbe57,#e0862b); }
   .recipeBtn.sellBtn:disabled { background:#555; }
 
-  /* ---------- VÒNG QUAY MAY MẮN (THẺ ĐỘNG VẬT) ---------- */
-  #wheelToggle {
-    position:absolute; top:8px; right:410px; z-index:12;
-    display:flex; align-items:center; gap:6px;
-    background:rgba(0,0,0,.4); border:2px solid rgba(255,180,255,.55);
-    color:#fff; font-size:12px; font-weight:800;
-    padding:6px 11px; border-radius:18px;
-    cursor:pointer; user-select:none;
-    box-shadow:0 2px 8px rgba(0,0,0,.35);
-  }
-  #wheelToggle:active { transform:scale(.96); }
-  #wheelOverlay {
-    position:absolute; inset:0;
-    background:radial-gradient(circle at 50% 18%, rgba(70,25,90,.35), rgba(0,0,0,.75) 72%);
-    backdrop-filter:blur(2px);
-    display:none; align-items:center; justify-content:center; z-index:21;
-    padding:16px;
-  }
-  #wheelPanelBox {
-    position:relative; display:flex; flex-direction:column; align-items:center; overflow:hidden;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.1)),
-      linear-gradient(150deg, #3a1c40 0%, #1e1122 100%);
-    border:3px solid #7a4a8e; border-radius:16px;
-    width:92%; max-width:360px; max-height:92%; overflow-y:auto;
-    color:#f4e9d8; padding:14px 16px 18px;
-    box-shadow:0 16px 40px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.05);
-  }
-  #wheelHeader {
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    width:100%; margin-bottom:8px;
-  }
-  #wheelHeader h3 {
-    margin:0; font-size:16px; letter-spacing:.3px; font-weight:800;
-    display:flex; align-items:center; gap:7px;
-    text-shadow:0 2px 4px rgba(0,0,0,.5);
-  }
-  #wheelHeaderRight { display:flex; align-items:center; gap:8px; }
-  #wheelWallet {
-    display:flex; align-items:center; gap:5px;
-    background:linear-gradient(180deg,#5a3d18,#2c1c0c);
-    border:1px solid rgba(255,210,120,.55);
-    color:#ffd97a; font-weight:800; font-size:13px;
-    padding:5px 11px; border-radius:20px;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 2px 6px rgba(0,0,0,.4);
-  }
-  #wheelClose {
-    cursor:pointer; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
-    color:#fff; width:28px; height:28px; border-radius:50%; font-size:13px;
-    display:flex; align-items:center; justify-content:center;
-  }
-  #wheelClose:active { background:rgba(255,255,255,.3); }
-  #wheelStage {
-    position:relative; width:190px; height:190px; margin:6px 0 14px;
-    display:flex; align-items:center; justify-content:center;
-  }
-  #wheelPointer {
-    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
-    font-size:20px; z-index:2; text-shadow:0 2px 4px rgba(0,0,0,.6);
-  }
-  #wheelWrap {
-    position:relative; width:100%; height:100%; border-radius:50%;
-    border:4px solid rgba(255,255,255,.85);
-    box-shadow:0 4px 20px rgba(0,0,0,.5), inset 0 0 0 2px rgba(0,0,0,.25);
-    transition: transform 4.2s cubic-bezier(.12,.67,.12,1);
-  }
-  #wheelWrap::after {
-    content:''; position:absolute; top:50%; left:50%; width:26px; height:26px;
-    transform:translate(-50%,-50%); border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #fff, #ccc);
-    border:2px solid rgba(0,0,0,.35);
-  }
-  .wheelIcon {
-    position:absolute; top:50%; left:50%; font-size:20px;
-    text-shadow:0 1px 3px rgba(0,0,0,.5);
-  }
-  #wheelSpinBtn {
-    background:linear-gradient(180deg,#c86bff,#8a2fd6);
-    border:1px solid rgba(255,255,255,.35); color:#fff; padding:10px 22px;
-    border-radius:22px; font-size:14px; font-weight:800; cursor:pointer;
-    box-shadow:0 3px 0 rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.3);
-  }
-  #wheelSpinBtn:active:not(:disabled) { transform:translateY(1px); }
-  #wheelSpinBtn:disabled {
-    background:#555; border-color:rgba(255,255,255,.08); color:rgba(255,255,255,.5);
-    cursor:not-allowed; box-shadow:none;
-  }
-  #wheelResultMsg {
-    min-height:18px; margin-top:9px; font-size:12px; font-weight:700;
-    color:#ffe08a; text-align:center;
-  }
-  #wheelCardsTitle {
-    width:100%; margin:14px 0 8px; font-size:11px; font-weight:800;
-    letter-spacing:.6px; text-transform:uppercase; color:#e9cd97;
-  }
-  #wheelCardsList {
-    width:100%; display:flex; flex-wrap:wrap; gap:7px;
-  }
-  .wheelCardChip {
-    display:flex; align-items:center; gap:5px;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
-    border-radius:10px; padding:5px 9px; font-size:11px; font-weight:700;
-  }
-  .wheelCardChip.locked { opacity:.35; filter:grayscale(.6); }
-  .wheelCardChip .cnt { color:#ffd97a; }
 
   /* ---------- CHAT CHUNG (GÓC MÀN HÌNH) ---------- */
   #chatBubble {
@@ -708,7 +603,6 @@
       </div>
       <div id="dayNightBadge"><span id="dayNightIcon">☀️</span><span id="dayNightText">Ban ngày</span><span id="weatherIcon"></span></div>
     </div>
-    <div id="wheelToggle" title="Vòng quay may mắn">🎡 Vòng quay</div>
     <div id="achToggle" title="Thành tựu">🏆 Thành tựu<span class="achBadge" id="achBadge"></span></div>
     <div id="achPanel">
       <div class="achCard" data-ach="wood">
@@ -783,25 +677,6 @@
       </div>
     </div>
 
-    <div id="wheelOverlay">
-      <div id="wheelPanelBox">
-        <div id="wheelHeader">
-          <h3>🎡 Vòng quay may mắn</h3>
-          <div id="wheelHeaderRight">
-            <div id="wheelWallet">💰 <span id="wheelWalletAmt">0</span></div>
-            <button id="wheelClose">✕</button>
-          </div>
-        </div>
-        <div id="wheelStage">
-          <div id="wheelPointer">▼</div>
-          <div id="wheelWrap"></div>
-        </div>
-        <button type="button" id="wheelSpinBtn">Quay · 20 💰</button>
-        <div id="wheelResultMsg"></div>
-        <div id="wheelCardsTitle">📚 Bộ sưu tập thẻ động vật</div>
-        <div id="wheelCardsList"></div>
-      </div>
-    </div>
 
     <div id="chatBubble" title="Chat chung">💬<span class="chatDot"></span></div>
     <div id="chatPanel">
@@ -1385,128 +1260,6 @@
   document.getElementById('shopClose').addEventListener('click', closeShop);
   shopOverlay.addEventListener('click', e => { if (e.target === shopOverlay) closeShop(); });
 
-  // ---------- VÒNG QUAY MAY MẮN: QUAY ĐỂ THU THẬP THẺ ĐỘNG VẬT ----------
-  const WHEEL_CARDS = [
-    { id:'card_rabbit',   icon:'🐰', name:'Thỏ',        rarity:'Thường',      weight:30, color:'#8bc34a' },
-    { id:'card_squirrel', icon:'🐿️', name:'Sóc',        rarity:'Thường',      weight:25, color:'#66bb6a' },
-    { id:'card_fox',      icon:'🦊', name:'Cáo',        rarity:'Hiếm',        weight:15, color:'#42a5f5' },
-    { id:'card_tiger',    icon:'🐯', name:'Hổ',         rarity:'Hiếm',        weight:12, color:'#29b6f6' },
-    { id:'card_panda',    icon:'🐼', name:'Gấu trúc',   rarity:'Sử thi',      weight:8,  color:'#ab47bc' },
-    { id:'card_owl',      icon:'🦉', name:'Cú mèo',     rarity:'Sử thi',      weight:6,  color:'#8e24aa' },
-    { id:'card_unicorn',  icon:'🦄', name:'Kỳ lân',     rarity:'Huyền thoại', weight:3,  color:'#ffca28' },
-    { id:'card_dragon',   icon:'🐉', name:'Rồng',       rarity:'Huyền thoại', weight:1,  color:'#ff7043' }
-  ];
-  WHEEL_CARDS.forEach(c => { ITEM_META[c.id] = { icon:c.icon, name:c.name }; });
-  const WHEEL_SPIN_COST = 30;
-  let wheelRotation = 0;
-  let wheelSpinning = false;
-
-  function buildWheelGradient() {
-    const n = WHEEL_CARDS.length;
-    const seg = 360 / n;
-    const stops = WHEEL_CARDS.map((c, i) => `${c.color} ${(i*seg).toFixed(2)}deg ${((i+1)*seg).toFixed(2)}deg`);
-    return `conic-gradient(${stops.join(',')})`;
-  }
-  function renderWheelIcons() {
-    const wrap = document.getElementById('wheelWrap');
-    if (!wrap) return;
-    wrap.style.background = buildWheelGradient();
-    const n = WHEEL_CARDS.length;
-    const seg = 360 / n;
-    const radius = 68;
-    wrap.innerHTML = WHEEL_CARDS.map((c, i) => {
-      const angle = i * seg + seg / 2;
-      return `<span class="wheelIcon" style="transform:translate(-50%,-50%) rotate(${angle}deg) translateY(-${radius}px) rotate(${-angle}deg);">${c.icon}</span>`;
-    }).join('');
-  }
-  function weightedPickCardIndex() {
-    const total = WHEEL_CARDS.reduce((s, c) => s + c.weight, 0);
-    let r = Math.random() * total;
-    for (let i = 0; i < WHEEL_CARDS.length; i++) {
-      if (r < WHEEL_CARDS[i].weight) return i;
-      r -= WHEEL_CARDS[i].weight;
-    }
-    return WHEEL_CARDS.length - 1;
-  }
-  function renderWheelCardsList() {
-    const list = document.getElementById('wheelCardsList');
-    if (!list) return;
-    list.innerHTML = WHEEL_CARDS.map(c => {
-      const owned = inventory[c.id] || 0;
-      return `<div class="wheelCardChip ${owned > 0 ? '' : 'locked'}">
-        <span class="ic">${c.icon}</span>
-        <span class="nm">${c.name}</span>
-        ${owned > 0 ? `<span class="cnt">x${owned}</span>` : ''}
-      </div>`;
-    }).join('');
-  }
-  function renderWheelPanel() {
-    const walletEl = document.getElementById('wheelWalletAmt');
-    if (walletEl) walletEl.textContent = inventory.coin || 0;
-    const btn = document.getElementById('wheelSpinBtn');
-    if (btn) {
-      btn.disabled = wheelSpinning || (inventory.coin || 0) < WHEEL_SPIN_COST;
-      btn.textContent = wheelSpinning ? 'Đang quay...' : `Quay · ${WHEEL_SPIN_COST} 💰`;
-    }
-    renderWheelCardsList();
-  }
-  function openWheel() {
-    renderWheelIcons();
-    renderWheelPanel();
-    const overlay = document.getElementById('wheelOverlay');
-    if (overlay) overlay.style.display = 'flex';
-    showMessage('🎡 Quay vòng quay để nhận thẻ động vật!', 1600);
-  }
-  function closeWheel() {
-    const overlay = document.getElementById('wheelOverlay');
-    if (overlay) overlay.style.display = 'none';
-  }
-  function spinWheel() {
-    if (wheelSpinning) return;
-    if ((inventory.coin || 0) < WHEEL_SPIN_COST) {
-      showMessage('Không đủ xu để quay!', 1200);
-      if (typeof sfx !== 'undefined') sfx.error();
-      return;
-    }
-    payItems({ coin: WHEEL_SPIN_COST });
-    wheelSpinning = true;
-    renderWheelPanel();
-    const resultMsgEl = document.getElementById('wheelResultMsg');
-    if (resultMsgEl) resultMsgEl.textContent = '';
-    const idx = weightedPickCardIndex();
-    const n = WHEEL_CARDS.length;
-    const seg = 360 / n;
-    const targetCenter = idx * seg + seg / 2;
-    const extraSpins = 5 * 360;
-    const cur = ((wheelRotation % 360) + 360) % 360;
-    const desiredMod = (360 - targetCenter) % 360;
-    let delta = desiredMod - cur;
-    if (delta <= 0) delta += 360;
-    wheelRotation += extraSpins + delta;
-    const wrap = document.getElementById('wheelWrap');
-    if (wrap) wrap.style.transform = `rotate(${wheelRotation}deg)`;
-    if (typeof sfx !== 'undefined') sfx.cast();
-    setTimeout(() => {
-      const card = WHEEL_CARDS[idx];
-      addItem(card.id, 1);
-      wheelSpinning = false;
-      renderWheelPanel();
-      if (resultMsgEl) resultMsgEl.textContent = `🎉 Bạn nhận được ${card.icon} ${card.name} (${card.rarity})!`;
-      if (typeof sfx !== 'undefined') sfx.fishWin();
-      showMessage(`🎉 Nhận được thẻ ${card.icon} ${card.name}!`, 2000);
-    }, 4200);
-  }
-  const wheelOverlayEl = document.getElementById('wheelOverlay');
-  const wheelToggleEl = document.getElementById('wheelToggle');
-  if (wheelToggleEl) {
-    wheelToggleEl.addEventListener('click', e => { e.stopPropagation(); openWheel(); });
-    wheelToggleEl.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); openWheel(); });
-  }
-  const wheelCloseEl = document.getElementById('wheelClose');
-  if (wheelCloseEl) wheelCloseEl.addEventListener('click', closeWheel);
-  if (wheelOverlayEl) wheelOverlayEl.addEventListener('click', e => { if (e.target === wheelOverlayEl) closeWheel(); });
-  const wheelSpinBtnEl = document.getElementById('wheelSpinBtn');
-  if (wheelSpinBtnEl) wheelSpinBtnEl.addEventListener('click', spinWheel);
 
 
   // ---------- CỬA HÀNG (vị trí cố định ở phía nam bản đồ) ----------
@@ -2791,7 +2544,7 @@
       const goBack = () => {
         if (left) return;
         left = true;
-        window.location.href = '/';
+        window.location.href = '/world';
       };
       // Luôn ghi localStorage đồng bộ trước khi rời trang (không phụ thuộc mạng)
       if (progressReady && myKey) {
@@ -2809,7 +2562,7 @@
   (async function initFromChatAccount() {
     const savedName = localStorage.getItem(CHAT_LS_KEY);
     if (!savedName) {
-      window.location.href = '/';
+      window.location.href = '/world';
       return;
     }
     const key = toKey(savedName);
