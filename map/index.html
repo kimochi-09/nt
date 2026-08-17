@@ -2499,6 +2499,8 @@
     }
     // dọn vật phẩm cũ không còn dùng
     ['fiber','seed_corn','seed_potato','axe','pickaxe','rod'].forEach(k => delete inventory[k]);
+    // dọn vật phẩm không xác định (không còn tồn tại trong ITEM_META) để tránh hiện icon ❔
+    Object.keys(inventory).forEach(k => { if (!ITEM_META[k] && k !== 'coin') delete inventory[k]; });
     if (data.pos && typeof data.pos.x === 'number' && typeof data.pos.y === 'number') {
       player.x = data.pos.x;
       player.y = data.pos.y;
